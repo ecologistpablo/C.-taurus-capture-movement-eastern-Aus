@@ -124,5 +124,5 @@ read_and_stack <- function(file_list) {
 
 
 # Set up parallel processing
-plan(multisession, workers = detectCores() - 2)
+plan(multisession, workers = 6)
 

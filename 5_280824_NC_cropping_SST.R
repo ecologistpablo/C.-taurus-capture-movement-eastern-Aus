@@ -7,7 +7,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 # old fashioned way: 2012 -------------------------------------------------
 
-setwd("E:/Pablo/2023_hons_dat/SST/2019")
+setwd("E:/Pablo/2023_hons_dat/SST/2012")
 
 plan(multisession, workers = 6) # Use 6 cores
 
