@@ -1,8 +1,8 @@
 # Set up parallel processing
-plan(multisession, workers = 7) # Using 7 cores
+plan(multisession, workers = 6) # Using x cores
 
 # Loop through years from 2016 to 2022
-for (year in 2019) {
+for (year in 2013:2022) {  
   
   # Set output folder and URL based on the year
   #output_folder <- "C:/Users/pablo/Documents/University/2023/Honours/R/data/IMOS/SST/2014"
