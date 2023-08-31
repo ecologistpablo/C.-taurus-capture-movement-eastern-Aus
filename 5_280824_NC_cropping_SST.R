@@ -23,8 +23,6 @@ rstack <- rast(c(r_list))
 # Select and keep only the layers with the specified name pattern
 rstack1 <- subset(rstack, grep("^sea_surface_temperature", names(rstack)))
 
-
-
 # renaming ----------------------------------------------------------------
 
 head(names(rstack))
@@ -145,3 +143,20 @@ writeRaster(rstack4, "SST_stack_2022.tif")
 
 
 
+
+
+
+# combine all stacks  -----------------------------------------------------
+
+rm(list=ls())
+setwd("~/University/2023/Honours/R/data/IMOS/SST")
+list.files()
+
+# Generate file names for the years
+file_names <- paste0("SST_stack_", 2012:2022, ".tif")
+
+# Read in existing files and combine them into one stack
+SST_stack <- rast(lapply(file_names, function(x) if(file.exists(x)) rast(x)))
+
+# Save the combined stack
+writeRaster(SST_stack, "GHRSST_12-22.tif")

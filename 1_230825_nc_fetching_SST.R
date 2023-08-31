@@ -4,7 +4,7 @@
 #Who needs remora anyway
 
 rm(list=ls())
-setwd("~/University/2023/Honours/R/data")
+setwd("~/University/2023/Honours/R/data/IMOS/SST")
 
 
 # Packages ----------------------------------------------------------------

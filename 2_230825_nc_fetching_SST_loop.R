@@ -1,3 +1,18 @@
+#Written to scrape GHRSST & AODN current data 
+# Written by Dave Schoeman for Scales Lab tutorial, modified by P. Fuenzalida
+# August 2023
+#Who needs remora anyway
+
+setwd("~/University/2023/Honours/R/data/IMOS/SST/2012")
+
+
+# Packages ----------------------------------------------------------------
+
+source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
+
+
+# le loop -----------------------------------------------------------------
+
 # Set up parallel processing
 plan(multisession, workers = 6) # Using x cores
 
