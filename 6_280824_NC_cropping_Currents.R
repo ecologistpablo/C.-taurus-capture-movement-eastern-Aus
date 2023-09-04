@@ -5,6 +5,16 @@
 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
+
+# metadata finding --------------------------------------------------------
+
+nc <- nc_open("IMOS_OceanCurrent_HV_20121231T000000Z_GSLA_FV02_DM02.nc")
+
+print(nc)
+desc <- describe(nc)
+
+
+
 # old fashioned way: 2014 -------------------------------------------------
 
 setwd("E:/Pablo/2023_hons_dat/Current/2012")

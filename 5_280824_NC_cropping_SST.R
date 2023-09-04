@@ -5,6 +5,15 @@
 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
+# metadata finding --------------------------------------------------------
+
+list.files()
+nc <- nc_open("20121231092000-ABOM-L3S_GHRSST-SSTfnd-AVHRR_D-1d_dn-v02.0-fv02.0.nc")
+
+print(nc)
+#what variables do we choose based on their metadata?
+
+
 # old fashioned way: 2012 -------------------------------------------------
 
 setwd("E:/Pablo/2023_hons_dat/SST/2012")

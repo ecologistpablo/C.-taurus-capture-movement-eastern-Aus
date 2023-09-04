@@ -5,7 +5,8 @@
 
 rm(list=ls())
 setwd("~/University/2023/Honours/R/data/IMOS/SST")
-
+setwd("E:/Pablo/2023_hons_dat/SST/2012")
+setwd("~/University/2023/Honours/R/data/git/NC-wrestling")
 
 # Packages ----------------------------------------------------------------
 
