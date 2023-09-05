@@ -1,5 +1,8 @@
 #28.08.23
-#automating the workflow to crop, stack and reproject our data
+  #automating the workflow to crop, stack and reproject our data
+    #For currents
+
+setwd("~/University/2023/Honours/R/data/git/NC-wrestling")
 
 # Packages ----------------------------------------------------------------
 
@@ -8,12 +11,13 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 # metadata finding --------------------------------------------------------
 
+setwd("E:/Pablo/2023_hons_dat/Current/2012")
 nc <- nc_open("IMOS_OceanCurrent_HV_20121231T000000Z_GSLA_FV02_DM02.nc")
 
 print(nc)
-desc <- describe(nc)
 
-
+#after discussions with K. Scales, we go with daily VCUR / UCUR varnames + GSLA (no anomalies needed)
+#we will then make averages the same way as SST
 
 # old fashioned way: 2014 -------------------------------------------------
 
@@ -34,7 +38,7 @@ rstack <- rast(c(r_list))
 
 subset_selected_layers <- function(rstack) {
   # Create a regular expression pattern to match the layer names you want to keep
-  pattern <- "^(UCUR_MEAN_TIME|VCUR_MEAN_TIME|GSLA_TIME)"
+  pattern <- "^(UCUR_TIME|VCUR_TIME|GSLA_TIME)"
   
   # Use grep to find the indices of layers that match the pattern
   selected_indices <- grep(pattern, names(rstack))
@@ -49,6 +53,8 @@ subset_selected_layers <- function(rstack) {
 rstack1 <- subset_selected_layers(rstack)
 
 names(rstack1)
+
+plot(rstack1, col = viridis(255))
 
 #nice
 
@@ -89,7 +95,7 @@ names(rstack1) <- new_names
 # Check the first few names to make sure they were renamed correctly
 head(names(rstack1))
 
-plot(rstack1[[2]], col = viridis(255))
+plot(rstack1, col = viridis(255))
 
 # crop --------------------------------------------------------------------
 
@@ -101,21 +107,14 @@ rstack2 <- terra::crop(rstack1, e)
 
 plot(rstack2, col = viridis(255))
 
-# more munging ------------------------------------------------------------
-
-# Convert from Kelvin to Celsius
-rstack3 <- app(rstack2, function(x) x - 273.15)
-
-# Check if it worked
-plot(rstack3, col = viridis(255))
-
-names(rstack3)
-
+names(rstack2)
 
 # save progress -----------------------------------------------------------
 
-writeRaster(rstack3, "Current_stack_2014.tif")
+writeRaster(rstack2, "Current_stack_2012.tif")
 
+setwd("~/University/2023/Honours/R/data/IMOS/Currents")
+writeRaster(rstack2, "Currents_stack_2012.tif")
 
 
 # looped ------------------------------------------------------------------
@@ -137,53 +136,77 @@ process_year <- function(year) {
   # Stack the rasters
   rstack <- rast(c(r_list))
   
-  # Select and keep only the layers with the specified name pattern
-  rstack1 <- subset(rstack, grep("^sea_surface_temperature_day_night", names(rstack)))
+  # Subset and keep only layers named UCUR_TIME, VCUR_TIME, and GSLA_TIME
+  rstack1 <- subset(rstack, grep("^(UCUR_TIME|VCUR_TIME|GSLA_TIME)", names(rstack)))
   
   # Extract the date part (YYYYMMDD) from each .nc file name
-  date_str <- substr(file_list, 3, 10)
+  date_str <- substr(file_list, 24, 31)
   
-  # Create new names by adding "Current_" prefix to the date
-  new_names <- paste0("Current_", date_str)
+  # Check if the lengths match
+  if ((length(date_str) * 3) != nlyr(rstack1)) {
+    stop("The number of dates does not match the number of layers in the SpatRaster.")
+  }
+  
+  # Initialize an empty vector to hold the new names
+  new_names <- vector("character", length = nlyr(rstack1))
+  
+  # Loop through each date to rename the corresponding layers
+  for (i in seq_along(date_str)) {
+    idx_GSLA <- (i - 1) * 3 + 1
+    idx_UCUR_MEAN <- (i - 1) * 3 + 2
+    idx_VCUR_MEAN <- (i - 1) * 3 + 3
+    
+    new_names[idx_GSLA] <- paste0("GSLA_", date_str[i])
+    new_names[idx_UCUR_MEAN] <- paste0("UCUR_", date_str[i])
+    new_names[idx_VCUR_MEAN] <- paste0("VCUR_", date_str[i])
+  }
   
   # Rename the layers
-  if (length(new_names) == nlyr(rstack1)) {
-    names(rstack1) <- new_names
-  } else {
-    stop("The number of names does not match the number of layers in the SpatRaster.")
-  }
+  names(rstack1) <- new_names
   
   # Crop the stack
   e <- ext(c(150, 155, -36, -24)) #xmin, xmax, ymin, ymax
   rstack2 <- terra::crop(rstack1, e)
   
-  # Convert from Kelvin to Celsius
-  rstack3 <- app(rstack2, function(x) x - 273.15)
-  
   # Save the processed stack as a TIFF file
   tif_file <- paste0("Current_stack_", year, ".tif")
-  writeRaster(rstack3, tif_file)
-  
+  writeRaster(rstack2, tif_file)
   
   # Return the processed stack
-  return(rstack3)
+  return(rstack2)
 }
 
 # Process each year
-years <- c("2019")
+years <- c("2022")  # Edit the years as needed
 
 for (year in years) {
-  rstack4 <- process_year(year)
+  rstack3 <- process_year(year)
   # You can save the processed_stack if needed for each year
 }
 
 
 #check it worked
-plot(rstack4, col = viridis(255))
+plot(rstack3, col = viridis(255))
 
-setwd("~/University/2023/Honours/R/data/IMOS/Current")
+setwd("~/University/2023/Honours/R/data/IMOS/Currents")
 
-writeRaster(rstack4, "Current_stack_2018.tif")
+writeRaster(rstack3, "Currents_stack_2022.tif")
+
+
+# combine all stacks  -----------------------------------------------------
+
+rm(list=ls())
+setwd("~/University/2023/Honours/R/data/IMOS/Currents")
+list.files()
+
+# Generate file names for the years
+file_names <- paste0("Currents_stack_", 2012:2022, ".tif")
+
+# Read in existing files and combine them into one stack
+SST_stack <- rast(lapply(file_names, function(x) if(file.exists(x)) rast(x)))
+
+# Save the combined stack
+writeRaster(SST_stack, "OceanCurrents_12-22.tif")
 
 
 

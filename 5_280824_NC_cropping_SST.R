@@ -1,5 +1,6 @@
 #28.08.23
   #automating the workflow to crop, stack and reproject our data
+rm(list=ls())
 
 # Packages ----------------------------------------------------------------
 
@@ -7,6 +8,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 # metadata finding --------------------------------------------------------
 
+setwd("E:/Pablo/2023_hons_dat/SST/2012")
 list.files()
 nc <- nc_open("20121231092000-ABOM-L3S_GHRSST-SSTfnd-AVHRR_D-1d_dn-v02.0-fv02.0.nc")
 
@@ -151,10 +153,6 @@ setwd("~/University/2023/Honours/R/data/IMOS/SST")
 writeRaster(rstack4, "SST_stack_2022.tif")
 
 
-
-
-
-
 # combine all stacks  -----------------------------------------------------
 
 rm(list=ls())
@@ -168,4 +166,5 @@ file_names <- paste0("SST_stack_", 2012:2022, ".tif")
 SST_stack <- rast(lapply(file_names, function(x) if(file.exists(x)) rast(x)))
 
 # Save the combined stack
-writeRaster(SST_stack, "GHRSST_12-22.tif")
+writeRaster(SST_stack, "GHRSST_12-22.tif", overwrite = T)
+
