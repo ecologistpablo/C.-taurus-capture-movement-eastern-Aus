@@ -9,24 +9,6 @@ setwd("~/University/2023/Honours/R/data/git/NC-wrestling")
 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
-
-# Coordinate reference systems --------------------------------------------
-
-UTM56S <- crs("EPSG:32756")
-
-# read in stack -----------------------------------------------------------
-
-setwd("~/University/2023/Honours/R/data")
-rstack <- rast("IMOS/SST/GHRSST_12-22.tif")
-
-head(rstack) #its all there
-
-rstack <- project(rstack, UTM56S)
-head(str(rstack))
-
-writeRaster(rstack, "GHRSST_12-22.tif", overwrite = T)
-
-
 # pts ---------------------------------------------------------------------
 
 rcs <- read_csv("Inputs/receiver_station_XY_230822.csv")
