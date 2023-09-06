@@ -111,12 +111,6 @@ sum(is.na(sst.pts2))
 # increase coarseness -----------------------------------------------------
 rstack #res at 0.02 by 0.02, 2km x 2km
 
-res.new <- c(5000,5000) #
-newgrid <- rast(ext = ext(rstack), crs = crs(rstack), res = res.new)
-rstack5km <- resample(rstack, newgrid)
-rstack5km #5km res
-rstack10km #increased resolution to 10km
-
 rstack10km <- aggregate(rstack, fact = 5.5, fun=mean, na.rm = TRUE)
 
 # resample ----------------------------------------------------------------
@@ -128,4 +122,66 @@ sum(is.na(sst.pts10km))
 sum(is.na(sst.pts5km))
 sum(is.na(sst.pts4km))
 
-#oke lets try our 10km buffer
+#oke lets try our 10km buffer since it has the least amount of NAs
+
+# nearest temporal neighbour ----------------------------------------------
+
+sst.pts10km1 <- t(apply(sst.pts10km, 1, function(row) { # Apply a function to each row of 'sst.pts'.
+  for (j in 1:length(row)) {  # Loop through each element of the row.
+    if (is.na(row[j])) {  # Check if the element is NA.
+      neighbors <- c(row[j-1], row[j+1]) # Find neighbors of the NA value (i.e., the previous and next values in the row).
+      non_na_neighbors <- neighbors[!is.na(neighbors)] # Remove NAs from the neighbors.
+      if (length(non_na_neighbors) > 0) { # If there are non-NA neighbors...
+        row[j] <- non_na_neighbors[1] # Replace the NA with the first non-NA neighbor.
+        
+      }
+    }
+  }
+  
+  return(row)  # Return the modified row.
+}))
+
+sst.pts1 <- as.data.frame(sst.pts1)
+
+sum(is.na(sst.pts10km)) - sum(is.na(sst.pts10km1)) 
+#we filled 160500 points
+
+sum(is.na(sst.pts10km1))
+#still got 81324 NAs
+
+# 5 d mean ----------------------------------------------------------------
+
+# Apply the function to each row and save the new values in sst.pts2
+sst.pts10km2 <- t(apply(sst.pts10km1, 1, mean_5d))
+
+#more munging
+sst.pts10km2 <- as.data.frame(sst.pts10km2)
+colnames(sst.pts10km2) <- colnames(sst.pts10km1)
+
+
+# fill_gaps ---------------------------------------------------------------
+
+fill_vals <- function(sst_pts2, sst_pts10km2) {
+  if (nrow(sst_pts2) != nrow(sst_pts10km2) || ncol(sst_pts2) != ncol(sst_pts10km2)) {
+    stop("The dimensions of the two data frames must be identical.")
+  }
+  
+  for (i in 1:nrow(sst_pts2)) {
+    for (j in 1:ncol(sst_pts2)) {
+      if (is.na(sst_pts2[i, j]) && !is.na(sst_pts10km2[i, j])) {
+        sst_pts2[i, j] <- sst_pts10km2[i, j]
+      }
+    }
+  }
+  
+  return(sst_pts2)
+}
+
+# Example usage
+sst.pts3 <- fill_vals(sst.pts2, sst.pts10km2)
+
+sum(is.na(sst.pts3)) - sum(is.na(sst.pts2))
+
+# %
+(81301 / 491617) * 100
+#16% of our data is still NA :(
