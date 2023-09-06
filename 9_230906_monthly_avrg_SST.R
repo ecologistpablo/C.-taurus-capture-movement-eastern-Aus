@@ -1,4 +1,4 @@
-#09 September 2023
+#06 September 2023
   #we have our sst vals
     #lets generate monthly averages
 
@@ -53,3 +53,4 @@ head(m_avg)
 # save --------------------------------------------------------------------
 
 write_csv(m_avg, file = "Inputs/SST_m_avrg_12-22_230906.csv")
+S
