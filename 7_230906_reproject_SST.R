@@ -30,15 +30,20 @@ for (file_name in file_names) {
 }
 
 # Combine the individual rasters into one stack
-SST_stack <- do.call(c, rasters_list)
+rstack <- do.call(c, rasters_list)
 
 
 # Check the CRS of the combined stack
-crs(SST_stack)
+crs(rstack)
 
-plot(SST_stack, col = viridis(255))
+plot(rstack[[19]], col = viridis(255))
 head(names(SST_stack))
 tail(names(SST_stack))
 
 # Save the combined stack
-writeRaster(SST_stack, "GHRSSTp_12-22.tif")
+writeRaster(SST_stack, filename = "GHRSSTp_12-22.tif", overwrite = T)
+
+
+# Save the raster stack with terra
+write(SST_stack, file = "GHRSSTp_12-22.tif")
+

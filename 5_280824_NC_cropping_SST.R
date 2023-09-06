@@ -165,6 +165,15 @@ file_names <- paste0("SST_stack_", 2012:2022, ".tif")
 # Read in existing files and combine them into one stack
 SST_stack <- rast(lapply(file_names, function(x) if(file.exists(x)) rast(x)))
 
+
+rstack <- project(rstack, UTM56S)
+head(rstack)
+
+
+# Coordinate reference systems --------------------------------------------
+
+UTM56S <- crs("EPSG:32756")
+
 # Save the combined stack
 writeRaster(SST_stack, "GHRSST_12-22.tif", overwrite = T)
 
