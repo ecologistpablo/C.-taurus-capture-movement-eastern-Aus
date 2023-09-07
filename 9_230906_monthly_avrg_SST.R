@@ -16,6 +16,8 @@ setwd("~/University/2023/Honours/R/data")
 dat <- read_csv("Inputs/SST_vals_12-22.csv")
 rcs <- read_csv("Inputs/receiver_station_XY_230822.csv")
 
+# enter the ring ----------------------------------------------------------
+
 rcs <-  rcs %>% mutate(RowNumber = row_number()) #make a row number 
 
 # Join dat with rcs to add the station_name based on RowNumber
@@ -45,12 +47,11 @@ calc_monthly_avg <- function(year, df) {
 m_avg <- map_dfc(2012:2022, ~ calc_monthly_avg(.x, dat))
 
 # Combine the original data frame with the new columns
-m_avg <- bind_cols(dat %>% dplyr::select(station_name), new_cols)
+m_avg <- bind_cols(dat %>% dplyr::select(station_name), m_avg)
 
 # View the first few rows of the final data
 head(m_avg)
 
 # save --------------------------------------------------------------------
 
-write_csv(m_avg, file = "Inputs/SST_m_avrg_12-22_230906.csv")
-S
+write_csv(m_avg, file = "Inputs/230907_SST_m_avrg_12-22.csv")
