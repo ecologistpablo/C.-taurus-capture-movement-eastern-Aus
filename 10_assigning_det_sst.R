@@ -99,3 +99,7 @@ diff <- det3 %>%
 
 write_csv(m_avg, file = "Inputs/230907_SST_det.csv")
 
+ggplot(det2, aes(x = month, y = SST_anomaly, colour = movement)) +
+  geom_jitter(width = 0.2) +
+  facet_wrap(~Location)
+
