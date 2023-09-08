@@ -3,6 +3,7 @@
 # Interpolating NAs in SST data
 
 rm(list=ls())
+
 setwd("~/University/2023/Honours/R/data/git/NC-wrestling")
 
 # Packages ----------------------------------------------------------------
@@ -12,6 +13,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 # pts ---------------------------------------------------------------------
 
 setwd("~/University/2023/Honours/R/data")
+
+rstack <- rast("IMOS/Currents/Currents_12-22.tif")
 
 rcs <- read_csv("Inputs/receiver_station_XY_230822.csv")
 head(rcs) #its all there
@@ -25,6 +28,7 @@ pts.sp
 pts.UTM <- st_transform(pts.sp, UTM56S) #reproject our data
 pts.UTM
 
+
 # plotting ----------------------------------------------------------------
 
 plot(rstack[[19]], col = viridis(255))
@@ -32,10 +36,10 @@ plot(pts.UTM, add = T)
 
 # extract -----------------------------------------------------------------
 
-sst.pts <- extract(rstack, pts.UTM, ID = F) # ID = FALSE otherwise it creates a column with a number for each spoint
+cur.pts <- extract(rstack, pts.UTM, ID = F) # ID = FALSE otherwise it creates a column with a number for each spoint
 
 
-sum(is.na(sst.pts))
+sum(is.na(cur.pts))
 13020 * 127 #how many obs in total
 (365083 / 1653540) * 100 
 
@@ -43,7 +47,7 @@ sum(is.na(sst.pts))
 
 # nearest temporal neighbour ----------------------------------------------
 
-sst.pts1 <- t(apply(sst.pts, 1, function(row) { # Apply a function to each row of 'sst.pts'.
+cur.pts1 <- t(apply(cur.pts, 1, function(row) { # Apply a function to each row of 'sst.pts'.
   for (j in 1:length(row)) {  # Loop through each element of the row.
     if (is.na(row[j])) {  # Check if the element is NA.
       neighbors <- c(row[j-1], row[j+1]) # Find neighbors of the NA value (i.e., the previous and next values in the row).
@@ -58,9 +62,9 @@ sst.pts1 <- t(apply(sst.pts, 1, function(row) { # Apply a function to each row o
   return(row)  # Return the modified row.
 }))
 
-sst.pts1 <- as.data.frame(sst.pts1)
+cur.pts1 <- as.data.frame(cur.pts1)
 
-sum(is.na(sst.pts1)) 
+sum(is.na(cur.pts1)) 
 
 (364560 / 1653540) * 100 
 #22.04 now, not much :o
@@ -145,20 +149,28 @@ sum(is.na(sst.pts3))
 #They're in Syd and Jervis bay in corners, can we remove them ?!
 
 
-sst.pts3 <- sst.pts2 %>% mutate(RowNumber = row_number()) #make a row number 
+rcs <-  rcs %>% mutate(RowNumber = row_number()) #make a row number 
+cur.pts1 <-  cur.pts1 %>% mutate(RowNumber = row_number()) #make a row number 
+
+cur.pts1 <- left_join(cur.pts1, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
+
+cur.pts1 <- cur.pts1 %>%
+  dplyr::select(-RowNumber) %>% 
+  dplyr::select(station_name, everything())
+
 
 # Remove rows that have more than 10 NA values
-sst.pts4 <- sst.pts3[apply(sst.pts3, 1, function(x) sum(is.na(x)) <= 10), ]
+cur.pts2 <- cur.pts1[apply(cur.pts1, 1, function(x) sum(is.na(x)) <= 10), ]
 
-sum(is.na(sst.pts4)) #0 obs out of 491,000 is pretty good
+sum(is.na(cur.pts2)) #0 obs out of 491,000 is pretty good
 
 
 #to find out which rows we removed:
-NA1 <- sst.pts3 %>% mutate(RowNumber = row_number()) #make a row number 
+NA1 <- cur.pts1 
 NA2 <- NA1[apply(NA1, 1, function(x) sum(is.na(x)) > 10), ] #bring only rows with + 10NAs 
-NA3 <- NA2[3872:3872] #only keep RowNumber column
+NA3 <- NA2[1:1] #only keep RowNumber column
 
 # save --------------------------------------------------------------------
 
-write_csv(sst.pts4, file = "Inputs/230907_Currents_vals_12-22.csv")
-write_csv(NA3, file = "Inputs/230907_Current_NAs_12-22.csv")
+write_csv(cur.pts2, file = "Inputs/230908_Currents_vals_12-22.csv")
+write_csv(NA3, file = "Inputs/230908_Currents_NAs_12-22.csv")

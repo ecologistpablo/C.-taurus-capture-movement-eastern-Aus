@@ -69,6 +69,58 @@ det1 <- map_dfr(seq_len(nrow(det)), ~{
 sum(is.na(det1$SST))
 sum(is.na(det1$SST_m_avrg))
 
+
+# monthly average ---------------------------------------------------------
+
+
+calc_overall_monthly_mean <- function(df, prefixes) {
+  months <- c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
+  
+  # Initialize result dataframe with just the station_name column
+  result_df <- df %>% dplyr::select(station_name)
+  
+  for (month in months) {
+    
+    # Initialize an empty character vector to collect relevant columns
+    all_cols_for_month <- character(0)
+    
+    for (prefix in prefixes) {
+      
+      # Regex pattern to match prefix, any year, and the specific month
+      pattern <- paste0(prefix, ".*", month, "_avg")
+      cols <- grep(pattern, colnames(df), value = TRUE)
+      
+      if (length(cols) == 0) {
+        cat("No columns found for prefix:", prefix, " and month:", month, "\n")
+        next
+      }
+      
+      all_cols_for_month <- c(all_cols_for_month, cols)
+    }
+    
+    # Skip to next iteration if no columns are found for the month
+    if (length(all_cols_for_month) == 0) {
+      cat("No columns found for month:", month, "\n")
+      next
+    }
+    
+    # Calculate mean across all relevant columns
+    monthly_mean <- rowMeans(df[, all_cols_for_month, drop = FALSE], na.rm = TRUE)
+    
+    # Add the calculated mean to the result dataframe
+    new_col_name <- paste0("MonthlyMean_", month)
+    result_df <- result_df %>% dplyr::mutate(!!new_col_name := monthly_mean)
+  }
+  
+  return(result_df)
+}
+
+# Usage
+dat3 <- calc_overall_monthly_mean(dat2, prefixes)
+
+head(dat3)
+
+
 # AND ANOMALYYYY ----------------------------------------------------------
 
 det2 <- det1 %>%
