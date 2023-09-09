@@ -15,7 +15,7 @@ setwd("~/University/2023/Honours/R/data")
 
 cur <- read_csv("Inputs/230909_Currents_vals_12-22.csv")
 m_avg <- read_csv("Inputs/230909_CUR_m_avrg_12-22.csv")
-det <- read_csv("Inputs/230907_step8.csv")
+det <- read_csv("Inputs/230909_SST_det.csv")
 
 head(cur)
 head(m_avg)
@@ -111,7 +111,7 @@ diff <- det2 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(det1, file = "Inputs/230909_cur_det.csv")
+write_csv(det1, file = "Inputs/230910_cur_det.csv")
 
 MI <- det1 %>% 
   filter(Location == "Moreton Island")

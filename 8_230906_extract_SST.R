@@ -102,8 +102,12 @@ sum(is.na(sst.pts2))
 
 #with nearest neighbour single day interpolation & 5 d mean
 
+# read and write ----------------------------------------------------------
+
+
 write_csv(sst.pts2, file = "Inputs/230909_SST_vals_12-22_pts2.csv")
 
+sst.pts2 <- read_csv("Inputs/230909_SST_vals_12-22_pts2.csv")
 
 # increase coarseness -----------------------------------------------------
 
@@ -134,7 +138,7 @@ sst.pts10km1 <- t(apply(sst.pts10km, 1, function(row) { # Apply a function to ea
   return(row)  # Return the modified row.
 }))
 
-sst.pts1 <- as.data.frame(sst.pts1) #convert back to df
+sst.pts10km1 <- as.data.frame(sst.pts10km1) #convert back to df
 
 sum(is.na(sst.pts10km1)) #still got 81324 NAs
 (65843 / 441294) * 100
@@ -183,6 +187,32 @@ sum(is.na(sst.pts3))
 41 - 16
 #25% of our data are sampled at 10km spatial resolution
 
+# fill gaps bilinear ------------------------------------------------------
+
+bl <- read_csv("Inputs/230909_SST_bl_vals_12-22.csv")
+
+fill_vals <- function(sst_pts3, bl) {
+  if (nrow(sst_pts3) != nrow(bl) || ncol(sst_pts3) != ncol(bl)) {
+    stop("The dimensions of the two data frames must be identical.")
+  }
+  
+  for (i in 1:nrow(sst_pts3)) {
+    for (j in 1:ncol(sst_pts3)) {
+      if (is.na(sst_pts3[i, j]) && !is.na(bl[i, j])) {
+        sst_pts3[i, j] <- bl[i, j]
+      }
+    }
+  }
+  
+  return(sst_pts3)
+}
+
+#fill vals of bilinear interpolation into our data
+sst.pts4 <- fill_vals(sst.pts3, bl)
+
+sum(is.na(sst.pts3)) - sum(is.na(sst.pts4)) #how many did the bilinear interpolation fill ?
+
+#what
 
 # add station name --------------------------------------------------------
 
