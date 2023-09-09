@@ -21,7 +21,7 @@ print(nc)
 
 # old fashioned way: 2014 -------------------------------------------------
 
-setwd("E:/Pablo/2023_hons_dat/Current/2012")
+setwd("E:/Pablo/2023_hons_dat/Current/2020")
 
 plan(multisession, workers = 6) # Use 6 cores
 
@@ -111,10 +111,10 @@ names(rstack2)
 
 # save progress -----------------------------------------------------------
 
-writeRaster(rstack2, "Current_stack_2012.tif")
+writeRaster(rstack2, "Current_stack_2020.tif", overwrite = T)
 
 setwd("~/University/2023/Honours/R/data/IMOS/Currents")
-writeRaster(rstack2, "Currents_stack_2012.tif")
+writeRaster(rstack2, "Currents_stack_2020.tif", overwrite = T)
 
 
 # looped ------------------------------------------------------------------
@@ -125,7 +125,7 @@ process_year <- function(year) {
   # Set working directory to the year's folder
   setwd(paste0("E:/Pablo/2023_hons_dat/Current/", year))
   
-  plan(multisession, workers = 6) # Use 6 cores
+  plan(multisession, workers = 7) # Use 6 cores
   
   # List all the .nc files in the directory
   file_list <- list.files(pattern = "\\.nc$", full.names = TRUE)
@@ -177,7 +177,8 @@ process_year <- function(year) {
 }
 
 # Process each year
-years <- c("2022")  # Edit the years as needed
+years <- c("2012", "2013", "2014", "2015", "2016", "2017", "2018",
+           "2019", "2020", "2021", "2022")  # Edit the years as needed
 
 for (year in years) {
   rstack3 <- process_year(year)
@@ -203,10 +204,10 @@ list.files()
 file_names <- paste0("Currents_stack_", 2012:2022, ".tif")
 
 # Read in existing files and combine them into one stack
-SST_stack <- rast(lapply(file_names, function(x) if(file.exists(x)) rast(x)))
+CUR_stack <- rast(lapply(file_names, function(x) if(file.exists(x)) rast(x)))
 
 # Save the combined stack
-writeRaster(SST_stack, "OceanCurrents_12-22.tif")
+writeRaster(CUR_stack, "OceanCurrents_12-22.tif")
 
 
 

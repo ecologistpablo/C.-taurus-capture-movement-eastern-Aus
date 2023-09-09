@@ -38,7 +38,7 @@ rstack <- do.call(c, rasters_list)
 # Check the CRS of the combined stack
 crs(rstack)
 
-plot(rstack[[19]], col = viridis(255))
+plot(rstack[[3]], col = viridis(255))
 head(names(rstack))
 tail(names(rstack))
 

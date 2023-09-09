@@ -15,9 +15,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("~/University/2023/Honours/R/data")
 
 rstack <- rast("IMOS/Currents/Currents_12-22.tif")
-
-rcs <- read_csv("Inputs/receiver_station_XY_230822.csv")
-head(rcs) #its all there
+rcs <- read_csv("Inputs/230909_XY_receivers.csv")
+UTM56S <- crs("EPSG:32756")# Coordinate reference systems
 
 pts.sp <- st_as_sf(rcs, coords = c("receiver_deployment_longitude", #convert to an SF object
                                    "receiver_deployment_latitude")) 
@@ -27,7 +26,6 @@ pts.sp
 
 pts.UTM <- st_transform(pts.sp, UTM56S) #reproject our data
 pts.UTM
-
 
 # plotting ----------------------------------------------------------------
 
@@ -40,10 +38,10 @@ cur.pts <- extract(rstack, pts.UTM, ID = F) # ID = FALSE otherwise it creates a 
 
 
 sum(is.na(cur.pts))
-13020 * 127 #how many obs in total
-(365083 / 1653540) * 100 
+13020 * 114 #how many obs in total
+(286930 / 1484280) * 100 
 
-#22.07% is NA, wow nice
+#19.33% is NA, wow nice
 
 # nearest temporal neighbour ----------------------------------------------
 
@@ -66,97 +64,94 @@ cur.pts1 <- as.data.frame(cur.pts1)
 
 sum(is.na(cur.pts1)) 
 
-(364560 / 1653540) * 100 
-#22.04 now, not much :o
+(286440 / 1484280) * 100 
+#19.29 now, not much :o
 
-# increase coarseness -----------------------------------------------------
 
-#dont think I want to increase coarseness of 20km
+# add station_name --------------------------------------------------------
 
-rstack #res at 0.02 by 0.02, 2km x 2km
+rcs <-  rcs %>% mutate(RowNumber = row_number()) #make a row number 
+cur.pts1 <-  cur.pts1 %>% mutate(RowNumber = row_number()) #make a row number 
 
-rstack10km <- aggregate(rstack, fact = 5.5, #factor of whatever your resolution is in the OG raster / stack
-                        fun = mean, na.rm = TRUE)
+#join station name into cur.pts
+cur.pts1 <- left_join(cur.pts1, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
 
-# resample ----------------------------------------------------------------
+#re-order it
+cur.pts1 <- cur.pts1 %>%
+  dplyr::select(-RowNumber) %>% 
+  dplyr::select(station_name, everything())
 
-sst.pts10km <- extract(rstack10km, pts.UTM, ID = F) 
+# bilinear interpolation --------------------------------------------------
 
-# nearest temporal neighbour ----------------------------------------------
+# Extract using bilinear interpolation
+blv <- extract(rstack, pts.UTM, method = "bilinear")
+#bilinear returns values that are interpolated from the four nearest cells
 
-sst.pts10km1 <- t(apply(sst.pts10km, 1, function(row) { # Apply a function to each row of 'sst.pts'.
-  for (j in 1:length(row)) {  # Loop through each element of the row.
-    if (is.na(row[j])) {  # Check if the element is NA.
-      neighbors <- c(row[j-1], row[j+1]) # Find neighbors of the NA value (i.e., the previous and next values in the row).
-      non_na_neighbors <- neighbors[!is.na(neighbors)] # Remove NAs from the neighbors.
-      if (length(non_na_neighbors) > 0) { # If there are non-NA neighbors...
-        row[j] <- non_na_neighbors[1] # Replace the NA with the first non-NA neighbor.
-        
-      }
-    }
+blv1 <-  blv %>% rename(station_name = ID) #make a row number 
+
+head(rstack)
+
+# why is there duplicate rows ? -------------------------------------------
+
+# Initialize an empty data frame
+result <- data.frame()
+
+# Loop through each point
+for (i in 1:nrow(pts.UTM)) {
+  point_values <- extract(rstack, pts.UTM[i,], method = "bilinear")
+  
+  # Check for duplicated column names within each point's extracted data
+  if (any(duplicated(names(point_values)))) {
+    print(paste("Duplicated columns found for point:", i))
   }
   
-  return(row)  # Return the modified row.
-}))
-
-sst.pts1 <- as.data.frame(sst.pts1) #convert back to df
-
-sum(is.na(sst.pts10km1)) #still got 81324 NAs
-
-
-# 5 d mean ----------------------------------------------------------------
-
-# Apply the function to each row and save the new values in sst.pts2
-sst.pts10km2 <- t(apply(sst.pts10km1, 1, mean_5d))
-
-#more munging
-sst.pts10km2 <- as.data.frame(sst.pts10km2)
-colnames(sst.pts10km2) <- colnames(sst.pts10km1)
-
-
-# fill_gaps ---------------------------------------------------------------
-
-fill_vals <- function(sst_pts2, sst_pts10km2) {
-  if (nrow(sst_pts2) != nrow(sst_pts10km2) || ncol(sst_pts2) != ncol(sst_pts10km2)) {
-    stop("The dimensions of the two data frames must be identical.")
-  }
-  
-  for (i in 1:nrow(sst_pts2)) {
-    for (j in 1:ncol(sst_pts2)) {
-      if (is.na(sst_pts2[i, j]) && !is.na(sst_pts10km2[i, j])) {
-        sst_pts2[i, j] <- sst_pts10km2[i, j]
-      }
-    }
-  }
-  
-  return(sst_pts2)
+  # Append the results to the main data frame
+  result <- rbind(result, point_values)
 }
 
-#fill values of 10km res into our 2km res
-sst.pts3 <- fill_vals(sst.pts2, sst.pts10km2)
 
-sum(is.na(sst.pts3))
 
-(81301 / 491617) * 100
-#16% of our data is still NA :(
 
-44 - 16
-#28 % is sampled at 10km spatial resolution
+#join station name into cur.pts
+cur.pts1 <- left_join(cur.pts1, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
+
+#re-order it
+cur.pts1 <- cur.pts1 %>%
+  dplyr::select(-RowNumber) %>% 
+  dplyr::select(station_name, everything())
+
+#join station name into cur.pts
+blv <- blv(cur.pts1, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
+
+#re-order it
+cur.pts1 <- cur.pts1 %>%
+  dplyr::select(-RowNumber) %>% 
+  dplyr::select(station_name, everything())
+
+
+# where are the NAs ? -----------------------------------------------------
+
+CG <- pts.UTM %>% 
+  filter(station_name == "Cod Grounds")
+
+# Extract x and y coordinates
+x <- cg_coords[, 'X']
+y <- cg_coords[, 'Y']
+
+# Determine the extent around CG where you want to zoom in
+xlims <- c(x - 1, x + 1)  # Change 1 to the desired distance in the x-direction
+ylims <- c(y - 1, y + 1)  # Change 1 to the desired distance in the y-direction
+
+# Plot the first layer of the raster stack
+plot(rstack[[1]], xlim=xlims, ylim=ylims, axes=TRUE)
+
+# Add the point to the plot
+points(x, y, pch=19, col="red")
 
 # rm NA rows --------------------------------------------------------------
 
 #we plotted the spatial points of all rows that contain majority of NAs
 #They're in Syd and Jervis bay in corners, can we remove them ?!
-
-
-rcs <-  rcs %>% mutate(RowNumber = row_number()) #make a row number 
-cur.pts1 <-  cur.pts1 %>% mutate(RowNumber = row_number()) #make a row number 
-
-cur.pts1 <- left_join(cur.pts1, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
-
-cur.pts1 <- cur.pts1 %>%
-  dplyr::select(-RowNumber) %>% 
-  dplyr::select(station_name, everything())
 
 
 # Remove rows that have more than 10 NA values
@@ -169,6 +164,7 @@ sum(is.na(cur.pts2)) #0 obs out of 491,000 is pretty good
 NA1 <- cur.pts1 
 NA2 <- NA1[apply(NA1, 1, function(x) sum(is.na(x)) > 10), ] #bring only rows with + 10NAs 
 NA3 <- NA2[1:1] #only keep RowNumber column
+
 
 # save --------------------------------------------------------------------
 
