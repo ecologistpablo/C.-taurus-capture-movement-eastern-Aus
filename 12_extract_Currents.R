@@ -14,7 +14,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-rstack <- rast("IMOS/Currents/Currents_12-22.tif")
+rstack <- rast("IMOS/Currents/Currents_u_12-22.tif")
 rcs <- read_csv("Inputs/230909_XY_receivers.csv")
 UTM56S <- crs("EPSG:32756")# Coordinate reference systems
 
@@ -29,7 +29,7 @@ pts.UTM
 
 # plotting ----------------------------------------------------------------
 
-plot(rstack[[19]], col = viridis(255))
+plot(rstack[[3]], col = viridis(255))
 plot(pts.UTM, add = T)
 
 # extract -----------------------------------------------------------------
@@ -39,9 +39,9 @@ cur.pts <- extract(rstack, pts.UTM, ID = F) # ID = FALSE otherwise it creates a 
 
 sum(is.na(cur.pts))
 13020 * 114 #how many obs in total
-(286930 / 1484280) * 100 
+(265480 / 1484280) * 100 
 
-#19.33% is NA, wow nice
+#17.88% is NA, wow nice
 
 # nearest temporal neighbour ----------------------------------------------
 
@@ -64,8 +64,8 @@ cur.pts1 <- as.data.frame(cur.pts1)
 
 sum(is.na(cur.pts1)) 
 
-(286440 / 1484280) * 100 
-#19.29 now, not much :o
+(264990 / 1484280) * 100 
+#17.85 now, not much :o
 
 
 # add station_name --------------------------------------------------------
@@ -84,10 +84,10 @@ cur.pts1 <- cur.pts1 %>%
 # bilinear interpolation --------------------------------------------------
 
 # Extract using bilinear interpolation
-blv <- extract(rstack, pts.UTM, method = "bilinear")
+bl <- extract(rstack1, pts.UTM, method = "bilinear")
 #bilinear returns values that are interpolated from the four nearest cells
 
-blv1 <-  blv %>% rename(station_name = ID) #make a row number 
+bl1 <-  bl %>% rename(station_name = ID) #make a row number 
 
 head(rstack)
 

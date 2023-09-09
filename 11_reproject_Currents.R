@@ -42,7 +42,31 @@ plot(rstack[[3]], col = viridis(255))
 head(names(rstack))
 tail(names(rstack))
 
+
+# rm duplicates -----------------------------------------------------------
+
+removeDuplicateLayers <- function(raster_stack) {
+  layer_names <- names(raster_stack)
+  unique_names <- unique(layer_names)
+  
+  # Identify the index of the unique layers based on their names
+  unique_layer_indices <- match(unique_names, layer_names)
+  
+  # Subset the raster stack to include only the unique layers
+  return(raster_stack[[unique_layer_indices]])
+}
+
+# Apply the function
+rstack1 <- removeDuplicateLayers(rstack)
+
+print(paste("Original number of layers: ", length(names(rstack))))
+print(paste("Number of layers after removing duplicates: ", length(names(rstack1))))
+
+#oh boy yeah there was a few
+
+# save --------------------------------------------------------------------
+
 # Save the combined stack
-writeRaster(rstack, filename = "Currents_12-22.tif", overwrite = T)
+writeRaster(rstack1, filename = "Currents_u_12-22.tif", overwrite = T)
 
 
