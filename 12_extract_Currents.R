@@ -84,89 +84,75 @@ cur.pts1 <- cur.pts1 %>%
 # bilinear interpolation --------------------------------------------------
 
 # Extract using bilinear interpolation
-bl <- extract(rstack1, pts.UTM, method = "bilinear")
+bl <- extract(rstack, pts.UTM, method = "bilinear")
 #bilinear returns values that are interpolated from the four nearest cells
 
 bl1 <-  bl %>% rename(station_name = ID) #make a row number 
 
 head(rstack)
 
-# why is there duplicate rows ? -------------------------------------------
 
-# Initialize an empty data frame
-result <- data.frame()
+# fill with bilinear interpolation ----------------------------------------
 
-# Loop through each point
-for (i in 1:nrow(pts.UTM)) {
-  point_values <- extract(rstack, pts.UTM[i,], method = "bilinear")
-  
-  # Check for duplicated column names within each point's extracted data
-  if (any(duplicated(names(point_values)))) {
-    print(paste("Duplicated columns found for point:", i))
+fill_na_with_bl1 <- function(cur.pts1, bl1) {
+  # Check if dimensions match
+  if (dim(cur.pts1)[1] != dim(bl1)[1] || dim(cur.pts1)[2] != dim(bl1)[2]) {
+    stop("Dimensions of the two data frames must match.")
   }
   
-  # Append the results to the main data frame
-  result <- rbind(result, point_values)
+  # Check if column names match
+  if (!all(colnames(cur.pts1) == colnames(bl1))) {
+    stop("Column names of the two data frames must match.")
+  }
+  
+  # Replace NA values in cur.pts1 with corresponding values in bl1
+  cur.pts1[is.na(cur.pts1)] <- bl1[is.na(cur.pts1)]
+  
+  return(cur.pts1)
 }
 
+# Usage
+cur.pts2 <- fill_na_with_bl1(cur.pts1, bl1)
+
+sum(is.na(cur.pts2))
+
+(60229 / 1484280) * 100 
+#from 17.85% to 4% :o
 
 
+# add station name --------------------------------------------------------
 
-#join station name into cur.pts
-cur.pts1 <- left_join(cur.pts1, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
+cur.pts2 <- left_join(cur.pts2, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
 
 #re-order it
-cur.pts1 <- cur.pts1 %>%
+cur.pts2 <- cur.pts2 %>%
   dplyr::select(-RowNumber) %>% 
   dplyr::select(station_name, everything())
 
 #join station name into cur.pts
-blv <- blv(cur.pts1, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
+blv <- blv(cur.pts2, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
 
 #re-order it
-cur.pts1 <- cur.pts1 %>%
+cur.pts1 <- cur.pts2 %>%
   dplyr::select(-RowNumber) %>% 
   dplyr::select(station_name, everything())
-
-
-# where are the NAs ? -----------------------------------------------------
-
-CG <- pts.UTM %>% 
-  filter(station_name == "Cod Grounds")
-
-# Extract x and y coordinates
-x <- cg_coords[, 'X']
-y <- cg_coords[, 'Y']
-
-# Determine the extent around CG where you want to zoom in
-xlims <- c(x - 1, x + 1)  # Change 1 to the desired distance in the x-direction
-ylims <- c(y - 1, y + 1)  # Change 1 to the desired distance in the y-direction
-
-# Plot the first layer of the raster stack
-plot(rstack[[1]], xlim=xlims, ylim=ylims, axes=TRUE)
-
-# Add the point to the plot
-points(x, y, pch=19, col="red")
 
 # rm NA rows --------------------------------------------------------------
 
-#we plotted the spatial points of all rows that contain majority of NAs
-#They're in Syd and Jervis bay in corners, can we remove them ?!
-
-
 # Remove rows that have more than 10 NA values
-cur.pts2 <- cur.pts1[apply(cur.pts1, 1, function(x) sum(is.na(x)) <= 10), ]
+cur.pts3 <- cur.pts2[apply(cur.pts1, 1, function(x) sum(is.na(x)) <= 10), ]
 
-sum(is.na(cur.pts2)) #0 obs out of 491,000 is pretty good
+sum(is.na(cur.pts3)) #0 obs out of 491,000 is pretty good
 
 
 #to find out which rows we removed:
-NA1 <- cur.pts1 
+NA1 <- cur.pts2 
 NA2 <- NA1[apply(NA1, 1, function(x) sum(is.na(x)) > 10), ] #bring only rows with + 10NAs 
 NA3 <- NA2[1:1] #only keep RowNumber column
 
+#just montague island 
 
 # save --------------------------------------------------------------------
 
-write_csv(cur.pts2, file = "Inputs/230908_Currents_vals_12-22.csv")
-write_csv(NA3, file = "Inputs/230908_Currents_NAs_12-22.csv")
+write_csv(cur.pts3, file = "Inputs/230909_Currents_vals_12-22.csv")
+write_csv(NA3, file = "Inputs/230909_Currents_NAs_12-22.csv")

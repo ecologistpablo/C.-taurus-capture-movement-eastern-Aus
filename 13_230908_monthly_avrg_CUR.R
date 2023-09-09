@@ -13,7 +13,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-dat <- read_csv("Inputs/230908_Currents_vals_12-22.csv")
+dat <- read_csv("Inputs/230909_Currents_vals_12-22.csv")
+
 
 # wrestle monthly averages ------------------------------------------------
 
@@ -48,7 +49,6 @@ calc_monthly_avg <- function(years, df, prefixes) {
 years <- 2012:2022
 prefixes <- c("GSLA", "UCUR", "VCUR")
 dat1 <- calc_monthly_avg(years, dat, prefixes)
-
 
 # Add the station_name and the calculated averages
 dat2 <- bind_cols(dat %>% dplyr::select(station_name), dat1)
@@ -108,4 +108,4 @@ head(dat3)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat3, file = "Inputs/230908_CUR_m_avrg_12-22.csv")
+write_csv(dat3, file = "Inputs/230909_CUR_m_avrg_12-22.csv")

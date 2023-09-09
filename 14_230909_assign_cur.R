@@ -13,8 +13,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-cur <- read_csv("Inputs/230908_Currents_vals_12-22.csv")
-m_avg <- read_csv("Inputs/230908_CUR_m_avrg_12-22.csv")
+cur <- read_csv("Inputs/230909_Currents_vals_12-22.csv")
+m_avg <- read_csv("Inputs/230909_CUR_m_avrg_12-22.csv")
 det <- read_csv("Inputs/230907_step8.csv")
 
 head(cur)
@@ -65,6 +65,8 @@ sum(is.na(det1 %>% dplyr::select(starts_with("cur_"))))
 sum(is.na(det1 %>% dplyr::select(starts_with("cur_m_avrg_"))))
 sum(is.na(det1 %>% dplyr::select(starts_with("anomaly_"))))
 
+2067 * 9
+
 #That worked splendidly, but we have quite a few NAs (again)
 
 # where do the NAs go ? ---------------------------------------------------
@@ -97,21 +99,19 @@ for (prefix in prefixes) {
 }
 
 # Summarize det2 by Location
-det3 <- det1 %>% 
+det2 <- det1 %>% 
   group_by(Location) %>% 
   summarise(sum = n())
 
 # Join det3 and agg_df by Location and calculate the difference
-diff <- det3 %>%
+diff <- det2 %>%
   left_join(agg_df, by = "Location") %>% # Join on Location
   mutate(across(starts_with("na_count_"), ~sum - .x, .names = "difference_{.col}"))
 
 
 # save --------------------------------------------------------------------
 
-write_csv(m_avg, file = "Inputs/230907_cur_det.csv")
+write_csv(det1, file = "Inputs/230909_cur_det.csv")
 
-ggplot(det2, aes(x = month, y = cur_anomaly, colour = movement)) +
-  geom_jitter(width = 0.2) +
-  facet_wrap(~Location)
-
+MI <- det1 %>% 
+  filter(Location == "Moreton Island")

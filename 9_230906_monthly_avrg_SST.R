@@ -13,19 +13,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-dat <- read_csv("Inputs/SST_vals_12-22.csv")
-rcs <- read_csv("Inputs/receiver_station_XY_230822.csv")
-
-# enter the ring ----------------------------------------------------------
-
-rcs <-  rcs %>% mutate(RowNumber = row_number()) #make a row number 
-
-# Join dat with rcs to add the station_name based on RowNumber
-dat <- left_join(dat, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
-
-dat <- dat %>%
-  dplyr::select(-RowNumber) %>% 
-  dplyr::select(station_name, everything())
+dat <- read_csv("Inputs/230909_SST_vals_12-22.csv")
+rcs <- read_csv("Inputs/230909_XY_receivers.csv")
 
 # wrestle monthly averages ------------------------------------------------
 
@@ -52,6 +41,59 @@ m_avg <- bind_cols(dat %>% dplyr::select(station_name), m_avg)
 # View the first few rows of the final data
 head(m_avg)
 
+
+# 12 - 22 avrg ------------------------------------------------------------
+
+calc_overall_monthly_mean <- function(df, prefixes) {
+  months <- c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
+  
+  # Initialize result dataframe with just the station_name column
+  result_df <- df %>% dplyr::select(station_name)
+  
+  for (month in months) {
+    
+    # Initialize an empty character vector to collect relevant columns
+    all_cols_for_month <- character(0)
+    
+    for (prefix in prefixes) {
+      
+      # Regex pattern to match prefix, any year, and the specific month
+      pattern <- paste0(prefix, "_", "....", month, "..")
+      cols <- grep(pattern, colnames(df), value = TRUE)
+      
+      if (length(cols) == 0) {
+        cat("No columns found for prefix:", prefix, " and month:", month, "\n")
+        next
+      }
+      
+      all_cols_for_month <- c(all_cols_for_month, cols)
+    }
+    
+    # Skip to next iteration if no columns are found for the month
+    if (length(all_cols_for_month) == 0) {
+      cat("No columns found for month:", month, "\n")
+      next
+    }
+    
+    # Calculate mean across all relevant columns
+    monthly_mean <- rowMeans(df[, all_cols_for_month, drop = FALSE], na.rm = TRUE)
+    
+    # Add the calculated mean to the result dataframe
+    new_col_name <- paste0("MonthlyMean_", month)
+    result_df <- result_df %>% dplyr::mutate(!!new_col_name := monthly_mean)
+  }
+  
+  return(result_df)
+}
+
+# Make sure that "prefixes" is a vector, even if it contains only one element
+prefixes <- c("SST")
+
+# Usage
+dat1 <- calc_overall_monthly_mean(dat, prefixes)
+
+head(dat1)
+
 # save --------------------------------------------------------------------
 
-write_csv(m_avg, file = "Inputs/230907_SST_m_avrg_12-22.csv")
+write_csv(dat1, file = "Inputs/230909_SST_m_avrg_12-22.csv")

@@ -13,30 +13,16 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-sst <- read_csv("Inputs/SST_vals_12-22.csv")
-m_avg <- read_csv("Inputs/230907_SST_m_avrg_12-22.csv")
+sst <- read_csv("Inputs/230909_SST_vals_12-22.csv")
+m_avg <- read_csv("Inputs/230909_SST_m_avrg_12-22.csv")
 det <- read_csv("Inputs/230907_step8.csv")
 
 head(sst)
 head(m_avg)
 head(det)
 
-# add station_name to sst -------------------------------------------------
 
-rcs <- read_csv("Inputs/receiver_station_XY_230822.csv")
-
-rcs <-  rcs %>% mutate(RowNumber = row_number()) #make a row number 
-# Join dat with rcs to add the station_name based on RowNumber
-sst <- left_join(sst, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
-
-sst <- sst %>%
-  dplyr::select(-RowNumber) %>% 
-  dplyr::select(station_name, everything())
-
-head(sst)
-rm(rcs)
-
-# enter the ring ----------------------------------------------------------
+# bind enviro dat ----------------------------------------------------------
 
 # Using map_dfr to loop through each row of det, and bind the results into a new dataframe
 det1 <- map_dfr(seq_len(nrow(det)), ~{
@@ -44,7 +30,9 @@ det1 <- map_dfr(seq_len(nrow(det)), ~{
   
   # Create column names based on the detection date in det
   sst_colname <- paste0("SST_", format(row$detection_datetime, "%Y%m%d"))  # For sst
-  m_avg_colname <- paste0("SST_", format(row$detection_datetime, "%Y%m"))  # For m_avg
+  
+  # Convert the detection_datetime to a monthly format and create a corresponding m_avg column name
+  m_avg_colname <- paste0("MonthlyMean_", format(row$detection_datetime, "%m"))  # For m_avg
   
   # Check if the column exists in sst, else return NA
   sst_value <- if (sst_colname %in% names(sst)) {
@@ -52,8 +40,9 @@ det1 <- map_dfr(seq_len(nrow(det)), ~{
   } else {
     NA
   }
-  # same for monthly avrg
-    m_avg_value <- if (m_avg_colname %in% names(m_avg)) {
+  
+  # same for monthly average
+  m_avg_value <- if (m_avg_colname %in% names(m_avg)) {
     m_avg[m_avg$station_name == row$station_name, m_avg_colname]  # From m_avg
   } else {
     NA
@@ -66,60 +55,9 @@ det1 <- map_dfr(seq_len(nrow(det)), ~{
   return(row)  # Return the modified row
 })
 
+
 sum(is.na(det1$SST))
 sum(is.na(det1$SST_m_avrg))
-
-
-# monthly average ---------------------------------------------------------
-
-
-calc_overall_monthly_mean <- function(df, prefixes) {
-  months <- c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
-  
-  # Initialize result dataframe with just the station_name column
-  result_df <- df %>% dplyr::select(station_name)
-  
-  for (month in months) {
-    
-    # Initialize an empty character vector to collect relevant columns
-    all_cols_for_month <- character(0)
-    
-    for (prefix in prefixes) {
-      
-      # Regex pattern to match prefix, any year, and the specific month
-      pattern <- paste0(prefix, ".*", month, "_avg")
-      cols <- grep(pattern, colnames(df), value = TRUE)
-      
-      if (length(cols) == 0) {
-        cat("No columns found for prefix:", prefix, " and month:", month, "\n")
-        next
-      }
-      
-      all_cols_for_month <- c(all_cols_for_month, cols)
-    }
-    
-    # Skip to next iteration if no columns are found for the month
-    if (length(all_cols_for_month) == 0) {
-      cat("No columns found for month:", month, "\n")
-      next
-    }
-    
-    # Calculate mean across all relevant columns
-    monthly_mean <- rowMeans(df[, all_cols_for_month, drop = FALSE], na.rm = TRUE)
-    
-    # Add the calculated mean to the result dataframe
-    new_col_name <- paste0("MonthlyMean_", month)
-    result_df <- result_df %>% dplyr::mutate(!!new_col_name := monthly_mean)
-  }
-  
-  return(result_df)
-}
-
-# Usage
-dat3 <- calc_overall_monthly_mean(dat2, prefixes)
-
-head(dat3)
-
 
 # AND ANOMALYYYY ----------------------------------------------------------
 
@@ -149,7 +87,7 @@ diff <- det3 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(m_avg, file = "Inputs/230907_SST_det.csv")
+write_csv(det2, file = "Inputs/230909_SST_det.csv")
 
 ggplot(det2, aes(x = month, y = SST_anomaly, colour = movement)) +
   geom_jitter(width = 0.2) +
