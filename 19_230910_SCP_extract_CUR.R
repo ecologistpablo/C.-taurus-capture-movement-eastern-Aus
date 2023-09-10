@@ -1,6 +1,6 @@
 #10.09.23
-  #paired SCP data
-    #extract SST vals for it
+#paired SCP data
+#extract SST vals for it
 
 rm(list=ls())
 setwd("~/University/2023/Honours/R/data/git/NC-wrestling")
@@ -15,8 +15,12 @@ setwd("~/University/2023/Honours/R/data")
 
 pts <- read_csv("~/University/2023/Honours/R/data/shark control/230910_XY_captures.csv")
 UTM56S <- crs("EPSG:32756")# Coordinate reference systems
+rstack <- rast("IMOS/Currents/Currents_u_12-22.tif")
 
 head(pts) #its all there
+rstack #nice
+plot(rstack)
+
 
 pts1 <- pts %>% 
   mutate(Date = as.Date(Date, format="%d/%m/%Y"),
@@ -24,10 +28,10 @@ pts1 <- pts %>%
          Longitude = as.numeric(Longitude))
 
 str(pts1)
-         
-         
+
+
 pts.sp <- st_as_sf(pts1, coords = c("Longitude", #convert to an SF object
-                                   "Latitude")) 
+                                    "Latitude")) 
 
 st_crs(pts.sp) <- crs(UTM56S) #remember to assign crs
 pts.sp
@@ -44,22 +48,21 @@ ptsxy <- pts %>%
   summarise(num_det = n(), .groups = 'drop')
 
 ptsxy_sf <- sf::st_as_sf(ptsxy, coords = c("Longitude", "Latitude"),
-                          crs= 4326, agr = "constant")
+                         crs= 4326, agr = "constant")
 
 mapview::mapview(ptsxy_sf, cex = "num_det", fbg = F)
 
-#they're plotting well, but a few rows should maybe be removed 
+#they're plotting well, everything looks to be in order
 
 # extract -----------------------------------------------------------------
 
-sst.pts <- extract(rstack, pts.UTM, ID = F) # ID = FALSE otherwise it creates a column with a number for each spoint
+cur.pts <- extract(rstack, pts.UTM, ID = F) # ID = FALSE otherwise it creates a column with a number for each spoint
 
-
-sum(is.na(sst.pts))
+sum(is.na(cur.pts))
 
 # nearest temporal neighbour ----------------------------------------------
 
-sst.pts1 <- t(apply(sst.pts, 1, function(row) { # Apply a function to each row of 'sst.pts'.
+cur.pts1 <- t(apply(cur.pts, 1, function(row) { # Apply a function to each row of 'cur.pts'.
   for (j in 1:length(row)) {  # Loop through each element of the row.
     if (is.na(row[j])) {  # Check if the element is NA.
       neighbors <- c(row[j-1], row[j+1]) # Find neighbors of the NA value (i.e., the previous and next values in the row).
@@ -74,15 +77,14 @@ sst.pts1 <- t(apply(sst.pts, 1, function(row) { # Apply a function to each row o
   return(row)  # Return the modified row.
 }))
 
-sst.pts1 <- as.data.frame(sst.pts1)
+cur.pts1 <- as.data.frame(cur.pts1)
 
-155*3871
-sum(is.na(sst.pts1)) #216812
+sum(is.na(cur.pts1))
 
-(596137 / 600005) * 100
-#99% NA, isn't that wonderful :()
+(1120185 / 1866975) * 100
+#60% still NA :o
 
-sst.pts2 <- sst.pts1
+cur.pts2 <- cur.pts1
 
 # Bilinear interpolation --------------------------------------------------
 
@@ -124,68 +126,35 @@ bl3 <- t(apply(bl2, 1, function(row) {
 bl3 <- as.data.frame(bl3)
 
 sum(is.na(bl3))
-#6000 were filled :(, still 54,000 to go
+#only 12045 :o
 
-fill_vals <- function(sst.pts2, bl3) {
-  if (nrow(sst.pts2) != nrow(bl3) || ncol(sst.pts2) != ncol(bl3)) {
+
+# fill values from bilinear interpolation into our pts --------------------
+
+fill_vals <- function(cur.pts2, bl3) {
+  if (nrow(cur.pts2) != nrow(bl3) || ncol(cur.pts2) != ncol(bl3)) {
     stop("The dimensions of the two data frames must be identical.")
   }
   
-  for (i in 1:nrow(sst.pts2)) {
-    for (j in 1:ncol(sst.pts2)) {
-      if (is.na(sst.pts2[i, j]) && !is.na(bl3[i, j])) {
-        sst.pts2[i, j] <- bl3[i, j]
+  for (i in 1:nrow(cur.pts2)) {
+    for (j in 1:ncol(cur.pts2)) {
+      if (is.na(cur.pts2[i, j]) && !is.na(bl3[i, j])) {
+        cur.pts2[i, j] <- bl3[i, j]
       }
     }
   }
   
-  return(sst.pts2)
+  return(cur.pts2)
 }
 
 #fill vals of bilinear interpolation into our data
-sst.pts3 <- fill_vals(sst.pts2, bl3)
+cur.pts3 <- fill_vals(cur.pts2, bl3)
 
-sum(is.na(sst.pts3)) 
+sum(is.na(cur.pts3)) 
 
-(491661 / 600005) * 100
-#from 99% down to 81%... Still horrible 
-
-
-# resize coarseness -------------------------------------------------------
-
-rstack #res at 0.02 by 0.02, 2km x 2km
-
-rstack10km <- aggregate(rstack, fact = 5.5, #factor of whatever your resolution is in the OG raster / stack
-                        fun = mean, na.rm = TRUE)
-#this is a 10km resize
-
-# resample ----------------------------------------------------------------
-
-sst.pts10km <- extract(rstack10km, pts.UTM, ID = F) 
-
-# nearest temporal neighbour ----------------------------------------------
-
-sst.pts10km1 <- t(apply(sst.pts10km, 1, function(row) { # Apply a function to each row of 'sst.pts'.
-  for (j in 1:length(row)) {  # Loop through each element of the row.
-    if (is.na(row[j])) {  # Check if the element is NA.
-      neighbors <- c(row[j-1], row[j+1]) # Find neighbors of the NA value (i.e., the previous and next values in the row).
-      non_na_neighbors <- neighbors[!is.na(neighbors)] # Remove NAs from the neighbors.
-      if (length(non_na_neighbors) > 0) { # If there are non-NA neighbors...
-        row[j] <- non_na_neighbors[1] # Replace the NA with the first non-NA neighbor.
-        
-      }
-    }
-  }
-  
-  return(row)  # Return the modified row.
-}))
-
-sst.pts10km1 <- as.data.frame(sst.pts10km1) #convert back to df
-
-sum(is.na(sst.pts10km1)) 
-(77673 / 600005) * 100
-
-#12% :D
+(12045 / 600005) * 100
+#2.007%
+# 58% was filled with bilinear interpolation :\
 
 # 5 d mean ----------------------------------------------------------------
 
@@ -208,62 +177,33 @@ mean_5d <- function(row) {
   return(new_row)
 }
 
-# Apply the function to each row and save the new values in sst.pts2
-sst.pts10km2 <- t(apply(sst.pts10km1, 1, mean_5d))
+# Apply the function to each row and save the new values in cur.pts2
+cur.pts4 <- t(apply(cur.pts3, 1, mean_5d))
 
 #more munging
-sst.pts10km2 <- as.data.frame(sst.pts10km2)
-colnames(sst.pts10km2) <- colnames(sst.pts10km1)
+cur.pts4 <- as.data.frame(cur.pts4)
+colnames(cur.pts4) <- colnames(cur.pts3)
 
-sum(is.na(sst.pts10km2))
-(77509 / 600005) * 100
-#still 12 but a tiny lil bit better
+sum(is.na(cur.pts4))
 
-# fill_gaps ---------------------------------------------------------------
+#the same as before, which means a NA row is all thats left
 
-fill_vals <- function(sst.pts3, sst_pts10km2) {
-  if (nrow(sst.pts3) != nrow(sst.pts3) || ncol(sst.pts3) != ncol(sst_pts10km2)) {
-    stop("The dimensions of the two data frames must be identical.")
-  }
-  
-  for (i in 1:nrow(sst.pts3)) {
-    for (j in 1:ncol(sst.pts3)) {
-      if (is.na(sst.pts3[i, j]) && !is.na(sst_pts10km2[i, j])) {
-        sst.pts3[i, j] <- sst_pts10km2[i, j]
-      }
-    }
-  }
-  
-  return(sst.pts3)
-}
-
-#fill values of 10km res into our 2km res
-sst.pts4 <- fill_vals(sst.pts3, sst.pts10km2)
-
-sum(is.na(sst.pts4))
-
-(46561 / 600005) * 100
-
-
-81 - 7
-#74% of our data are sampled at 10km spatial resolution
-#7% NAs, that's manageable
 
 # add station name --------------------------------------------------------
 
 pts <-  pts %>% mutate(RowNumber = row_number()) #make a row number 
-sst.pts4 <-  sst.pts4 %>% mutate(RowNumber = row_number()) #make a row number 
+cur.pts4 <-  cur.pts4 %>% mutate(RowNumber = row_number()) #make a row number 
 
 
-sst.pts5 <- left_join(sst.pts4, pts %>% dplyr::select(RowNumber, Location), by = "RowNumber")
+cur.pts5 <- left_join(cur.pts4, pts %>% dplyr::select(RowNumber, Location), by = "RowNumber")
 
 #re-order it
-sst.pts5 <- sst.pts5 %>%
+cur.pts5 <- cur.pts5 %>%
   dplyr::select(-RowNumber) %>% 
   dplyr::select(Location, everything())
 
 
 # save --------------------------------------------------------------------
 
-write_csv(sst.pts5, file = "Inputs/230910_capture_SST.csv")
+write_csv(cur.pts5, file = "Inputs/230910_capture_CUR.csv")
 

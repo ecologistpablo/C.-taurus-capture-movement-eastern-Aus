@@ -41,6 +41,8 @@ SCP <- SCP %>%
 
 str(SCP)
 
+
+#initialise row numbers
 SCP$rownum <- seq_len(nrow(SCP))
 m_avg$rownum <- seq_len(nrow(m_avg))
 sst$rownum <- seq_len(nrow(sst))
@@ -118,9 +120,5 @@ diff <- SCP3 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(SCP2, file = "Inputs/230909_SST_SCP.csv")
-
-ggplot(SCP2, aes(x = month, y = SST_anomaly, colour = movement)) +
-  geom_jitter(width = 0.2) +
-  facet_wrap(~Location)
+write_csv(SCP2, file = "Inputs/230910_SST_SCP.csv")
 
