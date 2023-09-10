@@ -16,47 +16,62 @@ setwd("~/University/2023/Honours/R/data")
 dat <- read_csv("Inputs/230910_capture_CUR.csv")
 pts <- read_csv("shark control/230910_XY_captures.csv")
 
-
 # interpolate using Location ----------------------------------------------
 
-#some rows have NAs with the same Location as other rows
-#which means there are values nearby but we didn't pick them up
-#lets interpolate
-
-# Group by location and fill in NA values
-dat1 <- dat %>%
-  group_by(Location) %>%
-  summarise(across(everything(), ~ {
-    first_value <- first(.[!is.na(.)], default = NA)
-    ifelse(is.na(.), first_value, .)
-  })) %>%
-  ungroup()
+#only 1 row is NA so this isn't used
+# #some rows have NAs with the same Location as other rows
+# #which means there are values nearby but we didn't pick them up
+# #lets interpolate
+# 
+# # Group by location and fill in NA values
+# dat1 <- dat %>%
+#   group_by(Location) %>%
+#   summarise(across(everything(), ~ {
+#     first_value <- first(.[!is.na(.)], default = NA)
+#     ifelse(is.na(.), first_value, .)
+#   })) %>%
+#   ungroup()
 
 
 # wrestle monthly averages ------------------------------------------------
 
-calc_monthly_avg <- function(year, df) {
+calc_monthly_avg <- function(years, df, prefixes) {
   months <- c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
   
-  map_dfc(months, function(month) {
-    pattern <- paste0("SST_", year, month)
-    cols <- grep(pattern, colnames(df))
-    
-    avg_column <- rowMeans(df[, cols], na.rm = TRUE)
-    
-    new_col_name <- paste0("SST_", year, month)
-    tibble(!!new_col_name := avg_column)
+  all_results <- map_dfc(years, ~{
+    year <- .x
+    map_dfc(prefixes, ~{
+      prefix <- .x
+      map_dfc(months, ~{
+        month <- .x
+        pattern <- paste0(prefix, "_", year, month)
+        cols <- grep(pattern, colnames(df))
+        
+        if (length(cols) == 0) {
+          return(tibble())
+        }
+        
+        avg_column <- rowMeans(df[, cols], na.rm = TRUE)
+        new_col_name <- paste0(prefix, "_", year, month, "_avg")
+        
+        tibble(avg_column) %>% setNames(new_col_name)
+      })
+    })
   })
+  
+  return(all_results)
 }
 
-# Assuming you have data from 2012 to 2022
-m_avg <- map_dfc(2012:2022, ~ calc_monthly_avg(.x, dat1))
 
-# Combine the original data frame with the new columns
-m_avg <- bind_cols(dat %>% dplyr::select(Location), m_avg)
+years <- 2012:2022
+prefixes <- c("GSLA", "UCUR", "VCUR")
+dat1 <- calc_monthly_avg(years, dat, prefixes)
 
-# View the first few rows of the final data
-head(m_avg)
+# Add the station_name and the calculated averages
+dat2 <- bind_cols(dat %>% dplyr::select(Location), dat1)
+
+# View the first few rows
+head(dat2)
 
 
 # 12 - 22 avrg ------------------------------------------------------------
@@ -64,7 +79,7 @@ head(m_avg)
 calc_overall_monthly_mean <- function(df, prefixes) {
   months <- c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
   
-  # Initialize result dataframe with just the station_name column
+  # Initialize result dataframe with just the Location column
   result_df <- df %>% dplyr::select(Location)
   
   for (month in months) {
@@ -75,7 +90,7 @@ calc_overall_monthly_mean <- function(df, prefixes) {
     for (prefix in prefixes) {
       
       # Regex pattern to match prefix, any year, and the specific month
-      pattern <- paste0(prefix, "_", "....", month, "..")
+      pattern <- paste0(prefix, ".*", month, "_avg")
       cols <- grep(pattern, colnames(df), value = TRUE)
       
       if (length(cols) == 0) {
@@ -103,16 +118,12 @@ calc_overall_monthly_mean <- function(df, prefixes) {
   return(result_df)
 }
 
-# Make sure that "prefixes" is a vector, even if it contains only one element
-prefixes <- c("SST")
-
 # Usage
-dat2 <- calc_overall_monthly_mean(dat1, prefixes)
+dat3 <- calc_overall_monthly_mean(dat2, prefixes)
 
-head(dat2)
+head(dat3)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat2, file = "Inputs/230910_capture_SST_m_avrg.csv")
-write_csv(dat1, file = "Inputs/230910_capture_SST.csv")
+write_csv(dat3, file = "Inputs/230910_capture_CUR_m_avrg.csv")
 

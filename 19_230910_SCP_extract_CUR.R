@@ -1,6 +1,6 @@
 #10.09.23
-#paired SCP data
-#extract SST vals for it
+  #paired SCP data
+    #extract CUR vals for it
 
 rm(list=ls())
 setwd("~/University/2023/Honours/R/data/git/NC-wrestling")

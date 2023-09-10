@@ -41,51 +41,52 @@ SCP <- SCP %>%
 
 str(SCP)
 
-
-#initialise row numbers
-SCP$rownum <- seq_len(nrow(SCP))
-m_avg$rownum <- seq_len(nrow(m_avg))
-sst$rownum <- seq_len(nrow(sst))
-
-
-
-# bind enviro dat ----------------------------------------------------------
-
-SCP1 <- map_dfr(seq_len(nrow(SCP)), function(.x) {
+# Processing
+det1 <- map_dfr(seq_len(nrow(det)), function(.x) {
   
-  row <- SCP[.x, ]
+  row <- det[.x, ]  # Extract the current row from det
   
-  # Debug print
-  print(paste("Processing row ", .x))
+  # Initialize a list to hold new columns
+  new_columns <- list()
   
-  sst_colname <- paste0("SST_", format(row$Date, "%Y%m%d")) # Change date to colnames
-  m_avg_colname <- paste0("MonthlyMean_", format(row$Date, "%m")) # And same with months
-  
-  sst_value <- if (sst_colname %in% names(sst)) {
-    temp <- sst[sst$rownum == .x, sst_colname]  # Using rownum for direct row mapping
-    print(paste("sst_value: ", temp))
-    if(length(temp) > 1) warning("Multiple sst values found for a single row")
-    temp
-  } else {
-    NA
+  for(prefix in c("GSLA", "UCUR", "VCUR")) {  # What prefixes are we using
+    
+    # Create column names based on the detection date in det
+    cur_colname <- paste0(prefix, "_", format(row$Date, "%Y%m%d"))
+    m_avg_colname <- paste0("MonthlyMean_", format(row$Date, "%m"))
+    
+    # Check if the column exists in cur, else return NA
+    cur_value <- if (cur_colname %in% names(cur)) {
+      temp <- cur[cur$rownum == .x, cur_colname]  # Using rownum for direct row mapping
+      if(length(temp) > 1) warning("Multiple cur values found for a single row")
+      as.numeric(unlist(temp))
+    } else {
+      NA_real_
+    }
+    
+    # Check if the column exists in m_avg, else return NA
+    m_avg_value <- if (m_avg_colname %in% names(m_avg)) {
+      temp <- m_avg[m_avg$rownum == .x, m_avg_colname]  # Using rownum for direct row mapping
+      if(length(temp) > 1) warning("Multiple m_avg values found for a single row")
+      as.numeric(unlist(temp))
+    } else {
+      NA_real_
+    }
+    
+    # Calculate the anomaly
+    anomaly <- m_avg_value - cur_value
+    
+    # Add new columns to the current row
+    new_columns[[paste0("cur_", prefix)]] <- cur_value
+    new_columns[[paste0("cur_m_avrg_", prefix)]] <- m_avg_value
+    new_columns[[paste0("anomaly_", prefix)]] <- anomaly
   }
   
-  m_avg_value <- if (m_avg_colname %in% names(m_avg)) {
-    temp <- m_avg[m_avg$rownum == .x, m_avg_colname]  # Using rownum for direct row mapping
-    print(paste("m_avg_value: ", temp))
-    if(length(temp) > 1) warning("Multiple m_avg values found for a single row")
-    temp
-  } else {
-    NA
-  }
+  # Combine the existing row with new columns
+  out_row <- bind_cols(row, as_tibble(new_columns))
   
-  # Coerce to numeric explicitly
-  row$SST <- as.numeric(unlist(sst_value))
-  row$SST_m_avrg <- as.numeric(unlist(m_avg_value))
-  
-  return(row)
+  return(out_row)
 })
-
 
 sum(is.na(SCP1$SST))
 sum(is.na(SCP1$SST_m_avrg))
@@ -115,8 +116,6 @@ SCP3 <- SCP2 %>%
 diff <- SCP3 %>%
   left_join(NAsst, by = "Location") %>% # Join on Location
   mutate(difference = sum - ifelse(is.na(na_count), 0, na_count)) # Calculate the difference
-
-#Montague Isl & Port Macq, gone :(
 
 # save --------------------------------------------------------------------
 
