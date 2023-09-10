@@ -125,5 +125,5 @@ head(dat3)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat3, file = "Inputs/230910_capture_CUR_m_avrg.csv")
+write_csv(dat3, file = "Inputs/230910_capture_SST_m_avrg.csv")
 
