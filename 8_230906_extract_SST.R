@@ -212,7 +212,7 @@ sst.pts4 <- fill_vals(sst.pts3, bl)
 
 sum(is.na(sst.pts3)) - sum(is.na(sst.pts4)) #how many did the bilinear interpolation fill ?
 
-#what
+#none were filled :o
 
 # add station name --------------------------------------------------------
 

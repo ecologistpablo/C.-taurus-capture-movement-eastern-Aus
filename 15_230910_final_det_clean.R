@@ -26,7 +26,7 @@ dat1 <-
             X = "receiver_deployment_longitude", 
             Y = "receiver_deployment_latitude",
             datetime = "detection_datetime", #datetime variable to be formatted correctly
-             env_var = "dist_to_land", 
+             env_var = "bathy", 
              #'rs_sst', 'rs_sst_interpolated', 'rs_salinity', 'rs_chl', 'rs_turbidity', 'rs_npp', 'rs_current', 'bathy', 'dist_to_land'
              cache_layers = F,
              crop_layers = TRUE,
@@ -78,5 +78,5 @@ diff <- dat4 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(dat3, "230910_complete_det_enviro.csv")
+write_csv(dat3, "Inputs/230910_complete_det_enviro.csv")
 

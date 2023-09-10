@@ -41,7 +41,7 @@ head(names(SST_stack))
 tail(names(SST_stack))
 
 # Save the combined stack
-writeRaster(SST_stack, filename = "GHRSSTp_12-22.tif", overwrite = T)
+writeRaster(rstack, filename = "GHRSSTp_12-22.tif", overwrite = T)
 
 
 # Save the raster stack with terra
