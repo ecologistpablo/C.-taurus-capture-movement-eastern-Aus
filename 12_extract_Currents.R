@@ -1,6 +1,6 @@
-# 04 September 2023
-# Who needs remora anyway
-# Interpolating NAs in SST data
+# 11 September 2023
+  # P. Fuenzalida
+    # extracting currrent data
 
 rm(list=ls())
 
@@ -14,33 +14,30 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-rstack <- rast("IMOS/Currents/Currents_u_12-22.tif")
+rstack <- rast("IMOS/Currents/230911_cstack_12-22.tif")
 rcs <- read_csv("Inputs/230909_XY_receivers.csv")
-UTM56S <- crs("EPSG:32756")# Coordinate reference systems
+WGS84 <- crs("EPSG:4326")# Coordinate reference systems
 
 pts.UTM <- st_as_sf(rcs, coords = c("receiver_deployment_longitude", #convert to an SF object
                                    "receiver_deployment_latitude")) 
 
-st_crs(pts.UTM) <- crs(UTM56S) #remember to assign crs
+st_crs(pts.UTM) <- crs(WGS84) #remember to assign crs
 pts.UTM
 
 # plotting ----------------------------------------------------------------
 
 plot(rstack[[3]], col = viridis(255))
 plot(pts.UTM, add = T)
-
-
-
+ 
 # extract -----------------------------------------------------------------
 
 cur.pts <- extract(rstack, pts.UTM, ID = F) # ID = FALSE otherwise it creates a column with a number for each spoint
 
 
 sum(is.na(cur.pts))
-13020 * 114 #how many obs in total
-(265480 / 1484280) * 100 
-
-#17.88% is NA, wow nice
+114 * 12045
+(265480 / 1373130) * 100 
+#19% is NA
 
 # nearest temporal neighbour ----------------------------------------------
 
@@ -63,8 +60,8 @@ cur.pts1 <- as.data.frame(cur.pts1)
 
 sum(is.na(cur.pts1)) 
 
-(264990 / 1484280) * 100 
-#17.85 now, not much :o
+(264990 / 1373130) * 100 
+#still 19
 
 
 # add station_name --------------------------------------------------------
@@ -90,7 +87,9 @@ bl1 <-  bl %>% rename(station_name = ID) #make a row number
 
 sum(is.na(cur.pts1)) 
 
-(264990 / 1484280) * 100
+(264990 / 1373130) * 100
+#19%
+
 
 # fill with bilinear interpolation ----------------------------------------
 
@@ -116,7 +115,7 @@ cur.pts2 <- fill_na_with_bl1(cur.pts1, bl1)
 
 sum(is.na(cur.pts2))
 
-(60229 / 1484280) * 100 
+(60229 / 1373130) * 100 
 #from 17.85% to 4% :o
 
 # # rm NA rows --------------------------------------------------------------

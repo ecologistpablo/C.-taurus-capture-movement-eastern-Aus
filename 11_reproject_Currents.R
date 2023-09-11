@@ -13,11 +13,11 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("~/University/2023/Honours/R/data/IMOS/Currents")
 list.files()
 
- # Generate file names for the years
+# Generate file names for the years
 file_names <- paste0("Currents_stack_", 2012:2022, ".tif")
 
 # Coordinate reference systems
-UTM56S <- crs("EPSG:32756")
+WGS84 <- crs("EPSG:4326")
 
 # Initialize an empty list to store the rasters
 rasters_list <- list()
@@ -26,7 +26,7 @@ rasters_list <- list()
 for (file_name in file_names) {
   if (file.exists(file_name)) {  # Check if the file exists
     r <- rast(file_name) # Read in the raster stack
-    crs(r) <- UTM56S # Assign CRS
+    crs(r) <- WGS84 # Assign CRS
     rasters_list[[length(rasters_list) + 1]] <- r # Append to the list
   }
 }
@@ -62,11 +62,9 @@ rstack1 <- removeDuplicateLayers(rstack)
 print(paste("Original number of layers: ", length(names(rstack))))
 print(paste("Number of layers after removing duplicates: ", length(names(rstack1))))
 
-#oh boy yeah there was a few
-
 # save --------------------------------------------------------------------
 
 # Save the combined stack
-writeRaster(rstack1, filename = "Currents_u_12-22.tif", overwrite = T)
+writeRaster(rstack1, filename = "230911_cstack_12-22.tif", overwrite = T)
 
 

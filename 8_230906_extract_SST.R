@@ -14,14 +14,14 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("~/University/2023/Honours/R/data")
 
 rcs <- read_csv("Inputs/230909_XY_receivers.csv")
-UTM56S <- crs("EPSG:32756")# Coordinate reference systems
+WGS84 <- crs("EPSG:4326")# Coordinate reference systems
 
 head(rcs) #its all there
 
 pts.UTM <- st_as_sf(rcs, coords = c("receiver_deployment_longitude", #convert to an SF object
                                    "receiver_deployment_latitude")) 
 
-st_crs(pts.UTM) <- crs(UTM56S) #remember to assign crs
+st_crs(pts.UTM) <- crs(WGS84) #remember to assign crs
 
 # plotting ----------------------------------------------------------------
 
@@ -31,7 +31,6 @@ plot(pts.UTM, add = T)
 # extract -----------------------------------------------------------------
 
 sst.pts <- extract(rstack, pts.UTM, ID = F) # ID = FALSE otherwise it creates a column with a number for each spoint
-
 
 sum(is.na(sst.pts))
 3871 * 114 #how many obs in total
@@ -58,10 +57,8 @@ sst.pts1 <- t(apply(sst.pts, 1, function(row) { # Apply a function to each row o
 
 sst.pts1 <- as.data.frame(sst.pts1)
 
-sum(is.na(sst.pts1)) #216812
-
+sum(is.na(sst.pts1))
 (181977 / 441294) * 100
-# 41.237% NA
 
 
 # 5 d mean ----------------------------------------------------------------
@@ -101,7 +98,7 @@ sum(is.na(sst.pts2))
 # read and write ----------------------------------------------------------
 
 
-write_csv(sst.pts2, file = "Inputs/230909_SST_vals_12-22_pts2.csv")
+write_csv(sst.pts2, file = "Inputs/230911_SST_vals_12-22_pts2.csv")
 
 sst.pts2 <- read_csv("Inputs/230909_SST_vals_12-22_pts2.csv")
 
@@ -136,7 +133,7 @@ sst.pts10km1 <- t(apply(sst.pts10km, 1, function(row) { # Apply a function to ea
 
 sst.pts10km1 <- as.data.frame(sst.pts10km1) #convert back to df
 
-sum(is.na(sst.pts10km1)) #still got 81324 NAs
+sum(is.na(sst.pts10km1))
 (65843 / 441294) * 100
 #14%
 
@@ -156,20 +153,22 @@ sum(is.na(sst.pts10km2))
   
 # fill_gaps ---------------------------------------------------------------
 
-fill_vals <- function(sst_pts2, sst_pts10km2) {
-  if (nrow(sst_pts2) != nrow(sst_pts10km2) || ncol(sst_pts2) != ncol(sst_pts10km2)) {
+fill_vals <- function(df1, df2) {
+  # Check if both data frames have the same dimensions
+  if (nrow(df1) != nrow(df2) || ncol(df1) != ncol(df2)) {
     stop("The dimensions of the two data frames must be identical.")
   }
   
-  for (i in 1:nrow(sst_pts2)) {
-    for (j in 1:ncol(sst_pts2)) {
-      if (is.na(sst_pts2[i, j]) && !is.na(sst_pts10km2[i, j])) {
-        sst_pts2[i, j] <- sst_pts10km2[i, j]
+  # Loop through each row and column to fill NA values
+  for (i in 1:nrow(df1)) {
+    for (j in 1:ncol(df1)) {
+      if (is.na(df1[i, j]) && !is.na(df2[i, j])) {
+        df1[i, j] <- df2[i, j]
       }
     }
   }
   
-  return(sst_pts2)
+  return(df1)
 }
 
 #fill values of 10km res into our 2km res
@@ -186,22 +185,6 @@ sum(is.na(sst.pts3))
 # fill gaps bilinear ------------------------------------------------------
 
 bl <- read_csv("Inputs/230909_SST_bl_vals_12-22.csv")
-
-fill_vals <- function(sst_pts3, bl) {
-  if (nrow(sst_pts3) != nrow(bl) || ncol(sst_pts3) != ncol(bl)) {
-    stop("The dimensions of the two data frames must be identical.")
-  }
-  
-  for (i in 1:nrow(sst_pts3)) {
-    for (j in 1:ncol(sst_pts3)) {
-      if (is.na(sst_pts3[i, j]) && !is.na(bl[i, j])) {
-        sst_pts3[i, j] <- bl[i, j]
-      }
-    }
-  }
-  
-  return(sst_pts3)
-}
 
 #fill vals of bilinear interpolation into our data
 sst.pts4 <- fill_vals(sst.pts3, bl)
@@ -225,6 +208,4 @@ sst.pts4 <- sst.pts4 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(sst.pts4, file = "Inputs/230909_SST_vals_12-22.csv")
-
-write_csv(NA3, file = "Inputs/NA_rows_12-22.csv")
+write_csv(sst.pts4, file = "Inputs/230911_SST_vals_12-22.csv")

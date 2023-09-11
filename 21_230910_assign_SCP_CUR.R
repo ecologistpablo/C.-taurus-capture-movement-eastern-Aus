@@ -14,9 +14,9 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-cur <- read_csv("Inputs/230910_capture_CUR.csv")
-m_avg <- read_csv("Inputs/230910_capture_CUR_m_avrg.csv")
-SCP <- read_csv("Inputs/230910_SST_SCP.csv")
+cur <- read_csv("Inputs/230911_capture_CUR.csv")
+m_avg <- read_csv("Inputs/230911_capture_CUR_m_avrg.csv")
+SCP <- read_csv("Inputs/230911_SST_SCP.csv")
 
 head(cur)
 head(m_avg)
@@ -54,9 +54,9 @@ det <- SCP
 
 
 # Processing
-det1 <- map_dfr(seq_len(nrow(det)), function(.x) {
+SCP1 <- map_dfr(seq_len(nrow(SCP)), function(.x) {
   
-  row <- det[.x, ]  # Extract the current row from det
+  row <- SCP[.x, ]  # Extract the current row from det
   
   # Initialize a list to hold new columns
   new_columns <- list()
@@ -101,55 +101,33 @@ det1 <- map_dfr(seq_len(nrow(det)), function(.x) {
 })
 
 # Checking for NAs
-sum(is.na(det1 %>% dplyr::select(starts_with("cur_"))))
-sum(is.na(det1 %>% dplyr::select(starts_with("cur_m_avrg_"))))
-sum(is.na(det1 %>% dplyr::select(starts_with("anomaly_"))))
+sum(is.na(SCP1 %>% dplyr::select(starts_with("cur_G"))))
+sum(is.na(SCP1 %>% dplyr::select(starts_with("cur_m_avrg_"))))
+sum(is.na(SCP1 %>% dplyr::select(starts_with("anomaly_"))))
 
 #That worked splendidly, but we have quite a few NAs (again)
 
 
-# same location == same value ---------------------------------------------
-
-#some rows have NAs with the same Location as other rows
-#which means there are values nearby but we didn't pick them up
-#lets interpolate
-
-# Group by location and fill in NA values
-det2 <- det1 %>%
-  group_by(Location) %>%
-  summarise(across(everything(), ~ {
-    first_value <- first(.[!is.na(.)], default = NA)
-    ifelse(is.na(.), first_value, .)
-  })) %>%
-  ungroup()
-
-sum(is.na(det1)) - sum(is.na(det2))
-
-#fill 202 values
-
-
-
-# where do the NAs go ? ---------------------------------------------------
-
-# Create a new data frame with rows where SST is NA
-NAcur <- det2 %>% filter(is.na(cur_GSLA)) %>% 
-  group_by(Location) %>%
-  summarise(na_count = sum(is.na(cur_GSLA)))
-
-unique(NAcur$Location)
-
-det3 <- det2 %>% 
-  group_by(Location) %>%
-  summarise(sum = n())
-
-# Join SCP3 and NAsst by Location and calculate the difference
-diff <- det3 %>%
-  left_join(NAcur, by = "Location") %>% # Join on Location
-  mutate(difference = sum - ifelse(is.na(na_count), 0, na_count)) # Calculate the difference
-
-#Montague Isl & Port Macq, gone :(
+# # same location == same value ---------------------------------------------
+# 
+# #some rows have NAs with the same Location as other rows
+# #which means there are values nearby but we didn't pick them up
+# #lets interpolate
+# 
+# # Group by location and fill in NA values
+# det2 <- det1 %>%
+#   group_by(Location) %>%
+#   summarise(across(everything(), ~ {
+#     first_value <- first(.[!is.na(.)], default = NA)
+#     ifelse(is.na(.), first_value, .)
+#   })) %>%
+#   ungroup()
+# 
+# sum(is.na(det1)) - sum(is.na(det2))
+# 
+# #fill 202 values
 
 # save --------------------------------------------------------------------
 
-write_csv(det2, file = "Inputs/230910_SCP_enviro.csv")
+write_csv(SCP1, file = "Inputs/230911_SCP_enviro.csv")
 

@@ -13,13 +13,12 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-pts <- read_csv("~/University/2023/Honours/R/data/shark control/230910_XY_captures.csv")
+pts <- read_csv("shark control/230910_XY_captures_12-22.csv")
 UTM56S <- crs("EPSG:32756")# Coordinate reference systems
 rstack <- rast("IMOS/Currents/Currents_u_12-22.tif")
 
 head(pts) #its all there
 rstack #nice
-plot(rstack)
 
 
 pts1 <- pts %>% 
@@ -30,15 +29,11 @@ pts1 <- pts %>%
 str(pts1)
 
 
-pts.sp <- st_as_sf(pts1, coords = c("Longitude", #convert to an SF object
+pts.UTM <- st_as_sf(pts1, coords = c("Longitude", #convert to an SF object
                                     "Latitude")) 
 
-st_crs(pts.sp) <- crs(UTM56S) #remember to assign crs
-pts.sp
-
-pts.UTM <- st_transform(pts.sp, UTM56S) #reproject our data
+st_crs(pts.UTM) <- crs(UTM56S) #remember to assign crs
 pts.UTM
-
 
 # plot --------------------------------------------------------------------
 
@@ -59,6 +54,8 @@ mapview::mapview(ptsxy_sf, cex = "num_det", fbg = F)
 cur.pts <- extract(rstack, pts.UTM, ID = F) # ID = FALSE otherwise it creates a column with a number for each spoint
 
 sum(is.na(cur.pts))
+(1036208 / 1577895) * 100
+#65 % NA
 
 # nearest temporal neighbour ----------------------------------------------
 
@@ -92,6 +89,9 @@ bl <- extract(rstack, pts.UTM, method = "bilinear") # ID = FALSE otherwise it cr
 
 bl2 <- bl %>% 
   dplyr::select(-ID)
+
+sum(is.na(bl2))
+(12080 / 1866975) * 100
 
 
 # nearest temporal neighbour ----------------------------------------------
@@ -127,6 +127,8 @@ bl3 <- as.data.frame(bl3)
 
 sum(is.na(bl3))
 #only 12045 :o
+(12045 / 1866975) * 100
+#0.6%  NA :o
 
 
 # fill values from bilinear interpolation into our pts --------------------
@@ -152,8 +154,8 @@ cur.pts3 <- fill_vals(cur.pts2, bl3)
 
 sum(is.na(cur.pts3)) 
 
-(12045 / 600005) * 100
-#2.007%
+(12045 / 1866975) * 100
+#0.64%
 # 58% was filled with bilinear interpolation :\
 
 # 5 d mean ----------------------------------------------------------------
@@ -202,8 +204,8 @@ cur.pts5 <- cur.pts5 %>%
   dplyr::select(-RowNumber) %>% 
   dplyr::select(Location, everything())
 
-
+head(cur.pts5)
 # save --------------------------------------------------------------------
 
-write_csv(cur.pts5, file = "Inputs/230910_capture_CUR.csv")
+write_csv(cur.pts5, file = "Inputs/230911_capture_CUR.csv")
 

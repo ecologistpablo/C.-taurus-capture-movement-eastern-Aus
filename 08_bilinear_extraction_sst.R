@@ -14,19 +14,15 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("~/University/2023/Honours/R/data")
 sst.pts2 <- read_csv("Inputs/230909_SST_vals_12-22_pts2.csv")
 rcs <- read_csv("Inputs/230909_XY_receivers.csv")
-UTM56S <- crs("EPSG:32756")# Coordinate reference systems
+WGS84 <- crs("EPSG:4326")# Coordinate reference systems
 
 head(rcs) #its all there
 
 pts.sp <- st_as_sf(rcs, coords = c("receiver_deployment_longitude", #convert to an SF object
                                    "receiver_deployment_latitude")) 
 
-st_crs(pts.sp) <- crs(UTM56S) #remember to assign crs
+st_crs(pts.sp) <- crs(WGS84) #remember to assign crs 
 pts.sp
-
-pts.UTM <- st_transform(pts.sp, UTM56S) #reproject our data
-pts.UTM
-
 
 # bilinear extrapolation --------------------------------------------------
 
@@ -81,7 +77,7 @@ sum(is.na(bl3))
 
 114*3871
 (135519 / 441294) * 100
-# 61% NA to 31% :o
+# 61% NA to 30% :o
 
 # 5 d mean ----------------------------------------------------------------
 
@@ -116,4 +112,4 @@ sum(is.na(bl4))
 (135497 / 441294) * 100
 #30%
 
-write_csv(bl4, file = "Inputs/230909_SST_bl_vals_12-22.csv")
+write_csv(bl4, file = "Inputs/230911_SST_bl_vals_12-22.csv")

@@ -13,8 +13,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-sst <- read_csv("Inputs/230909_SST_vals_12-22.csv")
-m_avg <- read_csv("Inputs/230909_SST_m_avrg_12-22.csv")
+sst <- read_csv("Inputs/230911_SST_vals_12-22.csv")
+m_avg <- read_csv("Inputs/230911_SST_m_avrg_12-22.csv")
 det <- read_csv("Inputs/230907_step8.csv")
 
 head(sst)
@@ -62,7 +62,7 @@ sum(is.na(det1$SST_m_avrg))
 # AND ANOMALYYYY ----------------------------------------------------------
 
 det2 <- det1 %>%
-  mutate(SST_anomaly = SST_m_avrg - SST)
+  mutate(SST_anomaly = SST - SST_m_avrg)
 
 
 # where do the NAs go ? ---------------------------------------------------

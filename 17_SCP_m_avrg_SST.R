@@ -13,8 +13,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-dat <- read_csv("Inputs/230910_capture_SST.csv")
-pts <- read_csv("shark control/230910_XY_captures.csv")
+dat <- read_csv("Inputs/230911_capture_SST.csv")
+pts <- read_csv("shark control/230910_XY_captures_12-22.csv")
 
 
 # interpolate using Location ----------------------------------------------
@@ -22,6 +22,10 @@ pts <- read_csv("shark control/230910_XY_captures.csv")
 #some rows have NAs with the same Location as other rows
 #which means there are values nearby but we didn't pick them up
 #lets interpolate
+
+sum(is.na(dat))
+131*3872
+(3925 / 507232) * 100
 
 # Group by location and fill in NA values
 dat1 <- dat %>%
@@ -32,6 +36,7 @@ dat1 <- dat %>%
   })) %>%
   ungroup()
 
+#that did nothing
 
 # wrestle monthly averages ------------------------------------------------
 
@@ -50,7 +55,7 @@ calc_monthly_avg <- function(year, df) {
 }
 
 # Assuming you have data from 2012 to 2022
-m_avg <- map_dfc(2012:2022, ~ calc_monthly_avg(.x, dat1))
+m_avg <- map_dfc(2012:2022, ~ calc_monthly_avg(.x, dat))
 
 # Combine the original data frame with the new columns
 m_avg <- bind_cols(dat %>% dplyr::select(Location), m_avg)
@@ -107,12 +112,12 @@ calc_overall_monthly_mean <- function(df, prefixes) {
 prefixes <- c("SST")
 
 # Usage
-dat2 <- calc_overall_monthly_mean(dat1, prefixes)
+dat2 <- calc_overall_monthly_mean(dat, prefixes)
 
 head(dat2)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat2, file = "Inputs/230910_capture_SST_m_avrg.csv")
-write_csv(dat1, file = "Inputs/230910_capture_SST.csv")
+write_csv(dat2, file = "Inputs/230911_capture_SST_m_avrg.csv")
+# write_csv(dat1, file = "Inputs/230910_capture_SST.csv")
 

@@ -13,8 +13,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-dat <- read_csv("Inputs/230910_capture_CUR.csv")
-pts <- read_csv("shark control/230910_XY_captures.csv")
+dat <- read_csv("Inputs/230911_capture_CUR.csv")
+pts <- read_csv("shark control/230910_XY_captures_12-22.csv")
 
 # interpolate using Location ----------------------------------------------
 
@@ -125,5 +125,5 @@ head(dat3)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat3, file = "Inputs/230910_capture_SST_m_avrg.csv")
+write_csv(dat3, file = "Inputs/230911_capture_CUR_m_avrg.csv")
 
