@@ -18,19 +18,18 @@ rstack <- rast("IMOS/Currents/Currents_u_12-22.tif")
 rcs <- read_csv("Inputs/230909_XY_receivers.csv")
 UTM56S <- crs("EPSG:32756")# Coordinate reference systems
 
-pts.sp <- st_as_sf(rcs, coords = c("receiver_deployment_longitude", #convert to an SF object
+pts.UTM <- st_as_sf(rcs, coords = c("receiver_deployment_longitude", #convert to an SF object
                                    "receiver_deployment_latitude")) 
 
-st_crs(pts.sp) <- crs(UTM56S) #remember to assign crs
-pts.sp
-
-pts.UTM <- st_transform(pts.sp, UTM56S) #reproject our data
+st_crs(pts.UTM) <- crs(UTM56S) #remember to assign crs
 pts.UTM
 
 # plotting ----------------------------------------------------------------
 
 plot(rstack[[3]], col = viridis(255))
 plot(pts.UTM, add = T)
+
+
 
 # extract -----------------------------------------------------------------
 
@@ -89,8 +88,9 @@ bl <- extract(rstack, pts.UTM, method = "bilinear")
 
 bl1 <-  bl %>% rename(station_name = ID) #make a row number 
 
-head(rstack)
+sum(is.na(cur.pts1)) 
 
+(264990 / 1484280) * 100
 
 # fill with bilinear interpolation ----------------------------------------
 
@@ -119,40 +119,22 @@ sum(is.na(cur.pts2))
 (60229 / 1484280) * 100 
 #from 17.85% to 4% :o
 
-
-# add station name --------------------------------------------------------
-
-cur.pts2 <- left_join(cur.pts2, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
-
-#re-order it
-cur.pts2 <- cur.pts2 %>%
-  dplyr::select(-RowNumber) %>% 
-  dplyr::select(station_name, everything())
-
-#join station name into cur.pts
-blv <- blv(cur.pts2, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
-
-#re-order it
-cur.pts1 <- cur.pts2 %>%
-  dplyr::select(-RowNumber) %>% 
-  dplyr::select(station_name, everything())
-
-# rm NA rows --------------------------------------------------------------
-
-# Remove rows that have more than 10 NA values
-cur.pts3 <- cur.pts2[apply(cur.pts1, 1, function(x) sum(is.na(x)) <= 10), ]
-
-sum(is.na(cur.pts3)) #0 obs out of 491,000 is pretty good
-
-
-#to find out which rows we removed:
-NA1 <- cur.pts2 
-NA2 <- NA1[apply(NA1, 1, function(x) sum(is.na(x)) > 10), ] #bring only rows with + 10NAs 
-NA3 <- NA2[1:1] #only keep RowNumber column
-
-#just montague island 
+# # rm NA rows --------------------------------------------------------------
+# 
+# # Remove rows that have more than 10 NA values
+# cur.pts3 <- cur.pts2[apply(cur.pts1, 1, function(x) sum(is.na(x)) <= 10), ]
+# 
+# sum(is.na(cur.pts3)) #0 obs out of 491,000 is pretty good
+# 
+# 
+# #to find out which rows we removed:
+# NA1 <- cur.pts2 
+# NA2 <- NA1[apply(NA1, 1, function(x) sum(is.na(x)) > 10), ] #bring only rows with + 10NAs 
+# NA3 <- NA2[1:1] #only keep RowNumber column
+# 
+# #just montague island 
 
 # save --------------------------------------------------------------------
 
-write_csv(cur.pts3, file = "Inputs/230909_Currents_vals_12-22.csv")
+write_csv(cur.pts2, file = "Inputs/230911_Currents_vals_12-22.csv")
 write_csv(NA3, file = "Inputs/230909_Currents_NAs_12-22.csv")

@@ -87,7 +87,7 @@ diff <- det3 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(det2, file = "Inputs/230909_SST_det.csv")
+write_csv(det2, file = "Inputs/230911_SST_det.csv")
 
 ggplot(det2, aes(x = month, y = SST_anomaly, colour = movement)) +
   geom_jitter(width = 0.2) +

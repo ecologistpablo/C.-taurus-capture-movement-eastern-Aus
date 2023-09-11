@@ -18,14 +18,10 @@ UTM56S <- crs("EPSG:32756")# Coordinate reference systems
 
 head(rcs) #its all there
 
-pts.sp <- st_as_sf(rcs, coords = c("receiver_deployment_longitude", #convert to an SF object
+pts.UTM <- st_as_sf(rcs, coords = c("receiver_deployment_longitude", #convert to an SF object
                                    "receiver_deployment_latitude")) 
 
-st_crs(pts.sp) <- crs(UTM56S) #remember to assign crs
-pts.sp
-
-pts.UTM <- st_transform(pts.sp, UTM56S) #reproject our data
-pts.UTM
+st_crs(pts.UTM) <- crs(UTM56S) #remember to assign crs
 
 # plotting ----------------------------------------------------------------
 
@@ -65,7 +61,7 @@ sst.pts1 <- as.data.frame(sst.pts1)
 sum(is.na(sst.pts1)) #216812
 
 (181977 / 441294) * 100
-# 41.23% NA
+# 41.237% NA
 
 
 # 5 d mean ----------------------------------------------------------------
@@ -98,7 +94,7 @@ colnames(sst.pts2) <- colnames(sst.pts1)
 sum(is.na(sst.pts2)) - sum(is.na(sst.pts1))  #only 24 were filled :o
 
 sum(is.na(sst.pts2)) 
-(181953 / 441294) * 100 #41.23% are NA at a 2km resolution
+(181953 / 441294) * 100 #41.231% are NA at a 2km resolution
 
 #with nearest neighbour single day interpolation & 5 d mean
 
@@ -182,9 +178,9 @@ sst.pts3 <- fill_vals(sst.pts2, sst.pts10km2)
 sum(is.na(sst.pts3))
 
 (65819 / 441294) * 100
-#16% of our data is still NA :(
+#14% of our data is NA :(
 
-41 - 16
+41 - 14
 #25% of our data are sampled at 10km spatial resolution
 
 # fill gaps bilinear ------------------------------------------------------

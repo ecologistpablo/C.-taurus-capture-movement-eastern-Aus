@@ -13,7 +13,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-dat <- read_csv("Inputs/230909_Currents_vals_12-22.csv")
+dat <- read_csv("Inputs/230911_Currents_vals_12-22.csv")
 
 
 # wrestle monthly averages ------------------------------------------------
@@ -108,4 +108,4 @@ head(dat3)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat3, file = "Inputs/230909_CUR_m_avrg_12-22.csv")
+write_csv(dat3, file = "Inputs/230911_CUR_m_avrg_12-22.csv")
