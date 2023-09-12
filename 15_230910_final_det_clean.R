@@ -14,7 +14,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-dat <- read_csv("Inputs/230911_cur_det.csv")
+dat <- read_csv("Inputs/230912_cur_det.csv")
 
 
 
@@ -26,7 +26,7 @@ dat1 <-
             X = "receiver_deployment_longitude", 
             Y = "receiver_deployment_latitude",
             datetime = "detection_datetime", #datetime variable to be formatted correctly
-             env_var = "dist_to_land", 
+             env_var = "bathy", 
              #'rs_sst', 'rs_sst_interpolated', 'rs_salinity', 'rs_chl', 'rs_turbidity', 'rs_npp', 'rs_current', 'bathy', 'dist_to_land'
              cache_layers = F,
              crop_layers = TRUE,
@@ -57,5 +57,5 @@ dat3 <- dat2 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(dat3, "Inputs/230911_complete_det_enviro.csv")
+write_csv(dat3, "Inputs/230912_complete_det_enviro.csv")
 

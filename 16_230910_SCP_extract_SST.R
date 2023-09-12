@@ -14,7 +14,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("~/University/2023/Honours/R/data")
 
 pts <- read_csv("~/University/2023/Honours/R/data/shark control/230910_XY_captures_12-22.csv")
-UTM56S <- crs("EPSG:32756")# Coordinate reference systems
+WGS84 <- crs("EPSG:32756")# Coordinate reference systems
 
 head(pts) #its all there
 
@@ -26,16 +26,16 @@ pts1 <- pts %>%
 str(pts1)
          
          
-pts.UTM <- st_as_sf(pts1, coords = c("Longitude", #convert to an SF object
+pts.WGS <- st_as_sf(pts1, coords = c("Longitude", #convert to an SF object
                                    "Latitude")) 
 
-st_crs(pts.UTM) <- crs(UTM56S) #remember to assign crs
-pts.UTM
+st_crs(pts.WGS) <- crs(WGS84) #remember to assign crs
+pts.WGS
 
 
 # plot --------------------------------------------------------------------
 
-plot(pts.UTM)
+plot(pts.WGS)
 # Calculate the number of detections at each station
 ptsxy <- pts %>%
   group_by( Latitude, Longitude) %>%
@@ -50,7 +50,7 @@ mapview::mapview(ptsxy_sf, cex = "num_det", fbg = F)
 
 # extract -----------------------------------------------------------------
 
-sst.pts <- extract(rstack, pts.UTM, ID = F) # ID = FALSE otherwise it creates a column with a number for each spoint
+sst.pts <- extract(rstack, pts.WGS, ID = F) # ID = FALSE otherwise it creates a column with a number for each spoint
 
 
 sum(is.na(sst.pts))
@@ -86,7 +86,7 @@ sst.pts2 <- sst.pts1
 
 # Bilinear interpolation --------------------------------------------------
 
-bl <- extract(rstack, pts.UTM, method = "bilinear") # ID = FALSE otherwise it creates a column with a number for each spoint
+bl <- extract(rstack, pts.WGS, method = "bilinear") # ID = FALSE otherwise it creates a column with a number for each spoint
 
 bl2 <- bl %>% 
   dplyr::select(-ID)
@@ -163,7 +163,7 @@ rstack10km <- aggregate(rstack, fact = 5.5, #factor of whatever your resolution 
 
 # resample ----------------------------------------------------------------
 
-sst.pts10km <- extract(rstack10km, pts.UTM, ID = F) 
+sst.pts10km <- extract(rstack10km, pts.WGS, ID = F) 
 
 sum(is.na(sst.pts10km)) 
 (255323 / 507101) * 100
@@ -259,7 +259,7 @@ sum(is.na(sst.pts4))
 
 # bli ---------------------------------------------------------------------
 
-bl <- extract(rstack10km, pts.UTM, method = "bilinear") # ID = FALSE otherwise it creates a column with a number for each spoint
+bl <- extract(rstack10km, pts.WGS, method = "bilinear") # ID = FALSE otherwise it creates a column with a number for each spoint
 
 pts <-  pts %>% mutate(RowNumber = row_number()) #make a row number 
 bl <-  bl %>% mutate(RowNumber = row_number()) #make a row number 

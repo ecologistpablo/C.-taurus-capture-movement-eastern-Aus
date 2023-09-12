@@ -14,30 +14,30 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-rstack <- rast("IMOS/Currents/230911_cstack_12-22.tif")
+rstack <- rast("IMOS/Currents/230912_cstack_12-22.tif")
 rcs <- read_csv("Inputs/230909_XY_receivers.csv")
 WGS84 <- crs("EPSG:4326")# Coordinate reference systems
 
-pts.UTM <- st_as_sf(rcs, coords = c("receiver_deployment_longitude", #convert to an SF object
+pts.WGS <- st_as_sf(rcs, coords = c("receiver_deployment_longitude", #convert to an SF object
                                    "receiver_deployment_latitude")) 
 
-st_crs(pts.UTM) <- crs(WGS84) #remember to assign crs
-pts.UTM
+st_crs(pts.WGS) <- crs(WGS84) #remember to assign crs
+pts.WGS
 
 # plotting ----------------------------------------------------------------
 
 plot(rstack[[3]], col = viridis(255))
-plot(pts.UTM, add = T)
+plot(pts.WGS, add = T)
  
 # extract -----------------------------------------------------------------
 
-cur.pts <- extract(rstack, pts.UTM, ID = F) # ID = FALSE otherwise it creates a column with a number for each spoint
+cur.pts <- extract(rstack, pts.WGS, ID = F) # ID = FALSE otherwise it creates a column with a number for each spoint
 
 
 sum(is.na(cur.pts))
 114 * 12045
 (265480 / 1373130) * 100 
-#19% is NA
+#19.33% is NA
 
 # nearest temporal neighbour ----------------------------------------------
 
@@ -80,7 +80,7 @@ cur.pts1 <- cur.pts1 %>%
 # bilinear interpolation --------------------------------------------------
 
 # Extract using bilinear interpolation
-bl <- extract(rstack, pts.UTM, method = "bilinear")
+bl <- extract(rstack, pts.WGS, method = "bilinear")
 #bilinear returns values that are interpolated from the four nearest cells
 
 bl1 <-  bl %>% rename(station_name = ID) #make a row number 
@@ -135,5 +135,5 @@ sum(is.na(cur.pts2))
 
 # save --------------------------------------------------------------------
 
-write_csv(cur.pts2, file = "Inputs/230911_Currents_vals_12-22.csv")
+write_csv(cur.pts2, file = "Inputs/230912_Currents_vals_12-22.csv")
 write_csv(NA3, file = "Inputs/230909_Currents_NAs_12-22.csv")

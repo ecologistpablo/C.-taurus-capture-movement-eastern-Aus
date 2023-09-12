@@ -128,5 +128,3 @@ print(diff)
 
 write_csv(det1, file = "Inputs/230911_cur_det.csv")
 
-MI <- det1 %>% 
-  filter(Location == "Moreton Island")
