@@ -70,7 +70,8 @@ rcs <-  rcs %>% mutate(RowNumber = row_number()) #make a row number
 cur.pts1 <-  cur.pts1 %>% mutate(RowNumber = row_number()) #make a row number 
 
 #join station name into cur.pts
-cur.pts1 <- left_join(cur.pts1, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
+cur.pts1 <- left_join(cur.pts1, rcs %>% dplyr::select(RowNumber, station_name),
+                      by = "RowNumber")
 
 #re-order it
 cur.pts1 <- cur.pts1 %>%
@@ -79,7 +80,7 @@ cur.pts1 <- cur.pts1 %>%
 
 # bilinear interpolation --------------------------------------------------
 
-# Extract using bilinear interpolation
+# Extract using bilinear extractione
 bl <- extract(rstack, pts.WGS, method = "bilinear")
 #bilinear returns values that are interpolated from the four nearest cells
 

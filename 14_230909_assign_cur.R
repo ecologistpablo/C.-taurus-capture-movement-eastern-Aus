@@ -13,8 +13,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-cur <- read_csv("Inputs/230911_Currents_vals_12-22.csv")
-m_avg <- read_csv("Inputs/230911_CUR_m_avrg_12-22.csv")
+cur <- read_csv("Inputs/230912_Currents_vals_12-22.csv")
+m_avg <- read_csv("Inputs/230912_CUR_m_avrg_12-22.csv")
 det <- read_csv("Inputs/230911_SST_det.csv")
 
 head(cur)
@@ -61,9 +61,7 @@ det1 <- map_dfr(seq_len(nrow(det)), ~{
     }
     
     # Calculate the anomaly
-    anomaly <- m_avg_value - cur_value
-    
-    anomaly <- m_avg_value - cur_value
+    anomaly <- cur_value - m_avg_value
     
     # Add new columns to the current row
     row[paste0("cur_", prefix)] <- as.numeric(cur_value)  # Adding cur with prefix
@@ -112,19 +110,8 @@ for (prefix in prefixes) {
   }
 }
 
-# Summarize det2 by Location
-det2 <- det1 %>% 
-  group_by(Location) %>% 
-  summarise(sum = n())
-
-# Join det3 and agg_df by Location and calculate the difference
-diff <- det2 %>%
-  left_join(agg_df, by = "Location") %>% # Join on Location
-  mutate(across(starts_with("na_count_"), ~sum - .x, .names = "difference_{.col}"))
-
-print(diff)
 
 # save --------------------------------------------------------------------
 
-write_csv(det1, file = "Inputs/230911_cur_det.csv")
+write_csv(det1, file = "Inputs/230912_cur_det.csv")
 

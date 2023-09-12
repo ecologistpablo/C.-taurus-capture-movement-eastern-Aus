@@ -14,7 +14,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-dat <- read_csv("Inputs/230911_SCP_enviro.csv")
+dat <- read_csv("Inputs/230912_SCP_enviro.csv")
 
 str(dat)
 
@@ -28,7 +28,7 @@ dat1 <-
              X = "Longitude", 
              Y = "Latitude",
              datetime = "Date", #datetime variable to be formatted correctly
-             env_var = "bathy", 
+             env_var = "dist_to_land", 
              #'rs_sst', 'rs_sst_interpolated', 'rs_salinity', 'rs_chl', 'rs_turbidity', 'rs_npp', 'rs_current', 'bathy', 'dist_to_land'
              cache_layers = F,
              crop_layers = TRUE,
@@ -60,5 +60,5 @@ dat3 <- dat2 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(dat3, "Inputs/230911_complete_SCP_enviro.csv")
+write_csv(dat3, "Inputs/230912_complete_SCP_enviro.csv")
 

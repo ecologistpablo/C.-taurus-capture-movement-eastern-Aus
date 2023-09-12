@@ -13,24 +13,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-dat <- read_csv("Inputs/230911_capture_CUR.csv")
+dat <- read_csv("Inputs/230912_capture_CUR.csv")
 pts <- read_csv("shark control/230910_XY_captures_12-22.csv")
-
-# interpolate using Location ----------------------------------------------
-
-#only 1 row is NA so this isn't used
-# #some rows have NAs with the same Location as other rows
-# #which means there are values nearby but we didn't pick them up
-# #lets interpolate
-# 
-# # Group by location and fill in NA values
-# dat1 <- dat %>%
-#   group_by(Location) %>%
-#   summarise(across(everything(), ~ {
-#     first_value <- first(.[!is.na(.)], default = NA)
-#     ifelse(is.na(.), first_value, .)
-#   })) %>%
-#   ungroup()
 
 
 # wrestle monthly averages ------------------------------------------------
@@ -74,9 +58,9 @@ dat2 <- bind_cols(dat %>% dplyr::select(Location), dat1)
 head(dat2)
 
 
-# 12 - 22 avrg ------------------------------------------------------------
+# climatologies -----------------------------------------------------------
 
-calc_overall_monthly_mean <- function(df, prefixes) {
+calc_climatology <- function(df, prefixes) {
   months <- c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
   
   # Initialize result dataframe with just the Location column
@@ -119,11 +103,11 @@ calc_overall_monthly_mean <- function(df, prefixes) {
 }
 
 # Usage
-dat3 <- calc_overall_monthly_mean(dat2, prefixes)
+dat3 <- calc_climatology(dat2, prefixes)
 
 head(dat3)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat3, file = "Inputs/230911_capture_CUR_m_avrg.csv")
+write_csv(dat3, file = "Inputs/230912_capture_CUR_m_avrg.csv")
 

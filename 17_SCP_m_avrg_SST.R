@@ -13,30 +13,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-dat <- read_csv("Inputs/230911_capture_SST.csv")
+dat <- read_csv("Inputs/230912_capture_SST.csv")
 pts <- read_csv("shark control/230910_XY_captures_12-22.csv")
-
-
-# interpolate using Location ----------------------------------------------
-
-#some rows have NAs with the same Location as other rows
-#which means there are values nearby but we didn't pick them up
-#lets interpolate
-
-sum(is.na(dat))
-131*3872
-(3925 / 507232) * 100
-
-# Group by location and fill in NA values
-dat1 <- dat %>%
-  group_by(Location) %>%
-  summarise(across(everything(), ~ {
-    first_value <- first(.[!is.na(.)], default = NA)
-    ifelse(is.na(.), first_value, .)
-  })) %>%
-  ungroup()
-
-#that did nothing
 
 # wrestle monthly averages ------------------------------------------------
 
@@ -64,9 +42,10 @@ m_avg <- bind_cols(dat %>% dplyr::select(Location), m_avg)
 head(m_avg)
 
 
-# 12 - 22 avrg ------------------------------------------------------------
 
-calc_overall_monthly_mean <- function(df, prefixes) {
+# climatology -------------------------------------------------------------
+
+calc_climatology <- function(df, prefixes) {
   months <- c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
   
   # Initialize result dataframe with just the station_name column
@@ -112,12 +91,12 @@ calc_overall_monthly_mean <- function(df, prefixes) {
 prefixes <- c("SST")
 
 # Usage
-dat2 <- calc_overall_monthly_mean(dat, prefixes)
+dat2 <- calc_climatology(dat, prefixes)
 
 head(dat2)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat2, file = "Inputs/230911_capture_SST_m_avrg.csv")
+write_csv(dat2, file = "Inputs/230912_capture_SST_m_avrg.csv")
 # write_csv(dat1, file = "Inputs/230910_capture_SST.csv")
 

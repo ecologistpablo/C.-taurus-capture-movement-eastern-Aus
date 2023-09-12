@@ -65,6 +65,7 @@ print(paste("Number of layers after removing duplicates: ", length(names(rstack1
 # save --------------------------------------------------------------------
 
 # Save the combined stack
-writeRaster(rstack1, filename = "230911_cstack_12-22.tif", overwrite = T)
+writeRaster(rstack1, filename = "230912_cstack_12-22.tif", overwrite = T)
+
 
 

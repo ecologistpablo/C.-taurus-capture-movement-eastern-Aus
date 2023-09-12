@@ -14,8 +14,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-sst <- read_csv("Inputs/230911_capture_SST.csv")
-m_avg <- read_csv("Inputs/230911_capture_SST_m_avrg.csv")
+sst <- read_csv("Inputs/230912_capture_SST.csv")
+m_avg <- read_csv("Inputs/230912_capture_SST_m_avrg.csv")
 SCP <- read_csv("shark control/230910_SCP_complete_12-22.csv")
 
 head(sst)
@@ -80,7 +80,7 @@ SCP1 <- map_dfr(seq_len(nrow(SCP)), function(.x) {
   }
   
   # Calculate the anomaly
-  anomaly <- m_avg_value - sst_value
+  anomaly <- sst_value - m_avg_value
   
   # Add new columns to the current row
   new_columns[["SST"]] <- sst_value
@@ -98,25 +98,8 @@ SCP1 <- map_dfr(seq_len(nrow(SCP)), function(.x) {
 sum(is.na(SCP1$SST))
 sum(is.na(SCP1$SST_m_avrg))
 
-# # where do the NAs go ? ---------------------------------------------------
-# 
-# # Create a new data frame with rows where SST is NA
-# NAsst <- SCP2 %>% filter(is.na(SST)) %>% 
-#   group_by(Location) %>%
-#   summarise(na_count = sum(is.na(SST)))
-# 
-# unique(NAsst$Location)
-# 
-# SCP3 <- SCP2 %>% 
-#   group_by(Location) %>%
-#   summarise(sum = n())
-# 
-# # Join SCP3 and NAsst by Location and calculate the difference
-# diff <- SCP3 %>%
-#   left_join(NAsst, by = "Location") %>% # Join on Location
-#   mutate(difference = sum - ifelse(is.na(na_count), 0, na_count)) # Calculate the difference
 
 # save --------------------------------------------------------------------
 
-write_csv(SCP1, file = "Inputs/230911_SST_SCP.csv")
+write_csv(SCP1, file = "Inputs/230912_SST_SCP.csv")
 

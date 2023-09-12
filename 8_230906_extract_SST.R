@@ -63,24 +63,6 @@ sum(is.na(sst.pts1))
 
 # 5 d mean ----------------------------------------------------------------
 
-# Function to fill NAs with 5-day rolling mean
-mean_5d <- function(row) {
-  n <- length(row)  # Get the length of the row
-  new_row <- numeric(n)   # Initialize an empty vector to store the new values
-
-  for (j in 1:n) {  
-    if (is.na(row[j])) {  # If value is NA
-      # Find the 5-day window around the NA
-      start_window <- max(1, j - 2)  # Window start (making sure it's not < 1)
-      end_window <- min(n, j + 2)  # Window end (making sure it's not > n)
-      mean_window <- mean(row[start_window:end_window], na.rm = TRUE) # Calculate the mean of the window, excluding NA
-      new_row[j] <- ifelse(is.na(mean_window), NA, mean_window) # If mean is still NA (i.e., all values in the window were NA), keep it as NA
-    } else {  # If value is not NA, keep it as is
-      new_row[j] = row[j]
-    }
-  }
-  return(new_row)
-}
 
 # Apply the function to each row and save the new values in sst.pts2
 sst.pts2 <- t(apply(sst.pts1, 1, mean_5d))
@@ -150,26 +132,6 @@ sum(is.na(sst.pts10km2))
 (65819 / 441294) * 100
 #still 14
   
-  
-# fill_gaps ---------------------------------------------------------------
-
-fill_vals <- function(df1, df2) {
-  # Check if both data frames have the same dimensions
-  if (nrow(df1) != nrow(df2) || ncol(df1) != ncol(df2)) {
-    stop("The dimensions of the two data frames must be identical.")
-  }
-  
-  # Loop through each row and column to fill NA values
-  for (i in 1:nrow(df1)) {
-    for (j in 1:ncol(df1)) {
-      if (is.na(df1[i, j]) && !is.na(df2[i, j])) {
-        df1[i, j] <- df2[i, j]
-      }
-    }
-  }
-  
-  return(df1)
-}
 
 #fill values of 10km res into our 2km res
 sst.pts3 <- fill_vals(sst.pts2, sst.pts10km2)

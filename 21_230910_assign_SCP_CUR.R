@@ -1,7 +1,5 @@
 #10 September 2023
-#we have our sst vals: Both daily and monthly values
-#let's get sst values, and anomalies into our detection dataset
-#for SCP data this time
+  #adding current data to SCP catches
 
 rm(list=ls())
 setwd("~/University/2023/Honours/R/data/git/NC-wrestling")
@@ -14,8 +12,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-cur <- read_csv("Inputs/230911_capture_CUR.csv")
-m_avg <- read_csv("Inputs/230911_capture_CUR_m_avrg.csv")
+cur <- read_csv("Inputs/230912_capture_CUR.csv")
+m_avg <- read_csv("Inputs/230912_capture_CUR_m_avrg.csv")
 SCP <- read_csv("Inputs/230911_SST_SCP.csv")
 
 head(cur)
@@ -48,10 +46,7 @@ SCP$rownum <- seq_len(nrow(SCP))
 m_avg$rownum <- seq_len(nrow(m_avg))
 cur$rownum <- seq_len(nrow(cur))
 
-det <- SCP
-
 # pair currents w captures ------------------------------------------------
-
 
 # Processing
 SCP1 <- map_dfr(seq_len(nrow(SCP)), function(.x) {
@@ -86,12 +81,12 @@ SCP1 <- map_dfr(seq_len(nrow(SCP)), function(.x) {
     }
     
     # Calculate the anomaly
-    anomaly <- m_avg_value - cur_value
+    anomaly <- cur_value - m_avg_value
     
     # Add new columns to the current row
-    new_columns[[paste0("cur_", prefix)]] <- cur_value
-    new_columns[[paste0("cur_m_avrg_", prefix)]] <- m_avg_value
-    new_columns[[paste0("anomaly_", prefix)]] <- anomaly
+    new_columns[[paste0(prefix)]] <- cur_value
+    new_columns[[paste0(prefix, "_mc_avrg")]] <- m_avg_value
+    new_columns[[paste0(prefix, "_anomaly")]] <- anomaly
   }
   
   # Combine the existing row with new columns
@@ -101,33 +96,13 @@ SCP1 <- map_dfr(seq_len(nrow(SCP)), function(.x) {
 })
 
 # Checking for NAs
-sum(is.na(SCP1 %>% dplyr::select(starts_with("cur_G"))))
+sum(is.na(SCP1 %>% dplyr::select("GSLA")))
 sum(is.na(SCP1 %>% dplyr::select(starts_with("cur_m_avrg_"))))
 sum(is.na(SCP1 %>% dplyr::select(starts_with("anomaly_"))))
 
 #That worked splendidly, but we have quite a few NAs (again)
 
-
-# # same location == same value ---------------------------------------------
-# 
-# #some rows have NAs with the same Location as other rows
-# #which means there are values nearby but we didn't pick them up
-# #lets interpolate
-# 
-# # Group by location and fill in NA values
-# det2 <- det1 %>%
-#   group_by(Location) %>%
-#   summarise(across(everything(), ~ {
-#     first_value <- first(.[!is.na(.)], default = NA)
-#     ifelse(is.na(.), first_value, .)
-#   })) %>%
-#   ungroup()
-# 
-# sum(is.na(det1)) - sum(is.na(det2))
-# 
-# #fill 202 values
-
 # save --------------------------------------------------------------------
 
-write_csv(SCP1, file = "Inputs/230911_SCP_enviro.csv")
+write_csv(SCP1, file = "Inputs/230912_SCP_enviro.csv")
 
