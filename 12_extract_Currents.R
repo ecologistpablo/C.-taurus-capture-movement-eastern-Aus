@@ -14,7 +14,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-rstack <- rast("IMOS/Currents/230912_cstack_12-22.tif")
+cstack <- rast("IMOS/Currents/230912_cstack_12-22.tif")
 rcs <- read_csv("Inputs/230909_XY_receivers.csv")
 WGS84 <- crs("EPSG:4326")# Coordinate reference systems
 
