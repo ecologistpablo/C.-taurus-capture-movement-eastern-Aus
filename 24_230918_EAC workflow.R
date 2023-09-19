@@ -1,3 +1,13 @@
+#19.09.23
+  #find dist_to_EAC
+
+rm(list=ls())
+
+# load current stack ------------------------------------------------------
+
+setwd("~/University/2023/Honours/R/data")
+
+cur_stack <- rast("IMOS/Currents/230912_cstack_12-22.tif")
 
 
 # load SST ----------------------------------------------------------------
@@ -32,18 +42,24 @@ sst_stack <- do.call(c, rasters_list)
 
 
 # Check the CRS of the combined stack
-crs(rstack)
+sst_stack
 
+#resample
+sst_stack1 <- resample(sst_stack, cur_stack)
 
-# load current stack ------------------------------------------------------
+plot(sst_stack1[[19]])
+plot(cur_stack[[3]])
 
-setwd("~/University/2023/Honours/R/data")
+writeRaster(sst_stack, filename = "GHRSST_12-22.tif", overwrite = T)
+writeRaster(sst_stack1, filename = "GHRSST_12-22_0.2.tif", overwrite = T)
 
-cur_stack <- rast("IMOS/Currents/230912_cstack_12-22.tif")
+# combine stacks ----------------------------------------------------------
+
 
 
 # pts ---------------------------------------------------------------------
 
+setwd("~/University/2023/Honours/R/data")
 
 rcs <- read_csv("Inputs/230909_XY_receivers.csv")
 WGS84 <- crs("EPSG:4326")# Coordinate reference systems
@@ -56,67 +72,62 @@ pts.WGS
 
 
 
+# gradients ---------------------------------------------------------------
 
-# define the EAC ----------------------------------------------------------
+# Calculate gradients for SST
+grad_sst <- terra::focal(sst_stack, w=matrix(1,3,3), fun=function(x) diff(range(x)))
 
-# Initialize an empty dataframe to store results
-results <- data.frame()
+# Calculate gradients for GSLA, UCUR, and VCUR
+grad_cur <- terra::focal(cur_stack, w=matrix(1,3,3), fun=function(x) diff(range(x)))
 
-# Get the column names (dates) from the current stack
-date_columns <- names(cur_stack)
 
-# Loop through each date column
-for (date_col in date_columns) {
-  # Extract the current layer for this date from the current stack
-  cur_layer <- cur_stack[[date_col]]
-  sst_layer <- sst_stack[[date_col]]
+# convert to vectore ------------------------------------------------------
+
+# Flatten rasters into data frames for PCA
+df_sst <- as.data.frame(values(grad_sst), xy=TRUE)
+df_cur <- as.data.frame(values(grad_cur), xy=TRUE)
+
+write_csv(df_sst, file = "SST_stack_gradient_230919.csv")
+write_csv(df_cur, file = "CUR_stack_gradient_230919.csv")
+
+# Combine these into a single data frame
+df_all <- data.frame(df_sst, df_cur)
+
+# Run the PCA
+pca_result <- prcomp(df_all[, 3:ncol(df_all)], center = TRUE, scale. = TRUE)
+
+# Extract the first principal component (PC1)
+pc1 <- pca_result$x[,1]
+
+# calculate distance ------------------------------------------------------
+
+# Initialize an empty list to store results
+distance_list <- list()
+
+# Loop through each unique date
+for(date in unique_dates) {
   
-  # Extract coordinates and values
-  xy <- xy(cur_layer)
-  lon_lat_data <- data.frame(
-    x = xy[, 1],
-    y = xy[, 2],
-    cur_values = values(cur_layer),
-    sst_values = values(sst_layer)
-  )
+  # Extract PC1 for the current date
+  pc1_current <- pc1[[date]]
   
-  # Calculate the magnitude of ocean current speed
-  cur_speed_layer <- sqrt(lon_lat_data$cur_values[1:(nrow(lon_lat_data) / 3)]^2 +
-                            lon_lat_data$cur_values[(nrow(lon_lat_data) / 3 + 1):(2 * nrow(lon_lat_data) / 3)]^2)
+  # Convert PC1 to a SpatRaster object again
+  pc1_raster <- rast(pc1_current)  # You'll need to make sure the dimensions match the original raster
   
-  # Compute a 30 km moving average for speed
-  f <- matrix(c(0, 1, 1), nrow = 1, ncol = 3, byrow = TRUE)
-  cur_speed_grad <- focal(cur_layer, w = f, fun = function(x, ...) x[3] - x[2], na.rm = TRUE)
-  cur_speed_av <- focal(cur_speed_grad, w = matrix(1, ncol = 3, nrow = 1), fun = mean, na.rm = TRUE)
+  # Find max value of PC1 at the latitude corresponding to each point
+  max_pc1_lat <- apply(st_coordinates(pts.WGS), 1, function(coord) {
+    lat <- coord[2]
+    # Extract values along the latitude and find the max PC1
+    lat_values <- extract(pc1_raster, y=lat)
+    return(max(lat_values, na.rm = TRUE))
+  })
   
-  # Apply the inner and outer longitude thresholds to cur_speed_av
-  cur_speed_av[which(lon_lat_data$x < inner_threshold | lon_lat_data$x > outer_threshold)] <- NA
+  # Calculate distance to max PC1 at the corresponding latitude
+  distance_to_max_pc1 <- st_distance(pts.WGS, max_pc1_lat)
   
-  # Calculate distances from points to the EAC edge (based on thresholds)
-  lon_lat_data$distance_to_edge <- NA
-  
-  for (j in 1:nrow(lon_lat_data)) {
-    if (!is.na(lon_lat_data$cur_values[j])) {
-      lon <- lon_lat_data$x[j]
-      lat <- lon_lat_data$y[j]
-      
-      # Check if the point is within the EAC edge
-      if (lon > inner_threshold && lon < outer_threshold) {
-        # Calculate distance to EAC edge
-        edge_lon <- ifelse(lon > (inner_threshold + outer_threshold) / 2, outer_threshold, inner_threshold)
-        distance <- distVincentySphere(c(lon, lat), c(edge_lon, lat))
-        lon_lat_data$distance_to_edge[j] <- distance
-      }
-    }
-  }
-  
-  # Extract the date from the column name (e.g., "GSLA_20120101" becomes "20120101")
-  date <- gsub("[^0-9]", "", date_col)
-  
-  # Add the date as a column in the dataframe
-  lon_lat_data$date <- date
-  
-  # Combine results for this date with the overall results
-  results <- rbind(results, lon_lat_data)
+  # Store the result
+  distance_list[[date]] <- distance_to_max_pc1
 }
+
+# Combine the results into a single data frame or other suitable object
+
 

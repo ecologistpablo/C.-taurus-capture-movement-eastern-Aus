@@ -189,3 +189,19 @@ length(unique(inverse$date)); nrow(inverse) #106 inversed loadings
 #all.months is list of environmental + entanglement data
 all.monthh <- do.call("rbind", all.months)
 nrow(all.monthh) #14280 (3570 days in study period * 4 sites)
+
+
+# gpt interpretation ------------------------------------------------------
+ 
+ 
+# 1. **Data Loading**: Retrieves the relevant temperature, velocity (`v`), and `u` component files from a given directory.
+# 2. **Data Preprocessing**: Crops the raster stacks to a specific area, in this case, Southeast Queensland.
+# 3. **Principal Component Analysis (PCA)**: Calculates the PCA based on variables like sea surface temperature (SST) gradient, speed, and v (presumably the meridional component of the current).
+# 4. **Masking and Thresholding**: Sets thresholds based on longitude and masks out irrelevant cells.
+# 5. **Finding Maximums**: Identifies the points with maximum PC1 for each shark net based on the processed data.
+# 6. **Distance Calculation**: Computes distances from the maximum gradient points to the shark nets.
+# 7. **Plotting**: Creates a plot that visually represents the information obtained.
+# - **Data Masking**: The script also masks out data over land using `mask()`.
+# - **Variance and Directionality**: Records the variance explained by each principal component and also seems to track the directionality (or sign) of the loadings.
+# - **Inverse Dataframe**: Builds an "inverse" dataframe for instances where the PCA loadings are not all the same sign.
+# - **Thresholding**: Uses an "inner" and "outer" threshold to limit the region of interest.
