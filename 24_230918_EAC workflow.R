@@ -3,64 +3,17 @@
 
 rm(list=ls())
 
-# load current stack ------------------------------------------------------
 
-setwd("~/University/2023/Honours/R/data")
-
-cur_stack <- rast("IMOS/Currents/230912_cstack_12-22.tif")
-
-
-# load SST ----------------------------------------------------------------
+# load libraries and data -------------------------------------------------
 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-
-# combine all stacks  -----------------------------------------------------
-
-setwd("~/University/2023/Honours/R/data/IMOS/SST")
-list.files()
-
-# Generate file names for the years
-file_names <- paste0("SST_stack_", 2012:2022, ".tif")
-
-# Coordinate reference systems
-WGS84 <- crs("EPSG:4326")
-
-# Initialize an empty list to store the rasters
-rasters_list <- list()
-
-# Loop through each file name
-for (file_name in file_names) {
-  if (file.exists(file_name)) {  # Check if the file exists
-    r <- rast(file_name) # Read in the raster stack
-    crs(r) <- WGS84 # Assign CRS
-    rasters_list[[length(rasters_list) + 1]] <- r # Append to the list
-  }
-}
-
-# Combine the individual rasters into one stack
-sst_stack <- do.call(c, rasters_list)
-
-
-# Check the CRS of the combined stack
-sst_stack
-
-#resample
-sst_stack1 <- resample(sst_stack, cur_stack)
-
-plot(sst_stack1[[19]])
-plot(cur_stack[[3]])
-
-writeRaster(sst_stack, filename = "GHRSST_12-22.tif", overwrite = T)
-writeRaster(sst_stack1, filename = "GHRSST_12-22_0.2.tif", overwrite = T)
-
-# combine stacks ----------------------------------------------------------
-
-
-
-# pts ---------------------------------------------------------------------
-
 setwd("~/University/2023/Honours/R/data")
 
+#load stacks
+cur_stack <- rast("IMOS/Currents/230912_cstack_12-22.tif")
+sst_stack <- rast("IMOS/SST/GHRSST_12-22_0.2.tif") 
+
+#pts
 rcs <- read_csv("Inputs/230909_XY_receivers.csv")
 WGS84 <- crs("EPSG:4326")# Coordinate reference systems
 
@@ -69,8 +22,6 @@ pts.WGS <- st_as_sf(rcs, coords = c("receiver_deployment_longitude", #convert to
 
 st_crs(pts.WGS) <- crs(WGS84) #remember to assign crs
 pts.WGS
-
-
 
 # gradients ---------------------------------------------------------------
 
@@ -87,17 +38,21 @@ grad_cur <- terra::focal(cur_stack, w=matrix(1,3,3), fun=function(x) diff(range(
 df_sst <- as.data.frame(values(grad_sst), xy=TRUE)
 df_cur <- as.data.frame(values(grad_cur), xy=TRUE)
 
-write_csv(df_sst, file = "SST_stack_gradient_230919.csv")
+#save 
+write_csv(df_sst, file = "Inputs/SST_stack_gradient_230919.csv")
 write_csv(df_cur, file = "CUR_stack_gradient_230919.csv")
+#load
+sst <- read_csv("Inputs/SST_stack_gradient_230919.csv")
+cur <- read_csv("Inputs/CUR_stack_gradient_230919.csv")
 
 # Combine these into a single data frame
-df_all <- data.frame(df_sst, df_cur)
+alldat <- data.frame(sst, cur)
 
 # Run the PCA
-pca_result <- prcomp(df_all[, 3:ncol(df_all)], center = TRUE, scale. = TRUE)
+pca <- prcomp(alldat[, 3:ncol(alldat)], center = TRUE, scale. = TRUE)
 
 # Extract the first principal component (PC1)
-pc1 <- pca_result$x[,1]
+pc1 <- pca$x[,1]
 
 # calculate distance ------------------------------------------------------
 

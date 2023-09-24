@@ -28,7 +28,7 @@ dat1 <-
              X = "Longitude", 
              Y = "Latitude",
              datetime = "Date", #datetime variable to be formatted correctly
-             env_var = "dist_to_land", 
+             env_var = "bathy", 
              #'rs_sst', 'rs_sst_interpolated', 'rs_salinity', 'rs_chl', 'rs_turbidity', 'rs_npp', 'rs_current', 'bathy', 'dist_to_land'
              cache_layers = F,
              crop_layers = TRUE,
@@ -60,5 +60,19 @@ dat3 <- dat2 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(dat3, "Inputs/230912_complete_SCP_enviro.csv")
+write_csv(dat2, "Inputs/230924_complete_SCP_enviro.csv")
+
+
+
+# map ---------------------------------------------------------------------
+
+# Calculate the number of detections at each station
+IMOSxy <- dat2 %>%
+  group_by(Area, Latitude, Longitude) %>%
+  summarise(num_det = n(), .groups = 'drop')
+
+IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("Longitude", "Latitude"),
+                          crs= 4326, agr = "constant")
+
+mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "Area", fbg = F)
 
