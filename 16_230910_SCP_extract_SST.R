@@ -13,7 +13,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-pts <- read_csv("~/University/2023/Honours/R/data/shark control/230910_XY_captures_12-22.csv")
+pts <- read_csv("~/University/2023/Honours/R/data/shark control/231004_SCP_captures.csv")
 WGS84 <- crs("EPSG:32756")# Coordinate reference systems
 
 head(pts) #its all there
@@ -33,11 +33,17 @@ st_crs(pts.WGS) <- crs(WGS84) #remember to assign crs
 pts.WGS
 
 
+# SST stack ---------------------------------------------------------------
+
+list.files("IMOS/SST")
+
+SST <- rast("IMOS/SST/GHRSST_12-22.tif")
+
 # plot --------------------------------------------------------------------
 
 # Calculate the number of detections at each station
 ptsxy <- pts %>%
-  group_by( Latitude, Longitude) %>%
+  group_by(Latitude, Longitude) %>%
   summarise(num_det = n(), .groups = 'drop')
 
 ptsxy_sf <- sf::st_as_sf(ptsxy, coords = c("Longitude", "Latitude"),
@@ -49,26 +55,28 @@ mapview::mapview(ptsxy_sf, cex = "num_det", fbg = F)
 
 # extract -----------------------------------------------------------------
 
-sst.pts <- extract(rstack, pts.WGS, ID = F)
+sst.pts <- extract(SST, pts.WGS, ID = F)
 # ID = FALSE otherwise it creates a column with a number for each point
 
 sum(is.na(sst.pts))
-131*3871
+283*3871
 
-#100% NA :)(
+#100% NA :(
 
 #no point don't 1 d or 5 d filling approaches with 100% NAs
 
 # Bilinear interpolation --------------------------------------------------
 
-bl <- extract(rstack, pts.WGS, method = "bilinear") 
+bl <- extract(SST, pts.WGS, method = "bilinear") 
 
 bl2 <- bl %>% 
   dplyr::select(-ID)
 
-sum(is.na(bl))
-(486686 / 507101) * 100
-#95 NA, we have some liftoff
+sum(is.na(bl2))
+283 * 3871
+
+(1086257 / 1095493) * 100
+#99% NA, we have almost nothing
 
 # nearest temporal neighbour ----------------------------------------------
 
@@ -102,51 +110,31 @@ bl3 <- t(apply(bl2, 1, function(row) {
 bl3 <- as.data.frame(bl3)
 
 sum(is.na(bl3))
-(464557 / 507101) * 100
-#91% as NA
-
-fill_vals <- function(sst.pts2, bl3) {
-  if (nrow(sst.pts2) != nrow(bl3) || ncol(sst.pts2) != ncol(bl3)) {
-    stop("The dimensions of the two data frames must be identical.")
-  }
-  
-  for (i in 1:nrow(sst.pts2)) {
-    for (j in 1:ncol(sst.pts2)) {
-      if (is.na(sst.pts2[i, j]) && !is.na(bl3[i, j])) {
-        sst.pts2[i, j] <- bl3[i, j]
-      }
-    }
-  }
-  
-  return(sst.pts2)
-}
-
-#fill vals of bilinear interpolation into our data
-sst.pts1 <- fill_vals(sst.pts, bl3)
-
-sum(is.na(sst.pts1)) 
-
-(464557 / 507101) * 100
-#91%... Still not ideal
+(1076158 / 1095493) * 100
+#98% as NA
 
 # resize coarseness -------------------------------------------------------
 
-rstack #res at 0.02 by 0.02, 2km x 2km
+SST #res at 0.02 by 0.02, 2km x 2km
 
-rstack10km <- aggregate(rstack, fact = 5.5, #factor of whatever your resolution is in the OG raster / stack
+#0.02 = appox 2km, 0.0898 = approx 10km
+
+# Resample the raster to the new resolution
+SST10km <- aggregate(SST, fact = 4.49, #factor multiple original resolution
                         fun = mean, #mean 
-                        na.rm = TRUE) #resize into land not sea
+                        na.rm = TRUE) #resize into land not sea = TRUE
 #this is a 10km resize
 
-plot(rstack10km[[19]])
+plot(SST10km[[3]], col = viridis(255))
 
 # resample ----------------------------------------------------------------
 
-sst.pts10km <- extract(rstack10km, pts.WGS, ID = F) 
+#direct resampling
+sst.pts10km <- extract(SST10km, pts.WGS, ID = F) 
 
 sum(is.na(sst.pts10km)) 
-(255323 / 507101) * 100
-#50% NA
+(757156 / 1095493) * 100
+#69% NA
 
 # nearest temporal neighbour ----------------------------------------------
 
@@ -168,8 +156,8 @@ sst.pts10km1 <- t(apply(sst.pts10km, 1, function(row) { # Apply a function to ea
 sst.pts10km1 <- as.data.frame(sst.pts10km1) #convert back to df
 
 sum(is.na(sst.pts10km1)) 
-(73766 / 507101) * 100
-#14% :D 
+(456872 / 1095493) * 100
+#41% :\ 
 
 #5 d mean
 sst.pts10km2 <- t(apply(sst.pts10km1, 1, mean_5d))
@@ -179,8 +167,8 @@ sst.pts10km2 <- as.data.frame(sst.pts10km2)
 colnames(sst.pts10km2) <- colnames(sst.pts10km1)
 
 sum(is.na(sst.pts10km2))
-(73626 / 507101) * 100
-#still 14%
+(456814 / 1095493) * 100
+#still 41%
 
 #fill values of 10km res into our 2km res
 sst.pts2 <- fill_vals(sst.pts1, sst.pts10km2)
@@ -190,26 +178,27 @@ sum(is.na(sst.pts2))
 (54291 / 507101) * 100
 #10% NA still. 
 
-# bli ---------------------------------------------------------------------
 
-bl <- extract(rstack10km, pts.WGS, method = "bilinear") # ID = FALSE otherwise it creates a column with a number for each spoint
+# bilinear interpolation of 10km grid -------------------------------------
+
+bl10 <- extract(SST10km, pts.WGS, method = "bilinear") # ID = FALSE otherwise it creates a column with a number for each spoint
 
 pts <-  pts %>% mutate(RowNumber = row_number()) #make a row number 
-bl <-  bl %>% mutate(RowNumber = row_number()) #make a row number 
+bl10 <-  bl10 %>% mutate(RowNumber = row_number()) #make a row number 
 
-bl1 <- left_join(bl, pts %>% dplyr::select(RowNumber, Location), by = "RowNumber")
+bl10a <- left_join(bl10, pts %>% dplyr::select(RowNumber, Location), by = "RowNumber")
 
 #re-order it
-bl1 <- bl1 %>%
+bl10b <- bl10a %>%
   dplyr::select(-RowNumber) %>% 
   dplyr::select(Location, everything())
 
-bl2 <- bl1 %>% 
+bl10c <- bl10b %>% 
   dplyr::select(-ID, -Location)
 
 # nearest temporal neighbour ----------------------------------------------
 
-bl3 <- t(apply(bl2, 1, function(row) { 
+bl10d <- t(apply(bl10c, 1, function(row) { 
   for (j in 1:length(row)) {  
     if (is.na(row[j])) {  
       neighbors <- c()
@@ -236,28 +225,28 @@ bl3 <- t(apply(bl2, 1, function(row) {
   return(row)  
 }))
 
-bl3 <- as.data.frame(bl3)
+bl10d <- as.data.frame(bl10d)
 
-sum(is.na(bl3))
+sum(is.na(bl10d))
 
-131*3871
-(4052 / 507101) * 100
-# 0.79 % :D
+283*3871
+(19534 / 1095493) * 100
+# 1.78% :D
 
 # 5 d mean ----------------------------------------------------------------
 
 # Apply the function to each row 
-bl4 <- t(apply(bl3, 1, mean_5d))
+bl10e <- t(apply(bl10d, 1, mean_5d))
 
-bl4 <- as.data.frame(bl4)
-colnames(bl4) <- colnames(bl2)
+bl10e <- as.data.frame(bl10e)
+colnames(bl10e) <- colnames(bl10c)
 
 
-
+colnames(bl10e)
 # fill_gaps of bli into sst.pts -------------------------------------------
 
 #fill values of bilinear interpolation at 10km into our df
-sst.pts3 <- fill_vals(sst.pts2, bl4)
+sst.pts3 <- fill_vals(sst.pts2, bl10e)
 
 sum(is.na(sst.pts3))
 (3925 / 507101) * 100
