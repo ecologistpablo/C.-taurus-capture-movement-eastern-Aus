@@ -35,8 +35,6 @@ pts.WGS
 
 # SST stack ---------------------------------------------------------------
 
-list.files("IMOS/SST")
-
 SST <- rast("IMOS/SST/GHRSST_12-22.tif")
 
 # plot --------------------------------------------------------------------
@@ -80,37 +78,13 @@ sum(is.na(bl2))
 
 # nearest temporal neighbour ----------------------------------------------
 
-bl3 <- t(apply(bl2, 1, function(row) { 
-  for (j in 1:length(row)) {  
-    if (is.na(row[j])) {  
-      neighbors <- c()
-      if(j > 1) {
-        neighbors <- c(neighbors, row[j-1])
-      }
-      if(j < length(row)) {
-        neighbors <- c(neighbors, row[j+1])
-      }
-      non_na_neighbors <- neighbors[!is.na(neighbors)] 
-      if (length(non_na_neighbors) > 0) { 
-        row[j] <- non_na_neighbors[1] 
-      }
-    }
-  }
-  
-  # New loop to replace NaN with NA
-  for (j in 1:length(row)) {
-    if (is.nan(row[j])) {
-      row[j] <- NA
-    }
-  }
-  
-  return(row)  
-}))
+bl3 <- fill1dneighbour(bl2)
 
-bl3 <- as.data.frame(bl3)
+bl4 <- mean_5d(bl3)
 
-sum(is.na(bl3))
-(1076158 / 1095493) * 100
+
+sum(is.na(bl4))
+(1076146 / 1095493) * 100
 #98% as NA
 
 # resize coarseness -------------------------------------------------------
@@ -138,32 +112,16 @@ sum(is.na(sst.pts10km))
 
 # nearest temporal neighbour ----------------------------------------------
 
-sst.pts10km1 <- t(apply(sst.pts10km, 1, function(row) { # Apply a function to each row of 'sst.pts'.
-  for (j in 1:length(row)) {  # Loop through each element of the row.
-    if (is.na(row[j])) {  # Check if the element is NA.
-      neighbors <- c(row[j-1], row[j+1]) # Find neighbors of the NA value (i.e., the previous and next values in the row).
-      non_na_neighbors <- neighbors[!is.na(neighbors)] # Remove NAs from the neighbors.
-      if (length(non_na_neighbors) > 0) { # If there are non-NA neighbors...
-        row[j] <- non_na_neighbors[1] # Replace the NA with the first non-NA neighbor.
-        
-      }
-    }
-  }
-  
-  return(row)  # Return the modified row.
-}))
-
-sst.pts10km1 <- as.data.frame(sst.pts10km1) #convert back to df
+sst.pts10km1 <- fill1dneighbour(sst.pts10km)
 
 sum(is.na(sst.pts10km1)) 
 (456872 / 1095493) * 100
 #41% :\ 
 
 #5 d mean
-sst.pts10km2 <- t(apply(sst.pts10km1, 1, mean_5d))
+sst.pts10km2 <- mean_5d(sst.pts10km1)
 
-#more munging
-sst.pts10km2 <- as.data.frame(sst.pts10km2)
+#return column names
 colnames(sst.pts10km2) <- colnames(sst.pts10km1)
 
 sum(is.na(sst.pts10km2))
@@ -198,34 +156,7 @@ bl10c <- bl10b %>%
 
 # nearest temporal neighbour ----------------------------------------------
 
-bl10d <- t(apply(bl10c, 1, function(row) { 
-  for (j in 1:length(row)) {  
-    if (is.na(row[j])) {  
-      neighbors <- c()
-      if(j > 1) {
-        neighbors <- c(neighbors, row[j-1])
-      }
-      if(j < length(row)) {
-        neighbors <- c(neighbors, row[j+1])
-      }
-      non_na_neighbors <- neighbors[!is.na(neighbors)] 
-      if (length(non_na_neighbors) > 0) { 
-        row[j] <- non_na_neighbors[1] 
-      }
-    }
-  }
-  
-  # New loop to replace NaN with NA
-  for (j in 1:length(row)) {
-    if (is.nan(row[j])) {
-      row[j] <- NA
-    }
-  }
-  
-  return(row)  
-}))
-
-bl10d <- as.data.frame(bl10d)
+bl10d <- fill1dneighbour(bl10c)
 
 sum(is.na(bl10d))
 
@@ -235,10 +166,8 @@ sum(is.na(bl10d))
 
 # 5 d mean ----------------------------------------------------------------
 
-# Apply the function to each row 
-bl10e <- t(apply(bl10d, 1, mean_5d))
+bl10e <- mean_5d(bl10d)
 
-bl10e <- as.data.frame(bl10e)
 colnames(bl10e) <- colnames(bl10c)
 
 
