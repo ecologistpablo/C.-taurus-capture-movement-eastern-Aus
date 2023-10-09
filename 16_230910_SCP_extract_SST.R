@@ -13,8 +13,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-pts <- read_csv("~/University/2023/Honours/R/data/shark control/231004_SCP_captures.csv")
-WGS84 <- crs("EPSG:32756")# Coordinate reference systems
+pts <- read_csv("~/University/2023/Honours/R/data/shark control/231009_SCP_captures.csv")
+WGS84 <- crs("EPSG:4326")# Coordinate reference systems
 
 head(pts) #its all there
 
@@ -57,11 +57,18 @@ sst.pts <- extract(SST, pts.WGS, ID = F)
 # ID = FALSE otherwise it creates a column with a number for each point
 
 sum(is.na(sst.pts))
-283*3871
+307*3871
+(1186617 / 1188397) * 100
 
-#100% NA :(
+#99.85% NA :(
 
-#no point don't 1 d or 5 d filling approaches with 100% NAs
+sst.pts1 <- fill1dneighbour(sst.pts)
+
+sst.pts2 <- mean_5d(sst.pts1)
+
+sum(is.na(sst.pts2))
+(1184526 / 1188397) * 100
+#99.67%
 
 # Bilinear interpolation --------------------------------------------------
 
@@ -71,10 +78,10 @@ bl2 <- bl %>%
   dplyr::select(-ID)
 
 sum(is.na(bl2))
-283 * 3871
+307 * 3871
 
-(1086257 / 1095493) * 100
-#99% NA, we have almost nothing
+(1158747 / 1188397) * 100
+#97% NA, we still have almost nothing
 
 # nearest temporal neighbour ----------------------------------------------
 
@@ -82,10 +89,11 @@ bl3 <- fill1dneighbour(bl2)
 
 bl4 <- mean_5d(bl3)
 
-
-sum(is.na(bl4))
-(1076146 / 1095493) * 100
-#98% as NA
+#fill bilinear interpolation of 2km grid squares into our straight extraction df
+sst.pts3 <- fill_vals(sst.pts2, bl4)
+sum(is.na(sst.pts3))
+(1126475 / 1188397) * 100
+#94% as NA
 
 # resize coarseness -------------------------------------------------------
 
@@ -93,13 +101,16 @@ SST #res at 0.02 by 0.02, 2km x 2km
 
 #0.02 = appox 2km, 0.0898 = approx 10km
 
+agg_factor <- 5 #0.02 x 5 = 10km
+
 # Resample the raster to the new resolution
-SST10km <- aggregate(SST, fact = 4.49, #factor multiple original resolution
+SST10km <- aggregate(SST, fact = agg_factor, #factor multiple original resolution
                         fun = mean, #mean 
                         na.rm = TRUE) #resize into land not sea = TRUE
+SST10km
 #this is a 10km resize
 
-plot(SST10km[[3]], col = viridis(255))
+plot(SST10km, col = viridis(255))
 
 # resample ----------------------------------------------------------------
 
@@ -107,16 +118,12 @@ plot(SST10km[[3]], col = viridis(255))
 sst.pts10km <- extract(SST10km, pts.WGS, ID = F) 
 
 sum(is.na(sst.pts10km)) 
-(757156 / 1095493) * 100
-#69% NA
+(609472 / 1188397) * 100
+#51% NA
 
 # nearest temporal neighbour ----------------------------------------------
 
 sst.pts10km1 <- fill1dneighbour(sst.pts10km)
-
-sum(is.na(sst.pts10km1)) 
-(456872 / 1095493) * 100
-#41% :\ 
 
 #5 d mean
 sst.pts10km2 <- mean_5d(sst.pts10km1)
@@ -125,8 +132,8 @@ sst.pts10km2 <- mean_5d(sst.pts10km1)
 colnames(sst.pts10km2) <- colnames(sst.pts10km1)
 
 sum(is.na(sst.pts10km2))
-(456814 / 1095493) * 100
-#still 41%
+(135500 / 1188397) * 100
+#still 11%
 
 #fill values of 10km res into our 2km res
 sst.pts2 <- fill_vals(sst.pts1, sst.pts10km2)
