@@ -20,7 +20,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 # Set up parallel processing
 plan(multisession, workers = 7) # Using 7 cores
 
-# Loop through years from 2012 to 2020
+# Loop through years from 2021 to 2022
 for (year in 2021:2022) {
 
     # Set output folder and URL based on the year
