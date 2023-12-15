@@ -25,8 +25,8 @@ yurl <- "https://mrs-data.csiro.au/imos-srs/sst/ghrsst/L3S-1d/dn/2012/" #year ur
 
 
 html <- rvest::read_html(yurl) # Read as html
-
-#f <- html[1] just get the first one
+html
+f <- html[1] # just get the first one
 
 file_tibble <- html %>% 
   html_node("table") %>% # Get the table of messy (html-formatted) links
@@ -35,7 +35,7 @@ file_tibble <- html %>%
 str(file_tibble)
 
 files <- file_tibble %>% 
-  select(Name) %>% # Select just the dataset names
+  dplyr::select(Name) %>% # Select just the dataset names
   filter(str_detect(Name, var_to_get)) %>%  # Filter for the specified variable
   pull(Name) # Pull out the contents of the variable Dataset as a vector
 # Of course, if you want to get a subset of files, say for 2016, you add "%>% str_subset("2016")"  
@@ -85,44 +85,4 @@ plan(multisession, workers = 6) # Using 2 cores
 future_walk(files, get_file)
 
 
-
-# stack and crop ----------------------------------------------------------
-
-#list
-sst2012 <- list.files("IMOS/SST/2012", pattern = "\\.nc$", full.names = TRUE)
-
-head(sst2012)
-
-e <- ext(-36, 155, -24, 150)
-
-setwd("~/University/2023/Honours/R/New directory/FSLE")
-
-
-# List all the .nc files in the directory
-file_list <- list.files(pattern = "*.nc")
-
-read_and_stack <- function(file_list) {
-  # Initialize an empty list to store rasters
-  rasters <- list()
-  
-  # Loop over file_list
-  for (file in file_list) {
-    # Read the file as a raster
-    r <- raster(file)
-    
-    # Create a label for the raster based on the file name
-    label <- stringr::str_extract(file, "fsle_\\d{8}")
-    names(r) <- label
-    
-    # Add the raster to the list
-    rasters[[label]] <- r
-  }
-  
-  # Stack all the rasters in the list
-  stack <- stack(rasters)
-  
-
-
-# Set up parallel processing
-plan(multisession, workers = 6)
 
