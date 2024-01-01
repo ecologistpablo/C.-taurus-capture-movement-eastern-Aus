@@ -8,15 +8,14 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 # metadata finding --------------------------------------------------------
 
-setwd("E:/Pablo/2023_hons_dat/SST/2012")
-list.files()
-nc <- nc_open("20121231092000-ABOM-L3S_GHRSST-SSTfnd-AVHRR_D-1d_dn-v02.0-fv02.0.nc")
+setwd("E:/Pablo/2023_hons_dat/SST/2012") #where did you download all your net cdfs?
+list.files() #copy and paste a string below
+nc <- nc_open("20121231092000-ABOM-L3S_GHRSST-SSTfnd-AVHRR_D-1d_dn-v02.0-fv02.0.nc") #read it in
 
-print(nc)
-#what variables do we choose based on their metadata?
+print(nc) #what variables do we choose need?
 
 
-# old fashioned way: 2012 -------------------------------------------------
+# cropping data -----------------------------------------------------------
 
 setwd("E:/Pablo/2023_hons_dat/SST/2012")
 
@@ -68,7 +67,8 @@ rstack2 <- terra::crop(rstack1, e)
 
 plot(rstack2, col = viridis(255))
 
-# more munging ------------------------------------------------------------
+
+# metric converisons ------------------------------------------------------
 
 # Convert from Kelvin to Celsius
 rstack3 <- app(rstack2, function(x) x - 273.15)
@@ -84,8 +84,9 @@ names(rstack3)
 writeRaster(rstack3, "SST_stack_2014.tif")
 
 
+# loop --------------------------------------------------------------------
 
-# looped ------------------------------------------------------------------
+#now that we know how to process a single year, we can loop it into processing all our data
 
 # Define a function to process a specific year
 process_year <- function(year) {
@@ -137,7 +138,7 @@ process_year <- function(year) {
 }
 
 # Process each year
-years <- c("2022")
+years <- c("2022") #change as needed, processing 1 year at a time is chunky enough as they're 70mb and I only have 8 cores on 16gb of ram 
 
 for (year in years) {
   rstack4 <- process_year(year)
@@ -168,12 +169,3 @@ SST_stack <- rast(lapply(file_names, function(x) if(file.exists(x)) rast(x)))
 
 rstack <- project(rstack, UTM56S)
 head(rstack)
-
-
-# Coordinate reference systems --------------------------------------------
-
-UTM56S <- crs("EPSG:32756")
-
-# Save the combined stack
-writeRaster(SST_stack, "GHRSST_12-22.tif", overwrite = T)
-

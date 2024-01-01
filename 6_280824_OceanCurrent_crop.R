@@ -8,7 +8,6 @@ setwd("~/University/2023/Honours/R/data/git/NC-wrestling")
 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
-
 # metadata finding --------------------------------------------------------
 
 setwd("E:/Pablo/2023_hons_dat/Current/2020")
@@ -16,10 +15,7 @@ nc <- nc_open("IMOS_OceanCurrent_HV_20121231T000000Z_GSLA_FV02_DM02.nc")
 
 print(nc)
 
-#after discussions with K. Scales, we go with daily VCUR / UCUR varnames + GSLA (no anomalies needed)
-#we will then make averages the same way as SST
-
-# old fashioned way: 2014 -------------------------------------------------
+# old fashioned way: 2012 -------------------------------------------------
 
 setwd("E:/Pablo/2023_hons_dat/Current/2012")
 
@@ -63,7 +59,7 @@ plot(rstack1, col = viridis(255))
 head(names(rstack1))
 
 # Extract the date part (YYYYMMDD) from each .nc file name
-date_str <- substr(file_list, 24, 31)
+date_str <- substr(file_list, 24, 31) #if you're download different data, count where the filename is that you want
 
 head(date_str) #check
 
@@ -84,7 +80,7 @@ for (i in seq_along(date_str)) {
   idx_VCUR_MEAN <- (i - 1) * 3 + 3
   
   # Rename the layers
-  new_names[idx_GSLA] <- paste0("GSLA_", date_str[i])
+  new_names[idx_GSLA] <- paste0("GSLA_", date_str[i]) #so it will come out as GSLA_20120101 for 01 Jan 2012
   new_names[idx_UCUR_MEAN] <- paste0("UCUR_", date_str[i])
   new_names[idx_VCUR_MEAN] <- paste0("VCUR_", date_str[i])
 }
@@ -100,7 +96,7 @@ plot(rstack1, col = viridis(255))
 # crop --------------------------------------------------------------------
 
 # Define the extent
-e <- ext(c(150, 155, -36, -24)) #xmin, xmax, ymin, ymax
+e <- ext(c(150, 155, -36, -24)) #xmin, xmax, ymin, ymax for your studysite
 
 # Crop the stack
 rstack2 <- terra::crop(rstack1, e)
@@ -115,7 +111,6 @@ writeRaster(rstack2, "Current_stack_2012.tif")
 
 setwd("~/University/2023/Honours/R/data/IMOS/Currents")
 writeRaster(rstack2, "Currents_stack_2012.tif")
-
 
 # looped ------------------------------------------------------------------
 

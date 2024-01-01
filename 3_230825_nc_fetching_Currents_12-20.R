@@ -1,14 +1,15 @@
 #27.08.23
-  #Downloading all gm OceanCurrent data
+  #Downloading all general mode (GM) OceanCurrent data
     #2012 - 2020
-
-
+      #for 2021 onwards, we need near real time data, which differs slightly in the url
+        
 # Packages ----------------------------------------------------------------
 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
-
 # for loop de loop --------------------------------------------------------
+
+#for detailed annotations, see the GHRSST fetching script
 
 # Set up parallel processing
 plan(multisession, workers = 7) # Using 7 cores
@@ -31,7 +32,7 @@ for (year in 2012:2020) {
   # Filter files
   files <- file_tibble %>% 
     dplyr::select(Name) %>% 
-    filter(str_detect(Name, "GSLA")) %>%
+    filter(str_detect(Name, "GSLA")) %>% #the files are named 
     pull(Name)
   
   # Filter out existing files

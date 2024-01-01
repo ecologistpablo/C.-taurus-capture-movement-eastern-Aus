@@ -1,21 +1,15 @@
 #27.08.23
-#Downloading all gm OceanCurrent data
-#2012 - 2020
+  #Downloading all near real time (NRT) OceanCurrent data
+    #2021 - 2022
 
 
 # Packages ----------------------------------------------------------------
 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
-
-
-# # #for output folders
-#  if (!dir.exists(output_folder)) {
-#    dir.create(output_folder)
-#  }
-
-
 # for loop de loop --------------------------------------------------------
+
+#for detailed annotations, see the GHRSST fetching script
 
 # Set up parallel processing
 plan(multisession, workers = 7) # Using 7 cores
