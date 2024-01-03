@@ -20,7 +20,7 @@ library(stringr)
 library(raster)
 library(terra)
 library(ggspatial)
-library(VTrack)
+#library(VTrack)
 library(readxl)
 library(data.table)
 library(devtools)
@@ -41,7 +41,7 @@ library(patchwork)
 library(gridExtra)
 library(gamm4)
 library(rnaturalearth)
-library(colorblindr)
+#library(colorblindr)
 library(MuMIn)
 library(partykit)
 library(bbmle)
@@ -49,7 +49,9 @@ library(data.table)
 
 # NC Wrestling ------------------------------------------------------------
 
-fill_vals <- function(df1, df2) {
+# for this little function, df1 should be the df that you want to fill
+# ie if I have NAs in df1 and df2 has values, it will put those values into df1
+fill_vals <- function(df1, df2) { 
   # Check if both data frames have the same dimensions
   if (nrow(df1) != nrow(df2) || ncol(df1) != ncol(df2)) {
     stop("The dimensions of the two data frames must be identical.")
