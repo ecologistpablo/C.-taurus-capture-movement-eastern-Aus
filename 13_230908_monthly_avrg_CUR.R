@@ -12,9 +12,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 # pts ---------------------------------------------------------------------
 
 setwd("~/University/2023/Honours/R/data")
-
 dat <- read_csv("Inputs/230912_Currents_vals_12-22.csv")
-
 
 # wrestle monthly averages ------------------------------------------------
 
@@ -56,9 +54,9 @@ dat2 <- bind_cols(dat %>% dplyr::select(station_name), dat1)
 # View the first few rows
 head(dat2)
 
+#we still have some NAs in sites similar to SST NAs, we may have to omit from analysis... :(
 
 # climatology -------------------------------------------------------------
-
 
 calc_overall_monthly_mean <- function(df, prefixes) {
   months <- c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")

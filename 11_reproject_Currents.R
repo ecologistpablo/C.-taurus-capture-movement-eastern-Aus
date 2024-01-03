@@ -60,7 +60,9 @@ removeDuplicateLayers <- function(raster_stack) {
 rstack1 <- removeDuplicateLayers(rstack)
 
 print(paste("Original number of layers: ", length(names(rstack))))
-print(paste("Number of layers after removing duplicates: ", length(names(rstack1))))
+print(paste("Number of layers after removing duplicates: ", length(names(rstack1)))) 
+
+#I had 13 duplicates, this was due to downloading data multiple times for certain layers / days
 
 # save --------------------------------------------------------------------
 

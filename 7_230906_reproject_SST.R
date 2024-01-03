@@ -1,7 +1,7 @@
 #28.08.23
   #automating the workflow to crop, stack and reproject our data
 
-    rm(list=ls())
+rm(list=ls())
 setwd("~/University/2023/Honours/R/data/git/NC-wrestling")
     
 # Packages ----------------------------------------------------------------
@@ -41,6 +41,32 @@ crs(rstack)
 plot(rstack[[19]], col = viridis(255))
 head(names(rstack))
 tail(names(rstack))
+
+# rm duplicates -----------------------------------------------------------
+
+#just as a precaution to ensure we didn't download multiple layers / days
+#we shall rm anything with the same name
+
+removeDuplicateLayers <- function(raster_stack) {
+  layer_names <- names(raster_stack)
+  unique_names <- unique(layer_names)
+  
+  # Identify the index of the unique layers based on their names
+  unique_layer_indices <- match(unique_names, layer_names)
+  
+  # Subset the raster stack to include only the unique layers
+  return(raster_stack[[unique_layer_indices]])
+}
+
+# Apply the function
+rstack1 <- removeDuplicateLayers(rstack)
+
+print(paste("Original number of layers: ", length(names(rstack))))
+print(paste("Number of layers after removing duplicates: ", length(names(rstack1)))) 
+
+#we have 0 duplicates, good 
+
+# save --------------------------------------------------------------------
 
 # Save the combined stack
 writeRaster(rstack, filename = "GHRSSTp_12-22.tif", overwrite = T)

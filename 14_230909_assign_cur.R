@@ -13,9 +13,9 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-cur <- read_csv("Inputs/230912_Currents_vals_12-22.csv")
-m_avg <- read_csv("Inputs/230912_CUR_m_avrg_12-22.csv")
-det <- read_csv("Inputs/230911_SST_det.csv")
+cur <- read_csv("Inputs/230912_Currents_vals_12-22.csv") #raw current values
+m_avg <- read_csv("Inputs/230912_CUR_m_avrg_12-22.csv") #climatological averages
+det <- read_csv("Inputs/230911_SST_det.csv") #xy coords w SST data on it
 
 head(cur)
 head(m_avg)
@@ -23,6 +23,9 @@ head(det)
 
 
 # calculate anomalies and add enviro data to det --------------------------
+
+# since we have 3 variables, it introduces some minor nuances...
+# nothing purrr and a good ol loop can't solve
 
 # Using map_dfr to loop through each row of det, and bind the results into a new dataframe
 det1 <- map_dfr(seq_len(nrow(det)), ~{
@@ -80,6 +83,8 @@ sum(is.na(det1 %>% dplyr::select(starts_with("anomaly_"))))
 
 # where do the NAs go ? ---------------------------------------------------
 
+#lets find out where our NAs are
+
 # Define a list of prefixes to loop over
 prefixes <- c("GSLA", "UCUR", "VCUR")
 
@@ -110,6 +115,7 @@ for (prefix in prefixes) {
   }
 }
 
+#Montague Island (again)...
 
 # save --------------------------------------------------------------------
 

@@ -13,10 +13,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 # pts ---------------------------------------------------------------------
 
 setwd("~/University/2023/Honours/R/data")
-
 dat <- read_csv("Inputs/230912_cur_det.csv")
-
-
 
 # REMORA ------------------------------------------------------------------
 
@@ -26,19 +23,20 @@ dat1 <-
             X = "receiver_deployment_longitude", 
             Y = "receiver_deployment_latitude",
             datetime = "detection_datetime", #datetime variable to be formatted correctly
-             env_var = "dist_to_land", 
+             env_var = "dist_to_land", #change to what you need
              #'rs_sst', 'rs_sst_interpolated', 'rs_salinity', 'rs_chl', 'rs_turbidity', 'rs_npp', 'rs_current', 'bathy', 'dist_to_land'
              cache_layers = F,
              crop_layers = TRUE,
             fill_gaps = TRUE,
             full_timeperiod = F,
-           #nrt = T, #for branched version only at the moment
+           #nrt = T, #for branched version only at the moment (thanks to my stubborn butt)
             folder_name = "VP2 AUG detections",
              .parallel = parallel::detectCores() - 2) #parallel::detectCores() - 2
 
-
-
 # La luna -----------------------------------------------------------------
+
+#lunar illumination is measured on a scale of 0 - 1, it omits the need to model a continuous variable cyclically 
+#lunar cycle can be utilised, however it is harder to pick up ecological anomalies
 
 dat2 <- dat1
 

@@ -13,14 +13,13 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-sst <- read_csv("Inputs/230911_SST_vals_12-22.csv")
-m_avg <- read_csv("Inputs/230911_SST_m_avrg_12-22.csv")
-det <- read_csv("Inputs/230907_step8.csv")
+sst <- read_csv("Inputs/230911_SST_vals_12-22.csv") #sst values raw for each day
+m_avg <- read_csv("Inputs/230911_SST_m_avrg_12-22.csv")  #Climatological averages for month
+det <- read_csv("Inputs/230907_step8.csv") #xy points
 
 head(sst)
 head(m_avg)
 head(det)
-
 
 # bind enviro dat ----------------------------------------------------------
 
@@ -59,7 +58,8 @@ det1 <- map_dfr(seq_len(nrow(det)), ~{
 sum(is.na(det1$SST))
 sum(is.na(det1$SST_m_avrg))
 
-# AND ANOMALYYYY ----------------------------------------------------------
+
+# anomaly -----------------------------------------------------------------
 
 det2 <- det1 %>%
   mutate(SST_anomaly = SST - SST_m_avrg)
@@ -68,11 +68,10 @@ det2 <- det1 %>%
 # where do the NAs go ? ---------------------------------------------------
 
 # Create a new data frame with rows where SST is NA
-NAsst <- det2 %>% filter(is.na(SST)) %>% 
+NAsst <- det2 %>% 
+  filter(is.na(SST)) %>% 
   group_by(Location) %>%
   summarise(na_count = sum(is.na(SST)))
-
-unique(NAsst$Location)
 
 det3 <- det2 %>% 
   group_by(Location) %>%
@@ -83,13 +82,9 @@ diff <- det3 %>%
   left_join(NAsst, by = "Location") %>% # Join on Location
   mutate(difference = sum - ifelse(is.na(na_count), 0, na_count)) # Calculate the difference
 
+diff 
 #Montague Isl & Port Macq, gone :(
 
 # save --------------------------------------------------------------------
 
 write_csv(det2, file = "Inputs/230911_SST_det.csv")
-
-ggplot(det2, aes(x = month, y = SST_anomaly, colour = movement)) +
-  geom_jitter(width = 0.2) +
-  facet_wrap(~Location)
-
