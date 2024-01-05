@@ -3,14 +3,12 @@
 
 # helpers -----------------------------------------------------------------
 
-
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-
 rm(list=ls())
 
+source("000_helpers.R")
+
 #bring and clean dat1a environment
-setwd("~/University/2023/Honours/R/data")
-dat <- read.csv("Inputs/231110_cleaned_pfuenzalida_dat.csv", stringsAsFactors = TRUE)
+dat <- read.csv("data/Inputs/231110_cleaned_pfuenzalida_dat.csv", stringsAsFactors = TRUE)
 
 dat1 <- dat %>% 
   mutate(Location = factor(Location),
@@ -36,8 +34,7 @@ str(dat1)
 
 # Starting model with all four variables
 m1 <- gamm4(Presence ~ s(SST_anomaly) + s(lunar.illumination) + s(anomaly_VCUR) + s(anomaly_GSLA),
-            random = ~(1|Tag_ID),
-            data = dat1,
+            random = ~(1|Tag_ID),data = dat1,
             family = binomial)
 
 # Models with combinations of three variables
@@ -124,12 +121,12 @@ summary(m5$gam)
 
 #all models linear, move to GLMMs
 
-# # Using the mixed model components for AIC comparison
-# AICtab(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
-#        m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
-#        m12$mer, m13$mer, m14$mer, m15$mer, mnull)
-# 
-# summary(m6$gam)
+# Using the mixed model components for AIC comparison
+AICtab(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
+       m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
+       m12$mer, m13$mer, m14$mer, m15$mer, mnull)
+
+summary(m6$gam)
 
 
 # GLMM --------------------------------------------------------------------

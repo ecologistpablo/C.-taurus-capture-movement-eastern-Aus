@@ -69,7 +69,6 @@ fill_vals <- function(df1, df2) {
   return(df1)
 }
 
-
 # mean 5 d for NAs --------------------------------------------------------
 
 # Function to fill NAs with 5-day rolling mean
@@ -90,7 +89,6 @@ mean_5d <- function(row) {
   }
   return(new_row)
 }
-
 
 # 1 d nearest neighbour function ------------------------------------------
 
@@ -133,7 +131,7 @@ fill1dneighbour <- function(df) {
 
 # A function to build a plotting data frame for mixed-effects model (mod), data (d) and alpha
 # Modified from https://bbolker.github.io/mixedmodels-misc/ecostats_chap.html
-# Written by Dave S
+# Written by Prof. Dave Schoeman
 # August 2020
 pltmm <- function(mod, d, alpha = 0.05) {
   m <- formula(mod,fixed.only = TRUE)[-2] # Fixed effects from mod
@@ -170,6 +168,5 @@ pltmm <- function(mod, d, alpha = 0.05) {
   Fits <- as.data.frame(lapply(fits, linv))
   return(cbind(p, Fits))
 }
-
 
 
