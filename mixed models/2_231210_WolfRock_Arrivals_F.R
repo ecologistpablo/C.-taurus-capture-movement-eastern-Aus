@@ -220,19 +220,17 @@ pdat <- expand.grid(
   Tag_ID = unique(dat1$Tag_ID)
 )
 
-preds <- pltmm(m11, pdat)
+preds <- pltmm(m11, dat1)
 
 
 # Plotting with confidence intervals
-p1 <- ggplot(preds, aes(x = anomaly_GSLA, y = y)) +
-  geom_line(colour = "firebrick4", size = 1) +
+ggplot(preds, aes(x = anomaly_VCUR)) +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2) +
   labs(title = "Female arrivals at Wolf Rock from south (n = 39)",
        x = "Temporal Anomaly of Global Sea Level Anomaly",
        y = "Predicted Probability of Presence") +
   theme_minimal()
 
-p1
 
 # VCUR --------------------------------------------------------------------
 
