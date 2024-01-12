@@ -111,8 +111,8 @@ m15 <- gamm4(Presence ~ s(anomaly_GSLA),
              family = binomial)
 
 # Null model
-mnull <- glmer(Presence ~ 1 + (1|Tag_ID),
-               data = dat1,
+mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"), 
+               data = dat1, 
                family = binomial)
 
 #first, are all estimated degrees of freedom linear? if so move to glmms
@@ -123,7 +123,7 @@ summary(m2$gam)
 # Using the mixed model components for AIC comparison
 MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
        m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
-       m12$mer, m13$mer, m14$mer, m15$mer, mnull)
+       m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
 
 #mnull is our minimum model again!
 

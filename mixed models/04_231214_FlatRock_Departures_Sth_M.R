@@ -122,13 +122,6 @@ summary(m15$gam)
 
 #all models linear, move to GLMMs
 
-# # Using the mixed model components for AIC comparison
-# AICtab(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
-#        m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
-#        m12$mer, m13$mer, m14$mer, m15$mer, mnull)
-# 
-# summary(m6$gam)
-
 # GLMM --------------------------------------------------------------------
 
 # Starting model with all four variables
@@ -201,10 +194,7 @@ mnull <- glmer(Presence ~ 1 + (1|Tag_ID),
                family = binomial)
 
 
-AICtab(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, mnull)
-
 MuMIn::AICc(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, mnull)
-
 
 summary(m12)
 
