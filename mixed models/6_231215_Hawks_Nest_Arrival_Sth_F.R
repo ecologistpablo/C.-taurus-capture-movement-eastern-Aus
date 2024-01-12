@@ -111,8 +111,8 @@ m15 <- gamm4(Presence ~ s(anomaly_GSLA),
              family = binomial)
 
 # Null model
-mnull <- glmer(Presence ~ 1 + (1|Tag_ID),
-               data = dat1,
+mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"), 
+               data = dat1, 
                family = binomial)
 
 #first, are all estimated degrees of freedom linear? if so move to glmms
