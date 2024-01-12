@@ -123,7 +123,33 @@ IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("receiver_deployment_longitude", "r
 
 mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "Location", fbg = F)
 
+
+
+
 # save it ----------------------------------------------------------------------
 
 write_csv(IMOS, "Inputs/231020_step2.csv")
+
+
+# results for detections --------------------------------------------------
+
+# Calculating min, max datetime and duration for each Tag ID
+duration_data <- IMOS %>%
+  group_by(Tag_ID) %>%
+  summarise(
+    min_datetime = min(detection_datetime, na.rm = TRUE),
+    max_datetime = max(detection_datetime, na.rm = TRUE),
+    duration = max_datetime - min_datetime
+  ) %>%
+  ungroup()
+
+# Calculating mean and standard deviation of durations
+mean_duration <- mean(duration_data$duration, na.rm = TRUE)
+sd_duration <- sd(duration_data$duration, na.rm = TRUE)
+
+# Print results
+print(duration_data)
+print(paste("Mean duration: ", mean_duration))
+print(paste("SD of duration: ", sd_duration))
+
 
