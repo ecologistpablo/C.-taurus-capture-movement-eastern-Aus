@@ -129,7 +129,7 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "Location", fbg = F)
 # save it ----------------------------------------------------------------------
 
 write_csv(IMOS, "Inputs/231020_step2.csv")
-
+IMOS <- read_csv("Inputs/231020_step2.csv")
 
 # results for detections --------------------------------------------------
 

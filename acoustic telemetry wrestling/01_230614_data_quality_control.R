@@ -18,12 +18,15 @@ files <- list(det = "IMOS_detections.csv", #,
               meas = "IMOS_animal_measurements.csv")
 
 #Quality control of REMORA
-tag_qc <- runQC(files, .parallel = F, .progress = TRUE) 
+tag_qc <- runQC(files, 
+                .parallel = F, #this is for parallel processeing, if you like = detectCores() - 2 helps 
+                .progress = TRUE) 
 
 #unnest
 qc_data <- tag_qc %>%
   unnest(cols = QC) %>%
   ungroup()
+#as of 13.01.24, 781145 pings
 
 #clean up our df, qc gave us useless columns
 qc_data <- qc_data %>%
@@ -164,7 +167,7 @@ load("Inputs/230807_step1.RData")
 # P. Butcher dat ----------------------------------------------------------
 #06.09.23
 
-bdat <- read_csv("Dwyer dat/GNS_det_data_Paul_Butcher_230904.csv")
+pb_dat <- read_csv("Dwyer dat/GNS_det_data_Paul_Butcher_230904.csv")
 
 str(bdat)
 
