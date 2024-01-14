@@ -62,4 +62,4 @@ unique_sum <- IMOS %>%
 unique_sum
 
 # save --------------------------------------------------------------------
-write_csv(IMOS, "Inputs/231020_step1.5.csv")
+write_csv(IMOS, "Inputs/240114_step2.csv")

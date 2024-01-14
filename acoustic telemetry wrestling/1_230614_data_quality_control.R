@@ -10,7 +10,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 #Quality control ---------------------------------------------------------------
 
-setwd("~/University/2023/Honours/R/data/IMOS/IMOS_detections_2023-07-21_11-56-11") 
+setwd("~/University/2023/Honours/R/data/git/C.-taurus-capture-movement-eastern-Aus/data/Inputs/IMOS_detections_2024-01-14_21-54-00")
 
 files <- list(det = "IMOS_detections.csv", #,
               #rmeta = "path_to/IMOS_receiver_deployment_metadata.csv",
@@ -19,14 +19,14 @@ files <- list(det = "IMOS_detections.csv", #,
 
 #Quality control of REMORA
 tag_qc <- runQC(files, 
-                .parallel = F, #this is for parallel processeing, if you like = detectCores() - 2 helps 
+                .parallel = detectCores() - 2, #this is for parallel processing, if you like = detectCores() - 2 helps 
                 .progress = TRUE) 
 
 #unnest
 qc_data <- tag_qc %>%
   unnest(cols = QC) %>%
   ungroup()
-#as of 13.01.24, 781145 pings
+#as of 14.01.24, 784,262 pings
 
 #clean up our df, qc gave us useless columns
 qc_data <- qc_data %>%
@@ -48,7 +48,12 @@ qc_data <- qc_data %>%
   distinct(detection_datetime, transmitter_id, station_name, #keep only one per day (per tag id)
            .keep_all = TRUE) #only one row per day & keep everything else
 
-qc_data$detection_corrected_datetime <- as.character(qc_data$detection_corrected_datetime)
+summary(qc_data$detection_datetime)
+
+#filter out 2023
+
+qc_data <- qc_data %>% 
+filter(format(detection_datetime, "%Y") != "2023")
 
 
 # save it ----------------------------------------------------------------------
@@ -58,8 +63,8 @@ rm(tag_qc)
 rm(WA)
 
 setwd("~/University/2023/Honours/R/data")
-write_csv(qc_data, file = "Inputs/230806_qc_data.csv")
-qc_data <- read_csv("Inputs/230806_qc_data.csv")
+write_csv(qc_data, file = "Inputs/240114_qc_data.csv")
+qc_data <- read_csv("Inputs/240114_qc_data.csv")
 
 # Dwyer dat ---------------------------------------------------------------
 
@@ -118,8 +123,14 @@ ddat <- ddat %>%
     Detection_QC = NA_real_
   )
 
-# Step 3: Reorder columns in 'ddat' to match the order in 'qc_data'
-ddat <- ddat[, colnames(qc_data)]
+# Add any (newish >?) missing columns from 'qc_data' to 'ddat'
+missing_cols <- setdiff(colnames(qc_data), colnames(ddat))
+for (col in missing_cols) {
+  ddat[[col]] <- NA
+}
+
+# Step 3: Reorder columns in 'ddat' to match 'qc_data'
+ddat <- ddat[colnames(qc_data)]
 
 # Step 4: Convert data types of 'ddat' columns to match those in 'qc_data'
 # need to use the appropriate conversion functions for each column depending on the expected data types in 'qc_data'
@@ -137,7 +148,7 @@ adat <- adat %>%
   distinct(detection_datetime, transmitter_id, station_name, #keep only one per day (per tag id)
            .keep_all = TRUE) #keep everything else
 
-#NA check
+#NA check, do we have any coords that are NA ? and why, what are their station names lets look them up 
 which(is.na(adat$receiver_deployment_longitude))
 
 # Replace lat/lon for missing values (physically inspected XY coordinates and corelated to IMOS database)
@@ -156,18 +167,19 @@ adat <- adat %>%
                                                  153.2300))
 
 which(is.na(adat$receiver_deployment_longitude))
+#this NEEDs to be 0
 
 # save it ----------------------------------------------------------------------
 
-write_csv(adat, file = "Inputs/230807_step1.csv")
-save(adat, file = "Inputs/230807_step1.RData")
+#write_csv(adat, file = "Inputs/230807_step1.csv")
+#save(adat, file = "Inputs/230807_step1.RData")
 
 load("Inputs/230807_step1.RData")
 
 # P. Butcher dat ----------------------------------------------------------
 #06.09.23
 
-pb_dat <- read_csv("Dwyer dat/GNS_det_data_Paul_Butcher_230904.csv")
+bdat <- read_csv("Dwyer dat/GNS_det_data_Paul_Butcher_230904.csv")
 
 str(bdat)
 
@@ -179,7 +191,7 @@ bdat1 <- bdat %>%
     receiver_deployment_latitude = `VR4G Lat.`,
     receiver_deployment_longitude = `VR4G Long.`,
     station_name = Location) %>%
-  select(-TL)
+  dplyr::select(-TL)
 
 # Step 2: Create new columns in 'ddat' to match those in 'qc_data' that don't have a corresponding column in 'ddat'.
 # We'll fill these with NA for now.
@@ -215,8 +227,14 @@ bdat2 <- bdat1 %>%
     detection_corrected_datetime = NA_character_,
   )
 
-# Step 3: Reorder columns in 'ddat' to match the order in 'qc_data'
-bdat3 <- bdat2[, colnames(adat)]
+# Correct Step 3: Add any missing columns from 'qc_data' to 'bdat2'
+missing_cols <- setdiff(colnames(qc_data), colnames(bdat2))
+for (col in missing_cols) {
+  bdat2[[col]] <- NA  # Ensure you're adding to bdat2, not ddat
+}
+
+# Correct Step 4: Reorder columns in 'bdat2' to match the order in 'qc_data'
+bdat3 <- bdat2[, colnames(qc_data)]
 
 bdat3$detection_datetime <- as.Date(bdat3$detection_datetime, format="%d/%m/%Y")
 
@@ -236,9 +254,10 @@ zdat <- bind_rows(adat, bdat4)
 zdat1 <- zdat %>%
   distinct(detection_datetime, tag_id, station_name, #keep only one per day (per tag id)
            .keep_all = TRUE)
+#so we have 17137 unique movemnts as of 14.01.23 22:20
+
 
 # save it ----------------------------------------------------------------------
 
-write_csv(zdat1, file = "Inputs/230906_step1.csv")
-save(zdat1, file = "Inputs/230807_step1.RData")
+write_csv(zdat1, file = "Inputs/240114_step1.csv")
 

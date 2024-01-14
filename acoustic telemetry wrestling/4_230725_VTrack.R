@@ -11,7 +11,8 @@ rm(list=ls())
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data") 
-IMOS <- read_csv("Inputs/231020_step2.csv")
+IMOS <- read_csv("Inputs/240114_step3.csv")
+# 15923 obs
 
 #ReadInputData -----------------------------------------------------------------------
 
@@ -67,12 +68,12 @@ TID.Res_all <-  #to understand RunResidenceExtraction, read vignette
 
 # Data exploration ------------------------------------------------------------------
 
-save(TID.Res_all, file = "Inputs/TID.Res_all_231020.RData")
+#save(TID.Res_all, file = "Inputs/TID.Res_all_231020.RData")
 #load("TID.Res_all_230805.RData")
 
 #Explore Residences log
-TID.Res_all.Logs <-
- TID.Res_all$residenceslog
+#TID.Res_all.Logs <-
+# TID.Res_all$residenceslog
 
 #TID.Res_all.Logs <- 
 #  TID.Res_all$residences
@@ -80,6 +81,8 @@ TID.Res_all.Logs <-
 # Explore Non-Residences/Movements
 TID.Res.Movements <- 
   TID.Res_all$nonresidences
+#as of 14.01.24, 11,616 rows emerge (meaning *2 due to each row being an arrival and departure)
+# 11,704 now
 
 #remove unnessecary columns
 TID.Res.Movements <- TID.Res.Movements[ , -9]
@@ -89,10 +92,9 @@ head(TID.Res.Movements)
 
 TID.Res.Movements <- TID.Res.Movements %>%
   filter(STATIONNAME1 != STATIONNAME2) #remove movements that return to the same location
-#559, 543 movements, 641 (still 641 :o)
-
+# 648
 
 # save --------------------------------------------------------------------
 
-write_csv(TID.Res.Movements,file = "Inputs/230906_step3.csv")
+write_csv(TID.Res.Movements,file = "Inputs/240114_step4.csv")
 

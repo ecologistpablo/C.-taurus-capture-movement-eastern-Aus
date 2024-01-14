@@ -9,7 +9,14 @@ rm(list=ls()) # to clear workspace
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data") 
-IMOS <- read_csv("Inputs/231020_step1.5.csv")
+IMOS <- read_csv("Inputs/240114_step2.csv")
+
+
+# conceptualisation of script ---------------------------------------------
+
+# we have raw detections
+# but we will turn this into movements from different spots
+# lets group our aggregations, curtains and bays into one location
 
 # plot it ----------------------------------------------------------------------
 
@@ -51,10 +58,10 @@ add_location_group <- function(df, central_station_name, location_name) {
   return(df) # Return the modified data frame
 }
 
-#adjust central lat / lon for how broad you want to generate your locations
-#we played with 10 km either side, but 5km either side targets aggregation sites more accurately
-#if you group aggregation sites together that are spatially close, they may not be ecologically similar
-#we don't know yet, so I targetted specific sites
+# adjust central lat / lon for how broad you want to generate your locations
+# we played with 10 km either side, but 5km either side targets aggregation sites more accurately
+# if you group aggregation sites together that are spatially close, they may not be ecologically similar
+# we don't know yet, so I targeted specific sites
 
 # run --------------------------------------------------------------------------
 
@@ -124,14 +131,15 @@ IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("receiver_deployment_longitude", "r
 mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "Location", fbg = F)
 
 
-
-
 # save it ----------------------------------------------------------------------
 
-write_csv(IMOS, "Inputs/231020_step2.csv")
-IMOS <- read_csv("Inputs/231020_step2.csv")
+write_csv(IMOS, "Inputs/240114_step3.csv")
+# IMOS <- read_csv("Inputs/231020_step2.csv")
 
 # results for detections --------------------------------------------------
+
+# this just for generating data for results section
+
 
 # Calculating min, max datetime and duration for each Tag ID
 duration_data <- IMOS %>%
