@@ -47,6 +47,5 @@ summary(cdat1$Direction)
 
 #save it -----------------------------------------------------------------------
 
-save(cdat1, file = "Inputs/230807_step4.RData")
-write_csv(cdat1,file = "Inputs/230906_step4.csv") 
+write_csv(cdat1,file = "Inputs/240114_step5.csv") 
 

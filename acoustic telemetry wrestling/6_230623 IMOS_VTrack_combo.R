@@ -1,14 +1,13 @@
 #23.06.23
-  #Generating Pseudo-Absences
+  #connecting movement with detections
 
 rm(list=ls())
 #listen to your supervisors - helpers:
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data") 
-IMOS <- read_csv("Inputs/230906_step2.csv") #after receiver renaming but before VTrack
-combined_data <- read_csv("Inputs/230906_step4.csv") 
-
+IMOS <- read_csv("Inputs/240114_step3.csv") #after receiver renaming but before VTrack
+combined_data <- read_csv("Inputs/240114_step5.csv") 
 
 #we now have a movement df and a df with raw detections
 #we need to add metadata to our movement rows
@@ -17,7 +16,6 @@ combined_data <- read_csv("Inputs/230906_step4.csv")
 # pre-munging -------------------------------------------------------------
 
 combined_data$Tag_ID <- as.character(combined_data$Tag_ID)
-
 
 # Assign a unique ID to each row before the split
 combined_data <- combined_data %>%
