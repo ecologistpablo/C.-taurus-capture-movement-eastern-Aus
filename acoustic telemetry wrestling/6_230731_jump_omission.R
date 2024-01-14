@@ -9,13 +9,26 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("~/University/2023/Honours/R/data")
 dat <- read_csv("Inputs/230906_step5.csv") #5km
 
+
+# conceptual background on script -----------------------------------------
+
+# my study wants to look at migratory movements only
+# sharks sometimes will leave a "location" only to return immediately
+# this could be seen as a foraging movement or just a little swim outside and back 
+# we want to remove these movements
+# so this script removes movements that leave, get detected outside a location within 50 km 
+# only to return back to the beginning location within 24 h 
+# I've written it into little functions so you can edit the temporal and spatial thresholds
+# because we are open - source scientists who are cool like that 
+
 # begin wrestling --------------------------------------------------------------
 
+# a departure at A, arrival at B, departure at B and arrival at A = 4 movements
 dat1 <- dat %>% 
   arrange(Tag_ID, detection_datetime) %>%  # sort data by Tag_ID and detection_datetime
   group_by(Tag_ID) %>%  # group data by Tag_ID
   filter(n() >= 4) %>%  # remove groups with fewer than 4 rows
-  slice(1:(n() %/% 4 * 4)) %>%  # keep the highest multiple of 4 rows for each group
+  dplyr::slice(1:(n() %/% 4 * 4)) %>%  # keep the highest multiple of 4 rows for each group
     #(one Tag_ID can move multiple times)
   ungroup()  # remove grouping
 
@@ -26,14 +39,16 @@ table(dat1$Tag_ID)
 dat1 <- dat1 %>%
   mutate(FRC = row_number())
 
-#does row 2 connect to row 3 in their departure/arrival location?
+#does row 1 - 4 and 2 - 3 connect in their location name (is it location A - B - A)
   #(ie are the movements connected?)
 evaluate_rows <- function(df) {
   df %>%
     group_by(Tag_ID) %>%
     mutate(keep_row = case_when(
+      FRC %% 4 == 1 & Departure_location == lag(Arrival_location, default = first(Arrival_location)) ~ TRUE, # Check if movement 1 departure matches the last arrival location (movement 4)
       FRC %% 4 == 2 & Arrival_location == lead(Departure_location) ~ TRUE, #TRUE IF row 2 = matching Arrival_location
       FRC %% 4 == 3 & Departure_location == lag(Arrival_location) ~ TRUE, #TRUE IF row 3 = matching Departure_location
+      FRC %% 4 == 0 & Arrival_location == lag(Departure_location, default = first(Departure_location)) ~ TRUE, # Check if movement 4 arrival matches the first departure location (movement 1)
       TRUE ~ FALSE #if it aint true, its false
     )) %>%
     ungroup()
@@ -43,9 +58,9 @@ dat2 <- evaluate_rows(dat1)
 
 table(dat2$keep_row)
 
-#if false occurred as evenly as true, the sets of 4 would all match in rows 2 & 3
-#this means not all groups of 4 rows are connected movements
-#this means we have some data to cut
+# if false occurred as evenly as true, the sets of 4 would all match in rows 2 & 3
+# this means not all groups of 4 rows are connected movements
+# this means we have some data to cut
 
 dat3 <- dat2 %>%
   # Create a new grouping variable that identifies each set of 4 rows
@@ -58,13 +73,7 @@ dat3 <- dat2 %>%
   # Drop the helper columns
   dplyr::select(-group_of_4, -any_true, -keep_row)
 
-#dat2 obs - dat3 obs
-968 - 884
-# Huzzah, 84
-904-696
-208
-
-#Ok, now we have we now an orderly df with groups of 4 rows that match in time and Tag_ID
+# Ok, now we have we now an df that is ordered using tag id with movement 2 & 3 in the same place
 #But we need to add a temporal filter and a spatial filter
 
 # Temporal filter --------------------------------------------------------------
