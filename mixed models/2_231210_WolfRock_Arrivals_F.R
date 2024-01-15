@@ -7,7 +7,7 @@ rm(list=ls())
 
 source("000_helpers.R")
 
-#bring and clean dat1a environment
+setwd("~/University/2023/Honours/R")
 dat <- read.csv("data/Inputs/231110_cleaned_pfuenzalida_dat.csv", stringsAsFactors = TRUE)
 
 dat1 <- dat %>% 
@@ -218,12 +218,15 @@ pdat <- expand.grid(
 
 preds <- pltmm(m11, dat1)
 
+# Sort the dataframe by 'anomaly_VCUR' to ensure lines are connected in the right order
+preds <- preds[order(preds$anomaly_VCUR),]
 
 # Plotting with confidence intervals
-ggplot(preds, aes(x = anomaly_VCUR)) +
+ggplot(preds, aes(x = anomaly_VCUR, y = y)) +
+  geom_line()+
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2) +
   labs(title = "Female arrivals at Wolf Rock from south (n = 39)",
-       x = "Temporal Anomaly of Global Sea Level Anomaly",
+       x = "North - south current direction climatological anomaly",
        y = "Predicted Probability of Presence") +
   theme_minimal()
 

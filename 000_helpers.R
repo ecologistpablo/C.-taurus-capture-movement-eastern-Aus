@@ -147,7 +147,7 @@ pltmm <- function(mod, d, alpha = 0.05) {
     if(eval(parse(text = paste0("with(d,is.factor(", fs[i], "))")))) {
       out[[fs[i]]] <- eval(parse(text = paste0("with(d, ", fs[i], " <- levels(", fs[i], "))")))
     } else {
-      out[[fs[i]]] <- eval(parse(text = paste0("with(d, ", fs[i], " <- seq(min(", fs[i], "), max(", fs[i], "), length.out = 250))")))	
+      out[[fs[i]]] <- eval(parse(text = paste0("with(d, ", fs[i], " <- seq(min(", fs[i], "), max(", fs[i], "), length.out = 50))")))	
     }
   }
   p <- expand.grid(out) # Make preditor data frame
@@ -164,6 +164,62 @@ pltmm <- function(mod, d, alpha = 0.05) {
                      se.lw =  y - pred.se,
                      upr = y + crit*pred.se, # Approx upper 95% conf limit for fit
                      lwr = y - crit*pred.se # Approx lower 95% conf limit for fit
+  )
+  Fits <- as.data.frame(lapply(fits, linv))
+  return(cbind(p, Fits))
+}
+
+
+# pltmm1 ------------------------------------------------------------------
+
+pltmm <- function(mod, d, fixed_effects, alpha = 0.05) {
+  require(parallel)
+  
+  # Extract the formula and get fixed effects
+  m <- formula(mod, fixed.only = TRUE)
+  mc <- as.character(m)[2] # Make the formula character
+  
+  # Filter only specified fixed effects
+  fs <- unlist(strsplit(mc, " * "))[unlist(strsplit(mc, " * ")) %in% fixed_effects]
+  
+  # Prepare data for parallel processing
+  out <- list()
+  for(i in 1:length(fs)) {
+    if(eval(parse(text = paste0("with(d,is.factor(", fs[i], "))")))) {
+      out[[fs[i]]] <- eval(parse(text = paste0("with(d, ", fs[i], " <- levels(", fs[i], "))")))
+    } else {
+      out[[fs[i]]] <- eval(parse(text = paste0("with(d, ", fs[i], " <- seq(min(", fs[i], "), max(", fs[i], "), length.out = 250))")))  
+    }
+  }
+  
+  p <- expand.grid(out)
+  mm <- model.matrix(m, p)
+  
+  # Set up parallel backend to use specified number of cores
+  no_cores <- detectCores() - 2
+  cl <- makeCluster(no_cores)
+  clusterExport(cl, c("mm", "mod"))
+  clusterEvalQ(cl, library(lme4))
+  
+  # Parallel computation for predictions
+  beta <- fixef(mod)
+  y <- parLapply(cl, split(mm, seq(nrow(mm))), function(x) x %*% beta)
+  y <- unlist(y)
+  
+  V <- vcov(mod)
+  pred.se <- parLapply(cl, split(mm, seq(nrow(mm))), function(x) sqrt(diag(x %*% V %*% t(x))))
+  pred.se <- unlist(pred.se)
+  
+  stopCluster(cl)
+  
+  # Remaining calculations
+  linv <- family(mod)$linkinv
+  crit <- -qnorm(alpha/2)
+  fits <- data.frame(y = y,
+                     se.hi = y + pred.se,
+                     se.lw = y - pred.se,
+                     upr = y + crit*pred.se,
+                     lwr = y - crit*pred.se
   )
   Fits <- as.data.frame(lapply(fits, linv))
   return(cbind(p, Fits))
