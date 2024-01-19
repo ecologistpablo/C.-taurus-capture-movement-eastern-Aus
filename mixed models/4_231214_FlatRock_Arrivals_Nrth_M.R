@@ -130,56 +130,51 @@ summary(m8$gam)
 
 # predictive model --------------------------------------------------------
 
-#pltmm ? 
+# fitting mixed effects models with sometimes two interaction terms in gamm4 and glmer
+# is harder than expected?!!!? (:O)
+# luckily D. Schoeman knows what package can help
+# ggeffects
+# https://strengejacke.github.io/ggeffects/articles/practical_logisticmixedmodel.html
 
-pdat <- expand.grid(
-  anomaly_GSLA = seq(min(dat1$anomaly_GSLA), max(dat1$anomaly_GSLA), length.out = 100),
-  SST_anomaly = mean(dat1$SST_anomaly, na.rm = T),
-  Tag_ID = unique(dat1$Tag_ID, na.rm = T)
-  )
+# for logistic mixed effects model w interaction terms
+# Model contains splines or polynomial terms. Consider using terms="var_cont [all]" to get smooth plots.
 
-# Predict using the model
-pdat$predicted_presence <- predict(m8$gam, newdata = pdat, type = "response")
+SST <- ggpredict(m8, c("SST_anomaly[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+SST #does it work?
+GSLA <- ggpredict(m8, c("anomaly_GSLA[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+GSLA
 
-# Plotting
-p1 <- ggplot(pdat, aes(x = anomaly_GSLA, y = predicted_presence)) +
-  geom_line(size = 2, colour = "firebrick") +
-  labs(title = "Male arrivals at Flat Rock from south (n = 126)",
-       x = "temporal anomaly of global sea level anomaly",
-       y = "Predicted probability of presence") +
-  theme_grey()
+#clean up x - y labels and breaks
+SST1 <- SST + 
+  theme_minimal() +
+  labs(x = "Sea surface temperature (⁰C) temporal anomaly",
+       y = "Predicted probability of arrival",
+       title = "Male arrivals from south at Flat Rock (n = 126)") +
+  scale_y_continuous(
+    breaks = c(0, 0.25, 0.5, 0.75, 1),
+    labels = c("0%", "25%", "50%", "75%", "100%"),
+    limits = c(0, 1))+
+  geom_line(size = 1)
 
-p1
+SST1
 
-# SST ---------------------------------------------------------------------
+#clean up x - y labels and breaks
+GSLA1 <- GSLA + 
+  theme_minimal() +
+  labs(x = "Temporal anomaly of gridded sea level anomaly",
+       y = "Predicted probability of arrival",
+       title = "Male arrivals from south at Flat Rock (n = 126)") + 
+  scale_y_continuous( breaks = c(0, 0.25, 0.5, 0.75, 1),
+                      labels = c("0%", "25%", "50%", "75%", "100%"),
+                      limits = c(0, 1)) +
+  geom_line(size = 1)
+GSLA1
 
-pdat <- expand.grid(
-  SST_anomaly = seq(min(dat1$SST_anomaly, na.rm = T), max(dat1$SST_anomaly, na.rm = T), length.out = 100),
-  anomaly_GSLA = mean(dat1$anomaly_GSLA, na.rm = T),
-  Tag_ID = unique(dat1$Tag_ID, na.rm = T)
-)
+#ggcombine that up bby
+p <- ggarrange(GSLA1 + SST1) #ncol / nrow = 1 to specify if u want 1 row or column
+p
 
-
-# Predict using the model
-pdat$predicted_presence <- predict(m8$gam, newdata = pdat, type = "response")
-
-
-head(pdat)
-
-# Plotting
-p2 <- ggplot(pdat, aes(x = SST_anomaly, y = predicted_presence)) +
-  geom_line(size = 2, colour = "firebrick") +
-  labs(title = "Male arrivals at Flat Rock from south (n = 126)",
-       x = "Sea surface temperature climatological anomaly",
-       y = "Predicted probability of presence") +
-  theme_grey()
-
-p2
-
-
-z1 <- ggarrange(p1, p2, ncol = 2)
-z1
 #save
-ggsave(path = "Outputs/Graphs/Polishing/Models", "231220_FR_Arrivals_Males.png",
-       plot = z1, width = 10, height = 5) #in inches because gg weird
+ggsave(path = "Outputs/Graphs/Polishing/Models", "240119_FR_Female_Arrival_Nrth.png",
+       plot = p, width = 10, height = 5) #in inches because gg weird
 

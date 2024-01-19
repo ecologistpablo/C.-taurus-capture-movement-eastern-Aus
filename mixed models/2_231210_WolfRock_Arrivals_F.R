@@ -5,10 +5,10 @@
 
 rm(list=ls())
 
-source("000_helpers.R")
+source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
-setwd("~/University/2023/Honours/R")
-dat <- read.csv("data/Inputs/231110_cleaned_pfuenzalida_dat.csv", stringsAsFactors = TRUE)
+setwd("~/University/2023/Honours/R/data")
+dat <- read.csv("Inputs/231110_cleaned_pfuenzalida_dat.csv", stringsAsFactors = TRUE)
 
 dat1 <- dat %>% 
   mutate(Location = factor(Location),
@@ -210,44 +210,51 @@ summary(m11)
 
 # predict -----------------------------------------------------------------
 
-pdat <- expand.grid(
-  anomaly_GSLA = seq(min(dat1$anomaly_GSLA, na.rm = TRUE), max(dat1$anomaly_GSLA, na.rm = TRUE), length.out = 100),
-  anomaly_VCUR = mean(dat1$anomaly_VCUR), #just need it 
-  Tag_ID = unique(dat1$Tag_ID)
-)
+# fitting mixed effects models with sometimes two interaction terms in gamm4 and glmer
+# is harder than expected?!!!? (:O)
+# luckily D. Schoeman knows what package can help
+# ggeffects
+# https://strengejacke.github.io/ggeffects/articles/practical_logisticmixedmodel.html
 
-preds <- pltmm(m11, dat1)
+# for logistic mixed effects model w interaction terms
+# Model contains splines or polynomial terms. Consider using terms="var_cont [all]" to get smooth plots.
 
-# Sort the dataframe by 'anomaly_VCUR' to ensure lines are connected in the right order
-preds <- preds[order(preds$anomaly_VCUR),]
+VCUR <- ggpredict(m11, c("anomaly_VCUR[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+VCUR #does it work?
+GSLA <- ggpredict(m11, c("anomaly_GSLA[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+GSLA
 
-# Plotting with confidence intervals
-ggplot(preds, aes(x = anomaly_VCUR, y = y)) +
-  geom_line()+
-  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2) +
-  labs(title = "Female arrivals at Wolf Rock from south (n = 39)",
-       x = "North - south current direction climatological anomaly",
-       y = "Predicted Probability of Presence") +
-  theme_minimal()
+#clean up x - y labels and breaks
+VCUR1 <- VCUR + 
+  theme_minimal() +
+  labs(x = "North-south current direction temporal anomaly",
+       y = "Predicted probability of arrival",
+       title = "Female arrivals from south at Wolf Rock (n = 39)") +
+  scale_y_continuous(
+    breaks = c(0, 0.25, 0.5, 0.75, 1),
+    labels = c("0%", "25%", "50%", "75%", "100%"),
+    limits = c(0, 1))+
+  geom_line(size = 1)
 
+VCUR1
 
-# VCUR --------------------------------------------------------------------
+#clean up x - y labels and breaks
+GSLA1 <- GSLA + 
+  theme_minimal() +
+  labs(x = "Temporal anomaly of gridded sea level anomaly",
+       y = "Predicted probability of arrival",
+       title = "Female arrivals from south at Wolf Rock (n = 39)") + 
+  scale_y_continuous( breaks = c(0, 0.25, 0.5, 0.75, 1),
+                      labels = c("0%", "25%", "50%", "75%", "100%"),
+                      limits = c(0, 1)) +
+  geom_line(size = 1)
+GSLA1
 
-new_data <- expand.grid(
-  anomaly_VCUR = seq(min(dat1$anomaly_VCUR, na.rm = TRUE), max(dat1$anomaly_VCUR, na.rm = TRUE), length.out = 100)
-)
+#ggcombine that up bby
+p <- ggarrange(GSLA1 + VCUR1) #ncol / nrow = 1 to specify if u want 1 row or column
+p
 
-# thank Dave 
-pred_data <- pltmm(m11, new_data)
+#save
+ggsave(path = "outputs/Graphs/Polishing/Models", "240119_WR_Female_Arrival_Nrth.png",
+       plot = p, width = 10, height = 5) #in inches because gg weird
 
-#plotting w preds
-p2 <- ggplot(pred_data, aes(x = anomaly_VCUR, y = y)) +
-  geom_line(colour = "firebrick4", size = 1) +
-  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2) +
-  labs(title = "Predicted Presence vs. current direction",
-       x = "North - south current direction anomaly",
-       y = "Predicted Probability of Presence") +
-  theme_minimal()
-
-
-p2

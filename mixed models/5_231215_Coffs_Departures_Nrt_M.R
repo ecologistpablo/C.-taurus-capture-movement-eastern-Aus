@@ -127,26 +127,35 @@ MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
 
 # predictive model --------------------------------------------------------
 
-pdat <- expand.grid(
-  SST_anomaly = seq(min(dat1$SST_anomaly, na.rm = T), max(dat1$SST_anomaly, na.rm = T), length.out = 100),
-  Tag_ID = unique(dat1$Tag_ID))
+# fitting mixed effects models with sometimes two interaction terms in gamm4 and glmer
+# is harder than expected?!!!? (:O)
+# luckily D. Schoeman knows what package can help
+# ggeffects
+# https://strengejacke.github.io/ggeffects/articles/practical_logisticmixedmodel.html
+
+# for logistic mixed effects model w interaction terms
+# Model contains splines or polynomial terms. Consider using terms="var_cont [all]" to get smooth plots.
 
 
-# Predict using the model
-pdat$predicted_presence <- predict(m12$gam, newdata = pdat, type = "response")
+SST <- ggpredict(m12, c("SST_anomaly[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+SST
 
-summary(pdat)
+#clean up x - y labels and breaks
+SST1 <- SST + 
+  theme_minimal() +
+  labs(x = "Sea surface temperature (⁰C) temporal anomaly",
+       y = "Predicted probability of arrival",
+       title = "Male departures going north at Coffs Harbour (n = 78)") +
+  scale_y_continuous(
+    breaks = c(0, 0.25, 0.5, 0.75, 1),
+    labels = c("0%", "25%", "50%", "75%", "100%"),
+    limits = c(0, 1))+
+  geom_line(size = 1) +
+  theme(plot.background = element_rect(fill = "white"))
 
-# Plotting
-p1 <- ggplot(pdat, aes(x = SST_anomaly, y = predicted_presence)) +
-  geom_line(size = 2, colour = "firebrick") +
-  labs(title = "Male departures at Coffs Harbour going north (n = 75)",
-       x = "Sea surface temperature climatological anomaly",
-       y = "Predicted probability of arrivals") +
-  theme_grey()
-
-p1
+SST1
 
 #save
-ggsave(path = "Outputs/Graphs/Polishing/Models", "231221_CH_Departures_Nrth_Males.png",
-       plot = p1, width = 5, height = 5) #in inches because gg weird
+ggsave(path = "outputs/Graphs/Polishing/Models", "240119_CH_Male_Departure_Nrth.png",
+       plot = SST1, width = 5, height = 5) #in inches because gg weird
+

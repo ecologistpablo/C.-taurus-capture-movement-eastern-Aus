@@ -12,7 +12,6 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data") 
 IMOS <- read_csv("Inputs/240114_step3.csv")
-# 15923 obs
 
 #ReadInputData -----------------------------------------------------------------------
 
