@@ -70,12 +70,12 @@ TID.Res_all <-  #to understand RunResidenceExtraction, read vignette
 #save(TID.Res_all, file = "Inputs/TID.Res_all_231020.RData")
 #load("TID.Res_all_230805.RData")
 
-#Explore Residences log
-#TID.Res_all.Logs <-
-# TID.Res_all$residenceslog
+# Explore Residences log
+TID.Res_all.Logs <-
+TID.Res_all$residenceslog
 
 #TID.Res_all.Logs <- 
-#  TID.Res_all$residences
+TID.Res_all$residences
 
 # Explore Non-Residences/Movements
 TID.Res.Movements <- 
@@ -84,8 +84,8 @@ TID.Res.Movements <-
 # 11,704 now
 
 #remove unnessecary columns
-TID.Res.Movements <- TID.Res.Movements[ , -9]
-TID.Res.Movements <- TID.Res.Movements[ , -8]
+
+TID.Res.Movements <- TID.Res.Movements[ , -c(8, 9)]
 
 head(TID.Res.Movements)
 
@@ -93,7 +93,21 @@ TID.Res.Movements <- TID.Res.Movements %>%
   filter(STATIONNAME1 != STATIONNAME2) #remove movements that return to the same location
 # 648
 
+
+
+# residence munging -------------------------------------------------------
+
+TID.Res_all.Logs <- TID.Res_all.Logs[, -c(3, 6)]
+
+
+TID.Res_all.Logs <- TID.Res_all.Logs %>% 
+  distinct(DATETIME, TRANSMITTERID, STATIONNAME, .keep_all = TRUE)
+
+
+
 # save --------------------------------------------------------------------
 
 write_csv(TID.Res.Movements,file = "Inputs/240114_step4.csv")
+write_csv(TID.Res_all.Logs,file = "Inputs/240124_residency.csv")
+
 
