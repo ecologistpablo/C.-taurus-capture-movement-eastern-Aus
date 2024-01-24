@@ -228,7 +228,7 @@ SST1 <- SST +
 SST1
 
 #save
-ggsave(path = "outputs/Graphs/Polishing/Models", "240119_FR_Male_Departure_Sth.png",
+ggsave(path = "outputs/Graphs/Polishing/Models", "240123_FR_Male_Departure_Sth.pdf",
        plot = SST1, width = 5, height = 5) #in inches because gg weird
 
 

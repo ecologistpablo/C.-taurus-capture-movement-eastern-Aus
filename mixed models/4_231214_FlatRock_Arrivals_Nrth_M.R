@@ -175,6 +175,6 @@ p <- ggarrange(GSLA1 + SST1) #ncol / nrow = 1 to specify if u want 1 row or colu
 p
 
 #save
-ggsave(path = "Outputs/Graphs/Polishing/Models", "240119_FR_Female_Arrival_Nrth.png",
+ggsave(path = "Outputs/Graphs/Polishing/Models", "240123_FR_Male_Arrival_Nrth.pdf",
        plot = p, width = 10, height = 5) #in inches because gg weird
-
+  

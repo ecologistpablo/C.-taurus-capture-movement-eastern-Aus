@@ -224,7 +224,7 @@ SST1 <- SST +
   theme_minimal() +
   labs(x = "Sea surface temperature (⁰C) temporal anomaly",
        y = "Predicted probability of arrival",
-       title = "Female arrivals from  north at Coffs Harbour (n = 24)") +
+       title = "Female arrivals from  north at Hawks Nest (n = 24)") +
   scale_y_continuous(
     breaks = c(0, 0.25, 0.5, 0.75, 1),
     labels = c("0%", "25%", "50%", "75%", "100%"),
@@ -235,6 +235,6 @@ SST1 <- SST +
 SST1
 
 #save
-ggsave(path = "outputs/Graphs/Polishing/Models", "240119_HN_Female_Arrival .png",
+ggsave(path = "outputs/Graphs/Polishing/Models", "240123_HN_Female_Arrival.pdf",
        plot = SST1, width = 5, height = 5) #in inches because gg weird
 
