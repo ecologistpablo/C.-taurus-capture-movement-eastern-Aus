@@ -116,15 +116,15 @@ mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"),
                family = binomial)
 
 #is edf = 1 in all models?
-summary(m5$gam)
+summary(m3$gam)
 
 
 #all models linear, move to GLMMs
 
 # # Using the mixed model components for AIC comparison
-# MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
-#        m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
-#        m12$mer, m13$mer, m14$mer, m15$mer, mnull)
+MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
+       m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
+       m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
 # 
 # summary(m6$gam)
 # 

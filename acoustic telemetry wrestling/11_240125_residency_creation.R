@@ -5,6 +5,9 @@ rm(list=ls())
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("~/University/2023/Honours/R/data")
 res_dat <- read_csv("Inputs/240124_residency.csv") #residence events
+IMOS <- read_csv("Inputs/240114_step3.csv") #after receiver renaming but before VTrack
+
+
 
 # dplyr wrestling ---------------------------------------------------------
 
@@ -19,54 +22,22 @@ str(res_dat)
 
 res_dat <- res_dat %>%
   mutate(Month = format(date, "%Y-%m")) %>%  # Create Year-Month column from date
-  group_by(Tag_ID, Location, date) %>%  # Group data by Tag ID, Location, and Year-Month
-  summarise(
-    monthly_res = n_distinct(date)) %>%  # Get the first date in each group
-  ungroup()  # Remove grouping
-
+  distinct(Tag_ID, Location, date)
 head(res_dat)
 
 
 # connect to sex ----------------------------------------------------------
 
-IMOS <- read_csv("Inputs/240114_step3.csv") #after receiver renaming but before VTrack
+# Ensure Tag_ID is the same format in both data frames
+IMOS$Tag_ID <- as.character(IMOS$Tag_ID)
 
+# Add the animal_sex column to res_dat, initially filled with NA
+res_dat$animal_sex <- NA
 
-# our beautiful function that connects the two
-combine <- function(IMOS, res_dat) {
-  
-  # Ensure IMOS data has the necessary columns
-  if(!("detection_datetime" %in% names(IMOS)) || 
-     !("tag_id" %in% names(IMOS)) || 
-     !("Location" %in% names(IMOS)) || 
-     !("animal_sex" %in% names(IMOS))) {
-    stop("IMOS data does not have the required columns.")
-  }
-  
-  # Ensure res_dat data has the necessary columns
-  if(!("Tag_ID" %in% names(res_dat)) || 
-     !("Location" %in% names(res_dat)) || 
-     !("Month" %in% names(res_dat))) {
-    stop("res_dat does not have the required columns.")
-  }
-  
-  # Prepare IMOS data
-  IMOS <- IMOS %>%
-    mutate(YearMonth = format(as.Date(detection_datetime), "%Y-%m")) %>%
-    group_by(Tag_ID, Location, YearMonth) %>%
-    summarise(animal_sex = first(animal_sex)) %>%
-    ungroup()
-  
-  # Prepare res_dat data
-  res_dat <- res_dat %>%
-    mutate(YearMonth = format(Month, "%Y-%m"))
-  
-  # Perform the join
-  res_dat <- res_dat %>%
-    left_join(IMOS, by = c("Tag_ID", "Location", "YearMonth")) %>%
-    select(-YearMonth) # Remove the YearMonth column after join
-  
-  return(res_dat)
-}
+# Match and fill in animal_sex
+matched_indices <- match(res_dat$Tag_ID, IMOS$Tag_ID)
+res_dat$animal_sex <- IMOS$animal_sex[matched_indices]
 
-combo_dat <- combine(IMOS, res_dat)
+str(res_dat)
+
+write_csv(res_dat, file = "Inputs/240125_res_dat.csv")
