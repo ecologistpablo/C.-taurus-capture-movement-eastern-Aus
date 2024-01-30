@@ -19,17 +19,19 @@ dat1 <- dat %>%
   mutate(Location = factor(Location, levels = c("Wolf Rock", "Moreton Island",
                                                 "Flat Rock", "Coffs Harbour",
                                                 "Hawks Nest", "Sydney", "Jervis Bay")),
-         Month = factor(month(date), labels = month.abb))  # Use abbreviated month names for readability
+         Month = factor(month(date), labels = month.abb),
+         Year = factor(year(date)))  # Use abbreviated month names for readability
 
 # take 4 ------------------------------------------------------------------
 
 # calculate the number of days each tag is present at each location per month and year
 dat2 <- dat1 %>%
-  group_by(Tag_ID, Location, animal_sex, year = year(date), Month = month(date)) %>%
+  group_by(Tag_ID, Location, animal_sex, Year, Month) %>%
   summarise(
     days_present = n_distinct(date),  # Number of unique days the tag was detected
     .groups = 'drop'
   )
+
 # aggregate across all years to get the average residency per location for each month and sex
 dat3 <- dat2 %>%
   group_by(Location, animal_sex, Month) %>%
@@ -47,8 +49,7 @@ ggplot(dat3, aes(x = Month, y = avg_residency, fill = animal_sex)) +
        y = "Average Residency (days)",
        fill = "Sex") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_x_continuous(breaks = 1:12, labels = month.abb, name = "Month") 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
   
 
 # unique tags -------------------------------------------------------------
