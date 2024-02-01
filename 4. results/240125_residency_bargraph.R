@@ -41,33 +41,43 @@ dat3 <- dat2 %>%
   )
 
 # ggplot
-ggplot(dat3, aes(x = Month, y = avg_residency, fill = animal_sex)) +
+a <- ggplot(dat3, aes(x = Month, y = avg_residency, fill = animal_sex)) +
   geom_bar(stat = "identity", position = "dodge") +
   facet_grid(Location~animal_sex) +
-  labs(title = "Average Residency by Sex at Each Location",
+  labs(title = "Average number of days resident split by month, location and sex",
        x = "Month",
        y = "Average Residency (days)",
        fill = "Sex") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-  
+  theme_grey() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_manual(values = c("mediumpurple4", "palegreen4"))
+a  
 
 # unique tags -------------------------------------------------------------
 
 dat2 <- dat1 %>%
   group_by(Location, Month = month(date), animal_sex) %>%
-  summarise(
-    unique_tags = n_distinct(Tag_ID),  # Count of unique tags
-    .groups = 'drop'
-  )
+  summarise(unique_tags = n_distinct(Tag_ID),  # Count of unique tags
+    .groups = 'drop')
 
-ggplot(dat2, aes(x = Month, y = unique_tags, fill = animal_sex)) +
+b <- ggplot(dat2, aes(x = Month, y = unique_tags, fill = animal_sex)) +
   geom_bar(stat = "identity") +
   facet_grid(Location~animal_sex) +
-  labs(title = "Total Unique Tags by Sex at Each Location",
+  labs(title = "Unique transmitter ID numbers split by month, location and sex",
        x = "Month",
-       y = "Total Unique Tags",
+       y = "Total num. of unique transmitters detected",
        fill = "Sex") +
-  theme_minimal() +
+  theme_grey() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_x_continuous(breaks = 1:12, labels = month.abb, name = "Month") 
+  scale_x_continuous(breaks = 1:12, labels = month.abb, name = "Month")  +
+  scale_fill_manual(values = c("mediumpurple4", "palegreen4"))
+b
+
+
+z <- ggarrange(a, b, common.legend = T, legend = "right")
+z
+
+#save
+ggsave(path = "outputs/Graphs/Final", "240201_det_residency_bars.pdf",
+       plot = z, width = 15, height = 12) #in inches because gg weird
+
