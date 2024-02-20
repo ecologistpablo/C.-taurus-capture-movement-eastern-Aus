@@ -97,3 +97,17 @@ head(dat1)
 # save --------------------------------------------------------------------
 
 write_csv(dat1, file = "Inputs/230911_SST_m_avrg_12-22.csv")
+
+
+# temp --------------------------------------------------------------------
+
+# Assuming dat1 is your dataset
+dat2 <- dat1 %>% 
+  dplyr::slice(1:19) %>% # Subsetting the first 19 rows
+  dplyr::select(-station_name) # Removing the station_name column
+
+# Calculating the mean for each column, excluding any NA values
+column_means <- map_dbl(dat2, ~mean(.x, na.rm = TRUE))
+
+# Viewing the means
+print(column_means)
