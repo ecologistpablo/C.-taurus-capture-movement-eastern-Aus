@@ -3,6 +3,7 @@
 
 # helpers -----------------------------------------------------------------
 
+
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 rm(list=ls())
@@ -16,19 +17,15 @@ dat1 <- dat %>%
          Sex = factor(Sex),
          Tag_ID = factor(Tag_ID),
          Presence = factor(Presence)) %>% 
-  filter(Location == "Wolf Rock") %>% 
+  filter(Location == "Coffs Harbour") %>% 
   filter(movement == "Arrival") %>% 
-  filter(Sex == "M") %>% 
-  mutate(Tag_ID = as.factor(Tag_ID))
+  filter(Sex == "M")
 
 dat1 <-dat1 %>% 
-  filter(Direction == "North")
-
-#all from southern aggregation sites in our study so all heading north when arriving
+  filter(Direction == "South")
 
 unique(dat1$Tag_ID)
 table(dat1$Tag_ID)
-str(dat1)
 
 # gamm --------------------------------------------------------------------
 
@@ -117,13 +114,47 @@ mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"),
                family = binomial)
 
 #first, are all estimated degrees of freedom linear? if so move to glmms
-summary(m1$gam)
+summary(m2$gam)
 
-#non linear models, GAMMs it is
+#we have a non linear model
 
 # Using the mixed model components for AIC comparison
 MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
-       m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
-       m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
+            m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
+            m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
 
-#null model is minimum adequate model!
+summary(m12$gam)
+
+# predictive model --------------------------------------------------------
+
+# fitting mixed effects models with sometimes two interaction terms in gamm4 and glmer
+# is harder than expected?!!!? (:O)
+# luckily D. Schoeman knows what package can help
+# ggeffects
+# https://strengejacke.github.io/ggeffects/articles/practical_logisticmixedmodel.html
+
+# for logistic mixed effects model w interaction terms
+# Model contains splines or polynomial terms. Consider using terms="var_cont [all]" to get smooth plots.
+
+SST <- ggpredict(m12, c("SST_anomaly[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+SST
+
+#clean up x - y labels and breaks
+SST1 <- SST + 
+  theme_minimal() +
+  labs(x = "Sea surface temperature (⁰C) temporal anomaly",
+       y = "Predicted probability of arrival",
+       title = "Male arrivals from north at Coffs Harbour (n = 57)") +
+  scale_y_continuous(
+    breaks = c(0, 0.25, 0.5, 0.75, 1),
+    labels = c("0%", "25%", "50%", "75%", "100%"),
+    limits = c(0, 1))+
+  geom_line(size = 1) +
+  theme(plot.background = element_rect(fill = "white"))
+
+SST1
+
+#save
+ggsave(path = "outputs/Graphs/Polishing/Models", "240123_CH_Male_Arrivals_Sth.pdf",
+       plot = SST1, width = 5, height = 5) #in inches because gg weird
+

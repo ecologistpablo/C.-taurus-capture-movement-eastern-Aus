@@ -200,31 +200,36 @@ summary(m12)
 
 # predict -----------------------------------------------------------------
 
-#Are the SST NAs rm'ed ?
-pdat <- expand.grid(
-  SST_anomaly = seq(min(dat1$SST_anomaly, na.rm = T), max(dat1$SST_anomaly, na.rm = T), length.out = 100),
-  Tag_ID = unique(dat1$Tag_ID, na.rm = T)
-)
+# fitting mixed effects models with sometimes two interaction terms in gamm4 and glmer
+# is harder than expected?!!!? (:O)
+# luckily D. Schoeman knows what package can help
+# ggeffects
+# https://strengejacke.github.io/ggeffects/articles/practical_logisticmixedmodel.html
 
-# Predict using the model
-pdat$predicted_presence <- predict(m12, newdata = pdat, type = "response")
+# for logistic mixed effects model w interaction terms
+# Model contains splines or polynomial terms. Consider using terms="var_cont [all]" to get smooth plots.
 
+SST <- ggpredict(m12, c("SST_anomaly[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+SST
 
-head(pdat)
+#clean up x - y labels and breaks
+SST1 <- SST + 
+  theme_minimal() +
+  labs(x = "Sea surface temperature (⁰C) temporal anomaly",
+       y = "Predicted probability of arrival",
+       title = "Male departures going south at Flat Rock (n = 93)") +
+  scale_y_continuous(
+    breaks = c(0, 0.25, 0.5, 0.75, 1),
+    labels = c("0%", "25%", "50%", "75%", "100%"),
+    limits = c(0, 1))+
+  geom_line(size = 1) +
+  theme(plot.background = element_rect(fill = "white"))
 
-# Plotting
-p1 <- ggplot(pdat, aes(x = SST_anomaly, y = predicted_presence)) +
-  geom_line(size = 2, colour = "firebrick") +
-  labs(title = "Male departures at Flat Rock going south (n = 93)",
-       x = "Sea surface temperature climatological anomaly",
-       y = "Predicted probability of presence") +
-  theme_grey()
-
-p1
-
+SST1
 
 #save
-ggsave(path = "Outputs/Graphs/Polishing/Models", "231220_FR_Departures_Sth_Males.png",
-       plot = p1, width = 5, height = 5) #in inches because gg weird
+ggsave(path = "outputs/Graphs/Polishing/Models", "240123_FR_Male_Departure_Sth.pdf",
+       plot = SST1, width = 5, height = 5) #in inches because gg weird
+
 
 

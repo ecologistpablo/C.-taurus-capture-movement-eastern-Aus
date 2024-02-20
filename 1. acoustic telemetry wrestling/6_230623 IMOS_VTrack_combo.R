@@ -7,7 +7,9 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data") 
 IMOS <- read_csv("Inputs/240114_step3.csv") #after receiver renaming but before VTrack
-combined_data <- read_csv("Inputs/240114_step5.csv") 
+combined_data <- read_csv("Inputs/240114_step5.csv") #movements
+
+
 
 #we now have a movement df and a df with raw detections
 #we need to add metadata to our movement rows
@@ -36,8 +38,8 @@ find_correlated_detections <- function(IMOS_data, movement_dates) {
   movement_dates_filtered_arrival <- movement_dates %>% 
     filter(!is.na(Arrival_date))
   
-    print(paste0("Rows after filtering Arrival_date: ", nrow(movement_dates_filtered_arrival)))
-    
+  print(paste0("Rows after filtering Arrival_date: ", nrow(movement_dates_filtered_arrival)))
+  
   movement_dates_filtered_departure <- movement_dates %>% 
     filter(!is.na(Departure_date))
   

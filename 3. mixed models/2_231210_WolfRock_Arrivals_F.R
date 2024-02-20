@@ -3,11 +3,10 @@
 
 # helpers -----------------------------------------------------------------
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-
 rm(list=ls())
 
-#bring and clean dat1a environment
+source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
+
 setwd("~/University/2023/Honours/R/data")
 dat <- read.csv("Inputs/231110_cleaned_pfuenzalida_dat.csv", stringsAsFactors = TRUE)
 
@@ -17,24 +16,25 @@ dat1 <- dat %>%
          Tag_ID = factor(Tag_ID),
          Presence = factor(Presence)) %>% 
   filter(Location == "Wolf Rock") %>% 
-  filter(movement == "Departure") %>% 
+  filter(movement == "Arrival") %>% 
   filter(Sex == "F") %>% 
   mutate(Tag_ID = as.factor(Tag_ID))
 
 dat1 <-dat1 %>% 
-  filter(Direction == "South")
+  filter(Direction == "North")
 
+#all from southern aggregation sites in our study so all heading north when arriving
 
 unique(dat1$Tag_ID)
 table(dat1$Tag_ID)
 str(dat1)
+#8 tags   
 
 # gamm --------------------------------------------------------------------
 
 # Starting model with all four variables
 m1 <- gamm4(Presence ~ s(SST_anomaly) + s(lunar.illumination) + s(anomaly_VCUR) + s(anomaly_GSLA),
-            random = ~(1|Tag_ID),
-            data = dat1,
+            random = ~(1|Tag_ID),data = dat1,
             family = binomial)
 
 # Models with combinations of three variables
@@ -115,19 +115,19 @@ mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"),
                data = dat1, 
                family = binomial)
 
-#first, are all estimated degrees of freedom linear? if so move to glmms
-summary(m10$gam)
-#
+#is edf = 1 in all models?
+summary(m3$gam)
+
 
 #all models linear, move to GLMMs
 
 # # Using the mixed model components for AIC comparison
-# AICtab(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
-#        m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
-#        m12$mer, m13$mer, m14$mer, m15$mer, mnull)
+MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
+       m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
+       m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
 # 
 # summary(m6$gam)
-
+# 
 
 # GLMM --------------------------------------------------------------------
 
@@ -201,17 +201,60 @@ mnull <- glmer(Presence ~ 1 + (1|Tag_ID),
                family = binomial)
 
 
-AICtab(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, mnull)
-
-#AICc = AIC + (2k(k+1)) / (n−k−1)
-# k = num. parameters
-# l = max. likelihood of model
-# n = num. of obs 
+MuMIn::AICc(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, mnull)
 
 
-MuMIn::AICc(m1, m2, m3, m4, m5 ,m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, mnull)
+summary(m11)
+#Using AICc, m11 is our minimum adequate model
 
 
-# mnull is our minimum adequate model...
+# predict -----------------------------------------------------------------
 
+# fitting mixed effects models with sometimes two interaction terms in gamm4 and glmer
+# is harder than expected?!!!? (:O)
+# luckily D. Schoeman knows what package can help
+# ggeffects
+# https://strengejacke.github.io/ggeffects/articles/practical_logisticmixedmodel.html
+
+# for logistic mixed effects model w interaction terms
+# Model contains splines or polynomial terms. Consider using terms="var_cont [all]" to get smooth plots.
+
+VCUR <- ggpredict(m11, c("anomaly_VCUR[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+VCUR #does it work?
+GSLA <- ggpredict(m11, c("anomaly_GSLA[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+GSLA
+
+#clean up x - y labels and breaks
+VCUR1 <- VCUR + 
+  theme_minimal() +
+  labs(x = "North-south current direction temporal anomaly",
+       y = "Predicted probability of arrival",
+       title = "Female arrivals from south at Wolf Rock (n = 39)") +
+  scale_y_continuous(
+    breaks = c(0, 0.25, 0.5, 0.75, 1),
+    labels = c("0%", "25%", "50%", "75%", "100%"),
+    limits = c(0, 1))+
+  geom_line(size = 1)
+
+VCUR1
+
+#clean up x - y labels and breaks
+GSLA1 <- GSLA + 
+  theme_minimal() +
+  labs(x = "Temporal anomaly of gridded sea level anomaly",
+       y = "Predicted probability of arrival",
+       title = "Female arrivals from south at Wolf Rock (n = 39)") + 
+  scale_y_continuous( breaks = c(0, 0.25, 0.5, 0.75, 1),
+                      labels = c("0%", "25%", "50%", "75%", "100%"),
+                      limits = c(0, 1)) +
+  geom_line(size = 1)
+GSLA1
+
+#ggcombine that up bby
+p <- ggarrange(GSLA1 + VCUR1) #ncol / nrow = 1 to specify if u want 1 row or column
+p
+
+#save
+ggsave(path = "outputs/Graphs/Polishing/Models", "240123_WR_Female_Arrival_Nrth.pdf",
+       plot = p, width = 10, height = 5) #in inches because gg weird
 

@@ -1,7 +1,8 @@
 #10.11.23
-  #keep on keepin on
+#keep on keepin on
 
 # helpers -----------------------------------------------------------------
+
 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
@@ -21,7 +22,7 @@ dat1 <- dat %>%
   filter(Sex == "M")
 
 dat1 <-dat1 %>% 
-  filter(Direction == "South")
+  filter(Direction == "North")
 
 unique(dat1$Tag_ID)
 table(dat1$Tag_ID)
@@ -111,84 +112,50 @@ m15 <- gamm4(Presence ~ s(anomaly_GSLA),
 mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"), 
                data = dat1, 
                family = binomial)
+
+
 #first, are all estimated degrees of freedom linear? if so move to glmms
-summary(m15$gam)
+summary(m1$gam)
 
-#all models are linear
+#we have a non linear model
 
-# GLMM --------------------------------------------------------------------
-
-# Starting model with all four variables
-m1 <- glmer(Presence ~ SST_anomaly + lunar.illumination + anomaly_VCUR + anomaly_GSLA + (1|Tag_ID),
-            data = dat1,
-            family = binomial)
-
-# Models with combinations of three variables
-m2 <- glmer(Presence ~ SST_anomaly + lunar.illumination + anomaly_VCUR + (1|Tag_ID),
-            data = dat1,
-            family = binomial)
-
-m3 <- glmer(Presence ~ SST_anomaly + lunar.illumination + anomaly_GSLA + (1|Tag_ID),
-            data = dat1,
-            family = binomial)
-
-m4 <- glmer(Presence ~ SST_anomaly + anomaly_VCUR + anomaly_GSLA + (1|Tag_ID),
-            data = dat1,
-            family = binomial)
-
-m5 <- glmer(Presence ~ lunar.illumination + anomaly_VCUR + anomaly_GSLA + (1|Tag_ID),
-            data = dat1,
-            family = binomial)
-
-# Models with two variables
-m6 <- glmer(Presence ~ SST_anomaly + lunar.illumination + (1|Tag_ID),
-            data = dat1,
-            family = binomial)
-
-m7 <- glmer(Presence ~ SST_anomaly + anomaly_VCUR + (1|Tag_ID),
-            data = dat1,
-            family = binomial)
-
-m8 <- glmer(Presence ~ SST_anomaly + anomaly_GSLA + (1|Tag_ID),
-            data = dat1,
-            family = binomial)
-
-m9 <- glmer(Presence ~ lunar.illumination + anomaly_VCUR + (1|Tag_ID),
-            data = dat1,
-            family = binomial)
-
-m10 <- glmer(Presence ~ lunar.illumination + anomaly_GSLA + (1|Tag_ID),
-             data = dat1,
-             family = binomial)
-
-m11 <- glmer(Presence ~ anomaly_VCUR + anomaly_GSLA + (1|Tag_ID),
-             data = dat1,
-             family = binomial)
-
-# Models with a single variable
-m12 <- glmer(Presence ~ SST_anomaly + (1|Tag_ID),
-             data = dat1,
-             family = binomial)
-
-m13 <- glmer(Presence ~ lunar.illumination + (1|Tag_ID),
-             data = dat1,
-             family = binomial)
-
-m14 <- glmer(Presence ~ anomaly_VCUR + (1|Tag_ID),
-             data = dat1,
-             family = binomial)
-
-m15 <- glmer(Presence ~ anomaly_GSLA + (1|Tag_ID),
-             data = dat1,
-             family = binomial)
-
-# Null model
-mnull <- glmer(Presence ~ 1 + (1|Tag_ID),
-               data = dat1,
-               family = binomial)
+# Using the mixed model components for AIC comparison
+MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
+            m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
+            m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
 
 
-MuMIn::AICc(m1, m2, m3, m4, m5 ,m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, mnull)
+# predictive model --------------------------------------------------------
 
-#the null model is our best
+# fitting mixed effects models with sometimes two interaction terms in gamm4 and glmer
+# is harder than expected?!!!? (:O)
+# luckily D. Schoeman knows what package can help
+# ggeffects
+# https://strengejacke.github.io/ggeffects/articles/practical_logisticmixedmodel.html
+
+# for logistic mixed effects model w interaction terms
+# Model contains splines or polynomial terms. Consider using terms="var_cont [all]" to get smooth plots.
+
+
+SST <- ggpredict(m12, c("SST_anomaly[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+SST
+
+#clean up x - y labels and breaks
+SST1 <- SST + 
+  theme_minimal() +
+  labs(x = "Sea surface temperature (⁰C) temporal anomaly",
+       y = "Predicted probability of arrival",
+       title = "Male departures going north at Coffs Harbour (n = 78)") +
+  scale_y_continuous(
+    breaks = c(0, 0.25, 0.5, 0.75, 1),
+    labels = c("0%", "25%", "50%", "75%", "100%"),
+    limits = c(0, 1))+
+  geom_line(size = 1) +
+  theme(plot.background = element_rect(fill = "white"))
+
+SST1
+
+#save
+ggsave(path = "outputs/Graphs/Polishing/Models", "240123_CH_Male_Departure_Nrth.pdf",
+       plot = SST1, width = 5, height = 5) #in inches because gg weird
 
