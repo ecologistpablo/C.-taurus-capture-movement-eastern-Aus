@@ -8,7 +8,7 @@ setwd("~/University/2023/Honours/R/data")
 library(tidyverse)
 dat <- read_csv("Inputs/230912_complete_det_enviro.csv")
 
-cp <- colorRampPalette(c("black", "beige", "black"))(n = 360) #colour palette that matches the lunar cycle
+cp <- colorRampPalette(c("black", "beige"))(n = 1) #colour palette that matches the lunar cycle
 
 # Define the location order
 location_order <- c("Wolf Rock", "Moreton Island", "Flat Rock", "Port Macquarie",

@@ -18,9 +18,6 @@ dat1 <- dat %>%
   filter(Location == "Wolf Rock") %>% 
   filter(movement == "Arrival") %>% 
   filter(Sex == "F") %>% 
-  mutate(Tag_ID = as.factor(Tag_ID))
-
-dat1 <-dat1 %>% 
   filter(Direction == "North")
 
 #all from southern aggregation sites in our study so all heading north when arriving

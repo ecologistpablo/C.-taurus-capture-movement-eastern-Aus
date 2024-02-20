@@ -1,6 +1,6 @@
 #9/11/23
   #making some spatial map examples
-
+rm(list=ls())
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
@@ -10,6 +10,42 @@ cstack <- rast("IMOS/Currents/230912_cstack_12-22.tif")
 sstack <- rast("IMOS/SST/GHRSST_12-22.tif")
 
 
+# sst ---------------------------------------------------------------------
+
+sst <- sstack[[19]] #the least cloudy day
+
+
+sst <- aggregate(sst, fact = 4.5, 
+                        fun = mean, na.rm = TRUE) 
+plot(sst, col = viridis(255)) #a little bit more pixelated at 10km but covers more
+
+sst_dat <- as.data.frame(sst, xy = T)
+sst_dat <- na.omit(sst_dat)
+head(sst_dat) #a beautifully curated df
+
+sst_plot <- ggplot() +
+  geom_raster(data = sst_dat, aes(x = x, y = y, fill = SST_20120119)) +
+  scale_fill_viridis(name = "Sea surface 
+temperature (⁰C)
+(19-01-2012)", option = "d", direction = 1) +
+  coord_fixed() + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Latitude", y = "Longitude")
+
+sst_plot
+
+sst_plot1 <- sst_plot + 
+  geom_sf(data = Aus, fill = "grey", colour = "black")  # Add borders of Aus
+sst_plot1
+
+sst_plot2 <- sst_plot1 +
+  coord_sf(xlim = c(150, 155), ylim = c(-36, -24), expand = FALSE)
+sst_plot2
+
+ggsave(path = "Outputs/Graphs/Final/SST", "240220_SST_spatial_map.png",
+       plot = sst_plot2, width = 5, height = 7) #in inches because gg weird
+  
 # vcur --------------------------------------------------------------------
 
 head(names(cstack))

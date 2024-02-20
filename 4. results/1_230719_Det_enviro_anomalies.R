@@ -13,7 +13,6 @@ dat <- read_csv("Inputs/230912a_complete_det_enviro.csv")
 
 # munging -----------------------------------------------------------------
 
-
 dat1 <- dat %>%
   filter(Presence == "1",
   Location %in% c("Wolf Rock", "Moreton Island", "Flat Rock",
@@ -183,12 +182,19 @@ ggsave(path = "Outputs/Graphs/Final/Currents",
 
 # Lunar Illumination ------------------------------------------------------
 
+cp <- colorRampPalette(c("black", "beige"))(n = 1) #colour palette that matches the lunar cycle
+str(dat1$lunar.illumination)
+summary(dat1$lunar.illumination)
 lunar <- 
   ggplot(data = dat1, aes(x = Location, y = lunar.illumination,
   fill = Location)) +
   geom_jitter(alpha = 0.3, width = 0.3) +
   geom_violin(width = 1, alpha = 0.3, scale = "width") +
-  scale_fill_viridis_d(direction = -1) +
+  scale_fill_gradientn(colors = cp, name = "Lunar Illumination") +
+  scale_x_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1), 
+                     labels = c("new moon", "quarter moon",
+                                "half moon", "three quarter moon", "full moon"), 
+                     limits = c(0, 1)) + 
 xlab("Location") +
   ylab("Lunar Illumination") +
     theme(legend.position = "right",
