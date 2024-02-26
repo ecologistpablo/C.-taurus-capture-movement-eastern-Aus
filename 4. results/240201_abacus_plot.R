@@ -54,3 +54,23 @@ b
 #save
 ggsave(path = "outputs/Graphs/Final/detection", "240219_abacus.png",
        plot = b, width = 12, height = 8) #in inches because gg weird
+
+# location based abacus plot ----------------------------------------------
+
+IMOS1 <- IMOS %>% 
+  filter(Location %in% c("Jervis Bay", "Sydney", "Hawks Nest", "Coffs Harbour", "Flat Rock", "Moreton Island", "Wolf Rock")) %>% 
+  mutate(Location = fct_relevel(Location, "Jervis Bay", "Sydney", "Hawks Nest", "Coffs Harbour", "Flat Rock", "Moreton Island", "Wolf Rock"))
+
+
+c <- ggplot(IMOS1, aes(x = detection_datetime, y = Location, colour = Location)) +
+  geom_point(alpha = 0.8, size = 2) +  # Adjust size and transparency as needed
+  theme_grey() +
+  scale_colour_viridis_d(direction = -1) +
+  labs(x = "Time", y = "Location", colour = "Location") +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y", limits = as.Date(c("2012-01-01", "2022-12-31"))) +
+  scale_y_discrete(limits = rev(levels(IMOS1$Location)))
+
+#save
+ggsave(path = "outputs/Graphs/Final/detection", "240221_abacus_locations.png",
+       plot = c, width = 12, height = 8) #in inches because gg weird
+

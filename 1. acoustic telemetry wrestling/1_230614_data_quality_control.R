@@ -45,8 +45,8 @@ qc_data$detection_datetime <- as.Date(qc_data$detection_datetime)
 
 #let's knock it down to one detection per day using distinct
 qc_data <- qc_data %>%
-  distinct(detection_datetime, transmitter_id, station_name, #keep only one per day (per tag id)
-           .keep_all = TRUE) #only one row per day & keep everything else
+  distinct(detection_datetime, transmitter_id, station_name,
+           .keep_all = TRUE)
 
 summary(qc_data$detection_datetime)
 
@@ -134,14 +134,11 @@ ddat <- ddat[colnames(qc_data)]
 
 # Step 4: Convert data types of 'ddat' columns to match those in 'qc_data'
 # need to use the appropriate conversion functions for each column depending on the expected data types in 'qc_data'
-#convert date column
-ddat$detection_datetime <- as.Date(ddat$detection_datetime)
+ddat$detection_datetime <- as.Date(ddat$detection_datetime)#convert date column
 
-#bind rows from both datastreams
-adat <- bind_rows(qc_data, ddat)
+adat <- bind_rows(qc_data, ddat)#bind rows from both datastreams
 
-#fix the damn tag_id column again
-adat$tag_id <- str_extract(adat$transmitter_id, "\\d{4,5}$")
+adat$tag_id <- str_extract(adat$transmitter_id, "\\d{4,5}$")#fix the damn tag_id column again
 
 #Because we joined two dfs, let's make sure there arent duplicate rows
 adat <- adat %>%
@@ -176,7 +173,7 @@ which(is.na(adat$receiver_deployment_longitude))
 
 load("Inputs/230807_step1.RData")
 
-# P. Butcher dat ----------------------------------------------------------
+# NSW DPI dat -------------------------------------------------------------
 #06.09.23
 
 bdat <- read_csv("Dwyer dat/GNS_det_data_Paul_Butcher_230904.csv")
