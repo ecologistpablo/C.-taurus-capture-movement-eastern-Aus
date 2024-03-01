@@ -26,13 +26,12 @@ tag_qc <- runQC(files,
 qc_data <- tag_qc %>%
   unnest(cols = QC) %>%
   ungroup()
-#as of 14.01.24, 784,262 pings
 
 #clean up our df, qc gave us useless columns
 qc_data <- qc_data %>%
   select(-c(34:42))
 
-# remove WA detections
+# remove Western Australia detections, as we focus on eastern Aus
 WA <- c("SL9", "SL18", "SL19", "SL2", "SL22",
                    "PRT27", "PRT35", "PRT37", "PRT74", "PRT73", "PRT75")
 
@@ -45,16 +44,12 @@ qc_data$detection_datetime <- as.Date(qc_data$detection_datetime)
 
 #let's knock it down to one detection per day using distinct
 qc_data <- qc_data %>%
-  distinct(detection_datetime, transmitter_id, station_name,
-           .keep_all = TRUE)
+  distinct(detection_datetime, transmitter_id, station_name, .keep_all = TRUE)
 
 summary(qc_data$detection_datetime)
 
-#filter out 2023
-
-qc_data <- qc_data %>% 
+qc_data <- qc_data %>% #filter out 2023
 filter(format(detection_datetime, "%Y") != "2023")
-
 
 # save it ----------------------------------------------------------------------
 
@@ -70,8 +65,7 @@ qc_data <- read_csv("Inputs/240114_qc_data.csv")
 
 ddat <- read_csv("Inputs/230806_step0.csv")
 
-#let's knock it down to one detection per day using distinct
-ddat <- ddat %>%
+ddat <- ddat %>% #let's knock it down to one detection per day using distinct
   distinct(Date, Transmitter.Name, Station.Name, .keep_all = TRUE)
 
 # merge data -------------------------------------------------------------------
@@ -145,8 +139,10 @@ adat <- adat %>%
   distinct(detection_datetime, transmitter_id, station_name, #keep only one per day (per tag id)
            .keep_all = TRUE) #keep everything else
 
-#NA check, do we have any coords that are NA ? and why, what are their station names lets look them up 
+#NA check, do we have any coords that are NA ? 
 which(is.na(adat$receiver_deployment_longitude))
+
+# what are their station names lets look them up manually
 
 # Replace lat/lon for missing values (physically inspected XY coordinates and corelated to IMOS database)
 adat <- adat %>%
@@ -251,8 +247,6 @@ zdat <- bind_rows(adat, bdat4)
 zdat1 <- zdat %>%
   distinct(detection_datetime, tag_id, station_name, #keep only one per day (per tag id)
            .keep_all = TRUE)
-#so we have 17137 unique movemnts as of 14.01.23 22:20
-
 
 # save it ----------------------------------------------------------------------
 

@@ -1,6 +1,6 @@
 #11.07.23
-  #step 2
-    # a new approach towards categorizing what concerns a 'location'
+  #step 3
+    # categorizing what categorises a 'focal location' in our analysis
   
 rm(list=ls()) # to clear workspace
 
@@ -15,10 +15,12 @@ IMOS <- read_csv("Inputs/240114_step2.csv")
 # conceptualisation of script ---------------------------------------------
 
 # we have raw detections
-# but we will turn this into movements from different spots
+# we will turn this into movements from different places
 # lets group our aggregations, curtains and bays into one location
+# this will allow us to detect movement between locations that hold large amounts of data
 
-# plot it ----------------------------------------------------------------------
+
+# begin with an interactive plot, where are our data? ---------------------
 
 # Calculate the number of detections at each station: station_name
 IMOSxy <- IMOS %>%
@@ -32,6 +34,10 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "station_name", fbg = F)
 
 # Location function ------------------------------------------------------------
 
+# now that we have the central receivers (receivers with most detections)
+# and receivers at beginning of curtains, we will turn this central receivers into locations
+
+#create location function
 add_location_group <- function(df, central_station_name, location_name) {
   # Get latitude of the central station
   central_lat <- df %>%
@@ -59,7 +65,7 @@ add_location_group <- function(df, central_station_name, location_name) {
 }
 
 # adjust central lat / lon for how broad you want to generate your locations
-# we played with 10 km either side, but 5km either side targets aggregation sites more accurately
+# we played with 5 / 10 km either side
 # if you group aggregation sites together that are spatially close, they may not be ecologically similar
 # we don't know yet, so I targeted specific sites
 
@@ -122,24 +128,21 @@ IMOS <- IMOS %>% #all other receivers shall be named after the degree they are i
 
 # Calculate the number of detections at each station
 IMOSxy <- IMOS %>%
-  group_by(Location, receiver_deployment_latitude, receiver_deployment_longitude) %>%
+  group_by(Location, receiver_deployment_latitude, receiver_deployment_longitude) %>% #location
   summarise(num_det = n(), .groups = 'drop')
 
 IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("receiver_deployment_longitude", "receiver_deployment_latitude"),
                           crs= 4326, agr = "constant")
 
-mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "Location", fbg = F)
+mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "Location", fbg = F) #colour by LOCATION
 
 
 # save it ----------------------------------------------------------------------
 
 write_csv(IMOS, "Inputs/240114_step3.csv")
-# IMOS <- read_csv("Inputs/231020_step2.csv")
 
 # results for detections --------------------------------------------------
-
-# this just for generating data for results section
-
+# this code is for the results section of the paper
 
 # Calculating min, max datetime and duration for each Tag ID
 duration_data <- IMOS %>%

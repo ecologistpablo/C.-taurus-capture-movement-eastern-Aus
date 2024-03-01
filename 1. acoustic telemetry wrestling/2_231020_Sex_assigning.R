@@ -1,5 +1,7 @@
-#1.5
-
+#23_10_20
+  #assigning sex to detections
+    #if no sex is assigned, we cannot be certain it's carcharias taurus, and omit
+      #important data curation step!
 
 # load library & data ----------------------------------------------------------
 
@@ -56,10 +58,10 @@ anyNA(IMOS$animal_sex) #this should be false
 
 unique_sum <- IMOS %>%
   distinct(transmitter_id, animal_sex) %>%  # Keep unique TRANSMITTEDID values
-  group_by(animal_sex) %>% 
+  group_by(animal_sex) %>% #group by sex
   summarise(count = n())  # Count them
 
-unique_sum
+unique_sum #what's the split?
 
 # save --------------------------------------------------------------------
 write_csv(IMOS, "Inputs/240114_step2.csv")
