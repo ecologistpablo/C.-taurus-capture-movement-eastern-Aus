@@ -7,6 +7,11 @@ library(tidyverse)
 setwd("~/University/2023/Honours/R/data")
 dat <- read_csv("Inputs/230907_step7.csv")
 
+# just some more data curation and wrestling
+
+
+# gloves on? let's wrestle ------------------------------------------------
+
 unique(dat$Location) #what do we have ?
 
 # Define the location order and which Locations we want to keep
@@ -46,6 +51,8 @@ IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("receiver_deployment_longitude", "r
                           crs= 4326, agr = "constant")
 
 mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "Location", fbg = F)
+
+# nice, gaaaarrrrryyy
 
 #save it ----------------------------------------------------------------------------
 

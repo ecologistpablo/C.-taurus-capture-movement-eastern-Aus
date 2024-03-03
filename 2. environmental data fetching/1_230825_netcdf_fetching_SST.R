@@ -10,9 +10,11 @@ setwd("~/University/2023/Honours/R/data/IMOS/SST/2012")
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 
-# explanation -------------------------------------------------------------
 
-# we are going to talk to IMOS, to downloada data for SST from 2012 - 2022
+# preamble ----------------------------------------------------------------
+
+# we are going to talk to IMOS' environmental product website
+# to downloada data for SST from 2012 - 2022
 # purrr, furrr and dplyr can help us with this
 # we specify output folder, the URL string onto the directory before we enter years
 # https://mrs-data.csiro.au/imos-srs/sst/ghrsst/L3S-1d/dn/
@@ -23,11 +25,13 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 # purrr and furrr our way thru --------------------------------------------
 
+parellel::detectCores()
+
 # Set up parallel processing
 plan(multisession, workers = 6) # Using x cores
 
-# Loop through years from 2016 to 2022
-for (year in 2013:2022) {  
+# Loop through years for your study period
+for (year in 2012:2022) {  
   
   # Set output folder and URL based on the year
   #output_folder <- "C:/Users/pablo/Documents/University/2023/Honours/R/data/IMOS/SST/2014" 

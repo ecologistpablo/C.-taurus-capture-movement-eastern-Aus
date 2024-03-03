@@ -8,6 +8,13 @@ res_dat <- read_csv("Inputs/240124_residency.csv") #residence events
 IMOS <- read_csv("Inputs/240114_step3.csv") #after receiver renaming but before VTrack
 
 
+# preamble ----------------------------------------------------------------
+
+# pretty late into my honours year, we realised I should be adding in residency into my analysis too
+# VTrack calculates this in script 4, so it's pretty easy to add
+# we will focus our analysis on residency of locations that hold detections in the same location
+# non-residency will indicate residency is further away and individuals will travel through these areas
+# you can copy this for residency munging though but it's pretty specific towards my methods
 
 # dplyr wrestling ---------------------------------------------------------
 
