@@ -10,6 +10,16 @@ dat <- read_csv("Inputs/230906_step6.csv")
 
 summary(dat$detection_datetime)
 
+# preamble ----------------------------------------------------------------
+
+# we have movements which will be presence in a model
+# we need an absence, something acoustic telemetry only gives on a large scale
+# to avoid zero-inflated models (the dark arts of biostatistics...), we shall dive into something else
+# pseudo-absences
+# the largest number of absences per presence without inflating a model with biase, is 2:1
+# so for every presence, let's make two absences
+
+
 # Psuedo Presence x 2 ----------------------------------------------------------
 
 generate_pseudo_absences <- function(...) {
@@ -71,8 +81,6 @@ dat1 <- dat %>%
   pmap_dfr(generate_pseudo_absences)
 
 summary(dat1$detection_datetime)
-
-1056 * 3
 
 #save it -----------------------------------------------------------------------
 

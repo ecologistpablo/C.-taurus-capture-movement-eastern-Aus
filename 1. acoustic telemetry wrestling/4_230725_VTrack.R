@@ -15,13 +15,14 @@ IMOS <- read_csv("Inputs/240114_step3.csv")
 
 #ReadInputData -----------------------------------------------------------------------
 
-#VTrack only works with specific column names and structures
-#we need to bend our data into this so VTrack likes it
+# VTrack only works with specific column names and structures
+# we need to bend our data into this so VTrack likes it
+# 05.03.23 Ross Dwyer code for ReadInputData (old function) to read in new IMOS ATF data
+
 IMOS <- IMOS %>%
   mutate(transmitter_sensor_raw_value = 0,
          transmitter_sensor_unit = 0)
 
-#05.03.23 RDwyer code for ReadInputData (old function) to read in new IMOS ATF data
 detections_formatted <- 
   IMOS %>%
   dplyr::select(c(detection_datetime, transmitter_id, transmitter_sensor_raw_value, transmitter_sensor_unit, #select what to pull out of the dataframe
@@ -30,7 +31,7 @@ detections_formatted <-
          Transmitter.ID = transmitter_id, 
          Sensor.1 = transmitter_sensor_raw_value,
          Units.1 = transmitter_sensor_unit, 
-         Station.Name = Location, #we want a location-based analysis which is a little more coarse then looking at each individual hydrophone or receiver
+         Station.Name = Location, #we want a location-based analysis which is a little more coarse then looking at each individual receiver
          Receiver.Name = receiver_name,
          Station.Longitude = receiver_deployment_longitude, 
          Station.Latitude = receiver_deployment_latitude)  %>%
@@ -83,9 +84,7 @@ TID.Res.Movements <-
 #as of 14.01.24, 11,616 rows emerge (meaning *2 due to each row being an arrival and departure)
 # 11,704 now
 
-#remove unnessecary columns
-
-TID.Res.Movements <- TID.Res.Movements[ , -c(8, 9)]
+TID.Res.Movements <- TID.Res.Movements[ , -c(8, 9)] #remove unnessecary columns
 
 head(TID.Res.Movements)
 
@@ -99,15 +98,10 @@ TID.Res.Movements <- TID.Res.Movements %>%
 
 TID.Res_all.Logs <- TID.Res_all.Logs[, -c(3, 6)]
 
-
 TID.Res_all.Logs <- TID.Res_all.Logs %>% 
   distinct(DATETIME, TRANSMITTERID, STATIONNAME, .keep_all = TRUE)
-
-
 
 # save --------------------------------------------------------------------
 
 write_csv(TID.Res.Movements,file = "Inputs/240114_step4.csv")
 write_csv(TID.Res_all.Logs,file = "Inputs/240124_residency.csv")
-
-

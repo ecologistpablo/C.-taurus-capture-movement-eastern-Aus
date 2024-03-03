@@ -1,14 +1,11 @@
 #29.05.23
-#data combination
-#We ran ddat & IMOS seperately through VTrack, let's combine the data now
+  #data combination
+    #We ran ddat & IMOS seperately through VTrack, let's combine the data now
 
 rm(list=ls()) 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("~/University/2023/Honours/R/data")
 cdat <- read_csv("Inputs/240114_step4.csv")
-
-#641
-
 
 # metrics -----------------------------------------------------------------
 
@@ -35,7 +32,7 @@ Location_levels <- c("deg_-24", "deg_-25", "Wolf Rock", "deg_-27",
                      "deg_-36", "Montague Island")
 
 cdat1 <- cdat %>%
-  mutate( #create directionality 
+  mutate( #create directionality as a row
     Departure_location = factor(Departure_location, levels = Location_levels),
     Arrival_location = factor(Arrival_location, levels = Location_levels),
     Direction = if_else(as.integer(Departure_location) > as.integer(Arrival_location),

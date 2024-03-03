@@ -20,6 +20,9 @@ dat <- read_csv("Inputs/230906_step5.csv") #5km
 # only to return back to the beginning location within 24 h 
 # I've written it into little functions so you can edit the temporal and spatial thresholds
 # because we are open - source scientists who are cool like that 
+# each movement is one row
+# so we begin by targeting unique tags in multiples of 4 (departure, arrival, departure arrival)
+
 
 # begin wrestling --------------------------------------------------------------
 
@@ -92,10 +95,9 @@ date_filter_rows <- function(df, temporal_threshold) {
 }
 
 
-temporal_threshold <- 1 # day filter
+temporal_threshold <- 1 # day filter, but you can change this as you wish
 dat4 <- date_filter_rows(dat3, temporal_threshold)
-#manually inspect, is each group of 4 within 30 d from their beginning to end?
-#nice, down to 52 obs with a 1 d threshold
+#manually inspect, is each group of 4 within 1 d from their beginning to end?
 unique(dat4$Location)
 
 # spatial filter ---------------------------------------------------------------
