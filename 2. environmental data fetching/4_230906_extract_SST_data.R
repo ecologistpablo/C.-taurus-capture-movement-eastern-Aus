@@ -1,6 +1,13 @@
 # 04 September 2023
-  # Who needs remora anyway
-    # extracting SST values 
+  # Who needs REMORA anyway
+    # extracting SST values
+
+# disclaimer, REMORA works beautifully, sometimes...
+# we needed to generate temporal anomalies to remove seasonality out of our psuedo-absences
+# we will now connect our environmental data with our data points
+# we do this by making a csv with all of our xy coordinates for each data point
+# we then punch through every data point through 11 years of data
+# and return a enviro value for every day, if it returns as NA we have some tricks up our sleeve
 
 rm(list=ls())
 
@@ -24,7 +31,7 @@ st_crs(pts.UTM) <- crs(WGS84) #remember to assign crs
 
 # rstack ------------------------------------------------------------------
 
-rstack <- rast("IMOS/SST/GHRSST_12-22.tif")
+rstack <- rast("IMOS/SST/GHRSST_12-22.tif") #our enviro data
 
 # plotting ----------------------------------------------------------------
 
@@ -39,11 +46,9 @@ sum(is.na(sst.pts)) #how many values were filled in the 2km resolution direct ex
 3871 * 114 #obs * columns = total obs
 (307253 / 441294) * 100 
 
-#69.63% is NA
-
 # nearest temporal neighbour ----------------------------------------------
 
-#Supervisors K. Scales, R. Dwyer & D. Schoeman state travelling in time THEN space is more appropriate when filling NAs
+#Supervisors K. Scales, R. Dwyer & D. Schoeman recommend travelling in time THEN space is more appropriate when filling NAs
 
 #so we shall travel one day, then average over five days, then increase spatial resolution of enviro data
 

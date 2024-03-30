@@ -1,5 +1,9 @@
 #28.08.23
-  #automating the workflow to crop, stack and reproject our data
+  #combine our stacks, and reproject them
+
+# we will now combine all years into one file, and reproject them
+# because the earth is round and our data is not accounting for the curvature of the earth yet
+# soz flat-earthers, ya wrong
 
 rm(list=ls())
 setwd("~/University/2023/Honours/R/data/git/NC-wrestling")
@@ -41,6 +45,8 @@ crs(rstack)
 plot(rstack[[19]], col = viridis(255))
 head(names(rstack))
 tail(names(rstack))
+
+# nice
 
 # rm duplicates -----------------------------------------------------------
 
