@@ -9,3 +9,4 @@ No shark control program analyses or data will be shared before a manuscript has
 So this repo will just contain the analysis of openly available data, C. taurus detections accessed from the AODN portal (https://animaltracking.aodn.org.au/), you can replicate this for any species however.
 
 For any questions or concerns regarding this repository, code or any analysis, please email pablofuenzalida427@gmail.com
+![GNS Carharias taurus G Smith](https://github.com/ecologistpablo/C.-taurus-capture-movement-eastern-Aus/assets/115206655/3470c46c-ba53-4aa5-a15a-d3743929053e)
