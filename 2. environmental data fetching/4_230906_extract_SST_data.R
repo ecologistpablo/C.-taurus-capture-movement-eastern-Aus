@@ -160,3 +160,6 @@ sst.pts4 <- sst.pts4 %>%
 # save --------------------------------------------------------------------
 
 write_csv(sst.pts4, file = "Inputs/230911_SST_vals_12-22.csv")
+
+#finish script
+
