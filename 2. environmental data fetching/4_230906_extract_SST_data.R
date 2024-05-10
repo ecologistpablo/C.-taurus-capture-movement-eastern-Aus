@@ -2,6 +2,8 @@
   # Who needs REMORA anyway
     # extracting SST values
 
+#script by D. Schoeman
+
 # disclaimer, REMORA works beautifully, sometimes...
 # we needed to generate temporal anomalies to remove seasonality out of our psuedo-absences
 # we will now connect our environmental data with our data points
