@@ -32,7 +32,8 @@ unique(dat2$Tag_ID)
 
 # Extract relevant columns from the initial IMOS dataframe
 IMOS2 <- IMOS1 %>% 
-  dplyr::select(Tag_ID, measurement, transmitter_deployment_datetime)
+  dplyr::select(Tag_ID, measurement, transmitter_deployment_datetime,
+                transmitter_deployment_longitude, transmitter_deployment_latitude)
 
 # Perform a left join to merge this data into dat based on Tag_ID
 dat3 <- dat2 %>%
@@ -56,30 +57,57 @@ table <- dat3 %>%
     Locations_Detected = toString(unique(Location)),
     Number_of_Arrivals = sum(movement == "Arrival", na.rm = TRUE),
     Number_of_Departures = sum(movement == "Departure", na.rm = TRUE),
-    Total_Movements = Number_of_Arrivals + Number_of_Departures) %>% 
+    Total_Movements = Number_of_Arrivals + Number_of_Departures,
+    Tagging_longitude = transmitter_deployment_longitude,
+    Tagging_latitude = transmitter_deployment_latitude) %>% 
   ungroup() %>% 
   distinct(Tag_ID, .keep_all = T)
-
+colnames(table)
 
 # clean our table up ------------------------------------------------------
 
 table$Transmitter_Deployment_Datetime <- as.Date(table$Transmitter_Deployment_Datetime, format= "Y-%m%d")
 
 table1 <- table %>%
-  mutate(
-    Measurement = str_extract(Measurement, "\\d+\\s*[cm]*[m]*"),  # Extracts the number and unit
-    Measurement = if_else(str_detect(Measurement, "m"),  # Check if 'm' is in the string
-                          as.numeric(str_extract(Measurement, "\\d+")),  # Convert meters to cm
-                          as.numeric(str_extract(Measurement, "\\d+")))  # Just extract the number if cm
-  )
+  mutate(Measurement = as.numeric(str_extract(Measurement, "\\d+")))  # Extracts only the number part
+
 table1$Measurement 
 
-# that worked, but some are in meters and centimeters, lets change that with a lil mutate function
+# that worked, but some are in meters and centimeters, lets change that with a lil ifelse function
 table2 <- table1 %>%
   mutate(Measurement = if_else(Measurement < 10, Measurement * 100, Measurement))
 table2$Measurement
 
 # View the result
 view(table2)
+head(table2$Locations_Detected)
 
-write_csv(table2, "outputs/240510_Tag_ID_table.csv")
+
+# re-ordering -------------------------------------------------------------
+
+#almost perfect, let's re-order the locations from north - south
+
+# our preferred order of locations
+preferred_order <- c("Wolf Rock", "Moreton Island", "Flat Rock", "Coffs Harbour", 
+                     "Hawks Nest", "Sydney", "Jervis Bay")
+
+# Define a function that orders locations based on the predefined order
+reorder_locations <- function(location_string) {
+  locations <- strsplit(location_string, ",\\s*")[[1]]  # Split into individual locations
+  factor_locations <- factor(locations, levels = preferred_order)  # Convert to factor with levels
+  ordered_locations <- sort(factor_locations)  # Sort according to factor levels
+  paste(ordered_locations, collapse = ", ")  # Combine back into a single string
+}
+
+# Apply the function to the Locations_Detected column using mutate
+table3 <- table2 %>%
+  mutate(Locations_Detected = sapply(Locations_Detected, reorder_locations))
+
+# View the modified dataframe
+print(table3)
+
+#dplyr for the win, nice and simple
+
+# save --------------------------------------------------------------------
+
+write_csv(table3, "outputs/240513_Tag_ID_table.csv")
