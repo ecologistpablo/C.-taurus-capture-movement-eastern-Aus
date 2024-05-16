@@ -42,15 +42,13 @@ dat3 <- dat2 %>%
 
 # ggplot
 a <- ggplot(dat3, aes(x = Month, y = avg_residency, fill = animal_sex)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  facet_grid(Location~animal_sex) +
-  labs(title = "Average number of days resident split by month, location and sex",
-       x = "Month",
-       y = "Average Residency (days)",
+  geom_bar(stat = "identity") +
+  facet_wrap(~Location, ncol = 1) +
+  labs(x = "Month",
+       y = "Mean residency (days)",
        fill = "Sex") +
   theme_grey() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_fill_manual(values = c("mediumpurple4", "palegreen4"))
+  scale_fill_manual(values = c("indianred4", "cyan4"))
 a  
 
 # unique tags -------------------------------------------------------------
@@ -62,22 +60,24 @@ dat2 <- dat1 %>%
 
 b <- ggplot(dat2, aes(x = Month, y = unique_tags, fill = animal_sex)) +
   geom_bar(stat = "identity") +
-  facet_grid(Location~animal_sex) +
-  labs(title = "Unique transmitter ID numbers split by month, location and sex",
-       x = "Month",
-       y = "Total num. of unique transmitters detected",
+  facet_wrap(~Location, ncol = 1) +
+  labs(x = "Month",
+       y = "Total number of tagged sharks present (2012 - 2022)",
        fill = "Sex") +
   theme_grey() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_x_continuous(breaks = 1:12, labels = month.abb, name = "Month")  +
-  scale_fill_manual(values = c("mediumpurple4", "palegreen4"))
+  scale_fill_manual(values = c("indianred4", "cyan4"))
 b
 
+b <- b + ylim(0, 30) #make the y limits the same in both graphs
 
-z <- ggarrange(a, b, common.legend = T, legend = "right")
+z <- ggarrange(b, a, common.legend = T, legend = "right")
 z
 
+#for red - green colourblind people
+protan(z)
+
 #save
-ggsave(path = "outputs/Graphs/Final", "240201_det_residency_bars.pdf",
-       plot = z, width = 15, height = 12) #in inches because gg weird
+ggsave(path = "outputs/Graphs/Final/detection", "240516_det_residency_bars.pdf",
+       plot = z, width = 10, height = 12) #in inches because gg weird
 
