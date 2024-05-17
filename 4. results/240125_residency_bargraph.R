@@ -69,7 +69,7 @@ b <- ggplot(dat2, aes(x = Month, y = unique_tags, fill = animal_sex)) +
   scale_fill_manual(values = c("indianred4", "cyan4"))
 b
 
-b <- b + ylim(0, 30) #make the y limits the same in both graphs
+b <- b + ylim(0, 35) #make the y limits the same in both graphs
 
 z <- ggarrange(b, a, common.legend = T, legend = "right")
 z
