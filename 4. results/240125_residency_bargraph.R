@@ -78,6 +78,6 @@ z
 protan(z)
 
 #save
-ggsave(path = "outputs/Graphs/Final/detection", "240516_det_residency_bars.pdf",
-       plot = z, width = 10, height = 12) #in inches because gg weird
+ggsave(path = "outputs/Graphs/Final/detection", "240517_det_residency_bars.pdf",
+       plot = z, width = 12, height = 14) #in inches because gg weird
 
