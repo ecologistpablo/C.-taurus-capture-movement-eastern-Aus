@@ -7,8 +7,7 @@ rm(list=ls())
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/230906_step5.csv") #5km
-
+dat <- read_csv("Inputs/240806_step6.csv")
 
 # conceptual background on script -----------------------------------------
 
@@ -126,7 +125,7 @@ dat5 <- dat5 %>%
 
 #filter foraging movements -----------------------------------------------------
 
-OG <- read_csv("Inputs/230906_step5.csv")
+OG <- read_csv("Inputs/240806_step6.csv")
 
 columns <- c("Tag_ID", "station_name", "Location",
              "Arrival_date", "Departure_date",
@@ -146,4 +145,4 @@ OG1 <- anti_join(OG, dat5, by = columns)
 
 #save it ----------------------------------------------------------------------------
 
-write_csv(OG1, file = "Inputs/230906_step6.csv")
+write_csv(OG1, file = "Inputs/240806_step7.csv")

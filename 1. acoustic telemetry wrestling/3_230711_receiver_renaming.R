@@ -9,7 +9,7 @@ rm(list=ls()) # to clear workspace
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data") 
-IMOS <- read_csv("Inputs/240114_step2.csv")
+IMOS <- read_csv("Inputs/240806_step2.csv")
 
 
 # conceptualisation of script ---------------------------------------------
@@ -139,7 +139,7 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "Location", fbg = F) #colour
 
 # save it ----------------------------------------------------------------------
 
-write_csv(IMOS, "Inputs/240114_step3.csv")
+write_csv(IMOS, "Inputs/240806_step3.csv")
 
 # results for detections --------------------------------------------------
 # this code is for the results section of the paper

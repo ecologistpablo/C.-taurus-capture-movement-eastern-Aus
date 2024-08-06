@@ -6,7 +6,7 @@
 rm(list=ls()) 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("~/University/2023/Honours/R/data")
-cdat <- read_csv("Inputs/230907_step8.csv")
+cdat <- read_csv("Inputs/240806_step9.csv")
 str(cdat)
 head(cdat)
 

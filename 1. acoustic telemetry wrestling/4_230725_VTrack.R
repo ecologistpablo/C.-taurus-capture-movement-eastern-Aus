@@ -11,7 +11,7 @@ rm(list=ls())
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data") 
-IMOS <- read_csv("Inputs/240114_step3.csv")
+IMOS <- read_csv("Inputs/240806_step3.csv")
 
 #ReadInputData -----------------------------------------------------------------------
 
@@ -59,7 +59,7 @@ head(detections_formatted_vtrack)
 #RunResidenceExtraction --------------------------------------------------------------------
 
 TID.Res_all <-  #to understand RunResidenceExtraction, read vignette
-  RunResidenceExtraction(sInputFile = detections_formatted_vtrack,
+  VTrack::RunResidenceExtraction(sInputFile = detections_formatted_vtrack,
                          sLocation = "STATIONNAME",
                          iResidenceThreshold = 1,
                          iTimeThreshold = 0, 
@@ -90,8 +90,7 @@ head(TID.Res.Movements)
 
 TID.Res.Movements <- TID.Res.Movements %>%
   filter(STATIONNAME1 != STATIONNAME2) #remove movements that return to the same location
-# 648
-
+#641
 
 
 # residence munging -------------------------------------------------------
@@ -103,5 +102,5 @@ TID.Res_all.Logs <- TID.Res_all.Logs %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(TID.Res.Movements,file = "Inputs/240114_step4.csv")
-write_csv(TID.Res_all.Logs,file = "Inputs/240124_residency.csv")
+write_csv(TID.Res.Movements,file = "Inputs/240806_step4.csv")
+write_csv(TID.Res_all.Logs,file = "Inputs/240806_residency.csv")

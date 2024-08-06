@@ -5,7 +5,7 @@
 rm(list=ls()) 
 library(tidyverse)
 setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/230907_step7.csv")
+dat <- read_csv("Inputs/240806_step8.csv")
 
 # just some more data curation and wrestling
 
@@ -34,16 +34,19 @@ keep_locations <- function(df, locations) {
 dat1 <- keep_locations(dat, location_order)
 
 colnames(dat1)
-dat2 <- dat1 %>% dplyr::select(-c(1:10, 14:19, 21:34))
+dat2 <- dat1 %>% dplyr::select(-c(1:9, 14:19, 21:34))
 
-dat2 <- dat2 %>% 
-  mutate(month = lubridate::month(detection_datetime)) # new column to hold the month
+colnames(dat2)
+dat3 <- dat2 %>% 
+  mutate(month = lubridate::month(detection_datetime)) %>% 
+  rename(Sex = animal_sex)
 
+colnames(dat3)
 
 # plot it -----------------------------------------------------------------
 
 # Calculate the number of detections at each station
-IMOSxy <- dat %>%
+IMOSxy <- dat3 %>%
   group_by(Location, receiver_deployment_latitude, receiver_deployment_longitude) %>%
   summarise(num_det = n(), .groups = 'drop')
 
@@ -56,5 +59,5 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "Location", fbg = F)
 
 #save it ----------------------------------------------------------------------------
 
-write_csv(dat2, file = "Inputs/230907_step8.csv")
+write_csv(dat3, file = "Inputs/240806_step9.csv")
 

@@ -4,8 +4,8 @@
 rm(list=ls()) 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("~/University/2023/Honours/R/data")
-res_dat <- read_csv("Inputs/240124_residency.csv") #residence events
-IMOS <- read_csv("Inputs/240114_step3.csv") #after receiver renaming but before VTrack
+res_dat <- read_csv("Inputs/240806_residency.csv") #residence events
+IMOS <- read_csv("Inputs/240806_step3.csv") #after receiver renaming but before VTrack
 
 
 # preamble ----------------------------------------------------------------
@@ -47,4 +47,4 @@ res_dat$animal_sex <- IMOS$animal_sex[matched_indices]
 
 str(res_dat)
 
-write_csv(res_dat, file = "Inputs/240125_res_dat.csv")
+write_csv(res_dat, file = "Inputs/240806_res_dat.csv")

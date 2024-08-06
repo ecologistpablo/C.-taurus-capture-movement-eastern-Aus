@@ -6,8 +6,8 @@ rm(list=ls())
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data") 
-IMOS <- read_csv("Inputs/240114_step3.csv") #after receiver renaming but before VTrack
-combined_data <- read_csv("Inputs/240114_step5.csv") #movements
+IMOS <- read_csv("Inputs/240806_step3.csv") #after receiver renaming but before VTrack
+combined_data <- read_csv("Inputs/240806_step5.csv") #movements
 
 
 # description -------------------------------------------------------------
@@ -19,6 +19,7 @@ combined_data <- read_csv("Inputs/240114_step5.csv") #movements
 # pre-munging -------------------------------------------------------------
 
 combined_data$Tag_ID <- as.character(combined_data$Tag_ID)
+IMOS$Tag_ID <- as.character(IMOS$Tag_ID)
 
 # Assign a unique ID to each row before the split
 combined_data <- combined_data %>%
@@ -27,10 +28,6 @@ combined_data <- combined_data %>%
 # find detections---------------------------------------------------------------
 
 find_correlated_detections <- function(IMOS_data, movement_dates) {
-  
-  # Rename the Tag_ID column in IMOS_data to match that in movement_dates
-  IMOS_data <- IMOS_data %>% 
-    rename(Tag_ID = tag_id)
   
   print(paste0("Initial row count: ", nrow(movement_dates)))
   
@@ -50,7 +47,7 @@ find_correlated_detections <- function(IMOS_data, movement_dates) {
     left_join(movement_dates_filtered_arrival, by = "Tag_ID") %>% 
     filter(detection_datetime == Arrival_date &
              Location == Arrival_location & 
-             animal_sex == Sex) %>%
+             animal_sex == animal_sex) %>%
     mutate(movement = "Arrival", Movement_date = Arrival_date) # Add "movement" and "Movement_date" column
   
   print(paste0("Rows after joining and filtering Arrival_date: ", nrow(joined_data_arrival)))
@@ -59,7 +56,7 @@ find_correlated_detections <- function(IMOS_data, movement_dates) {
     left_join(movement_dates_filtered_departure, by = "Tag_ID") %>% 
     filter(detection_datetime == Departure_date &
              Location == Departure_location &
-             animal_sex == Sex) %>%
+             animal_sex == animal_sex) %>%
     mutate(movement = "Departure", Movement_date = Departure_date) # Add "movement" and "Movement_date" column
   
   print(paste0("Rows after joining and filtering Departure_date: ", nrow(joined_data_departure)))
@@ -80,7 +77,7 @@ fdat <- find_correlated_detections(IMOS, combined_data)
 
 fdat1 <- fdat %>% 
   distinct(Tag_ID, detection_datetime, Arrival_date, Departure_date, Location,
-           Arrival_location, Departure_location, Num_days, Sex,
+           Arrival_location, Departure_location, Num_days, animal_sex,
            .keep_all = T) #in-case the function joined duplicate rows, remove 
 
 fdat2 <- fdat1 %>%
@@ -106,22 +103,30 @@ print(missing_ids)
 calculate_distance <- function(df) {
   df <- df %>%
     group_by(Tag_ID, Arrival_location, Arrival_date, Departure_date) %>%
-    mutate(distance = c(cbind(receiver_deployment_longitude[1], receiver_deployment_latitude[1]),
-                                    cbind(receiver_deployment_longitude[2], receiver_deployment_latitude[2])) / 1000)
-  return(df)}
-
+    mutate(
+      # Use distHaversine function to calculate distance between two points
+      distance = distHaversine(
+        matrix(c(receiver_deployment_longitude[1], receiver_deployment_latitude[1]), nrow = 1),
+        matrix(c(receiver_deployment_longitude[2], receiver_deployment_latitude[2]), nrow = 1)
+      ) / 1000 # Convert meters to kilometers
+    ) %>%
+    mutate(
+      distance = round(distance, 0) # Round to 0 decimal places
+    )
+  return(df)
+}
 # run the function
-fdat2 <- calculate_distance(fdat1)
+fdat3 <- calculate_distance(fdat2)
 
-summary(fdat2$distance)
-anyNA(fdat2$distance) #should be no NAs
+summary(fdat3$distance)
+anyNA(fdat3$distance) #should be no NAs
 
 # Filter dat movements that go to and from just a degree -----------------------
 
-fdat2 <- fdat2 %>% # we only are interested in focal locations
+fdat4 <- fdat3 %>% # we only are interested in focal locations
   filter(!(startsWith(Departure_location, "deg_") & #but this is methods specific
              startsWith(Arrival_location, "deg_")))
 
 #save it -----------------------------------------------------------------------
 
-write_csv(fdat2, file = "Inputs/230906_step5.csv") #5km
+write_csv(fdat4, file = "Inputs/240806_step6.csv")

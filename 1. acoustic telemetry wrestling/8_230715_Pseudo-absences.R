@@ -6,7 +6,7 @@ rm(list=ls())
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/230906_step6.csv")
+dat <- read_csv("Inputs/240806_step7.csv")
 
 summary(dat$detection_datetime)
 
@@ -84,5 +84,5 @@ summary(dat1$detection_datetime)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(dat1, file = "Inputs/230907_step7.csv")
+write_csv(dat1, file = "Inputs/240806_step8.csv")
 

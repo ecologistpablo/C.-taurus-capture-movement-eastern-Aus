@@ -7,7 +7,6 @@
 
 rm(list=ls())
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-
 setwd("~/University/2023/Honours/R/data")
 IMOS <- read_csv("Inputs/230906_step1.csv")
 
@@ -16,7 +15,7 @@ IMOS <- read_csv("Inputs/230906_step1.csv")
 
 IMOS$Tag_ID <- str_extract(IMOS$transmitter_id, "\\d{4,5}$") #shorten tag ID strings
 
-sex_vector <- c("27907" = "M", "29124" = "F", "29125" = "F", "29127" = "F", 
+sex_vector <- c("27907" = "F", "29124" = "F", "29125" = "F", "29127" = "F", 
                 "29128" = "F", "29132" = "M", "29138" = "M", "29139" = "M", 
                 "29141" = "F", "29142" = "F", "29143" = "F", "29144" = "F", 
                 "29145" = "M", "29146" = "M", "6388" = "M", "6392" = "M", 
@@ -49,6 +48,8 @@ IMOS <- IMOS %>%
 unique(IMOS$animal_sex)
 
 #remove all data that does not have a Sex assigned
+table(IMOS$animal_sex)
+#only 12 / 16304 don't
 
 IMOS <- IMOS %>% 
   filter(!is.na(animal_sex), #filter NAs
@@ -64,4 +65,4 @@ unique_sum <- IMOS %>%
 unique_sum #what's the split?
 
 # save --------------------------------------------------------------------
-write_csv(IMOS, "Inputs/240114_step2.csv")
+write_csv(IMOS, "Inputs/240806_step2.csv")
