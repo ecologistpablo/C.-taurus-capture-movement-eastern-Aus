@@ -12,10 +12,11 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 # pts ---------------------------------------------------------------------
 
 setwd("~/University/2023/Honours/R/data")
+setwd("~/Documents/USC/Honours/R/data")
 
 sst <- read_csv("Inputs/230911_SST_vals_12-22.csv") #sst values raw for each day
 m_avg <- read_csv("Inputs/230911_SST_m_avrg_12-22.csv")  #Climatological averages for month
-det <- read_csv("Inputs/230907_step8.csv") #xy points
+det <- read_csv("Inputs/240806_step9.csv") #xy points
 
 head(sst)
 head(m_avg)
@@ -87,4 +88,4 @@ diff
 
 # save --------------------------------------------------------------------
 
-write_csv(det2, file = "Inputs/230911_SST_det.csv")
+write_csv(det2, file = "Inputs/240806_SST_det.csv")

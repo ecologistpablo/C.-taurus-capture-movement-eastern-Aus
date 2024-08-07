@@ -3,7 +3,8 @@
     # August 2023
       #Who needs REMORA anyway
 
-setwd("~/University/2023/Honours/R/data/IMOS/SST/2012")
+setwd("~/Documents/USC/Honours/R/data/IMOS/SST/2012")
+> setwd("~/Documents/USC/Honours/R/data/IMOS")
 
 # Packages ----------------------------------------------------------------
 

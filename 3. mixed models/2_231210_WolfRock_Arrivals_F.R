@@ -8,7 +8,7 @@ rm(list=ls())
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
-dat <- read.csv("Inputs/231110_cleaned_pfuenzalida_dat.csv", stringsAsFactors = TRUE)
+dat <- read.csv("Inputs/240806_cleaned_model_dat.csv", stringsAsFactors = TRUE)
 
 dat1 <- dat %>% 
   mutate(Location = factor(Location),
@@ -113,18 +113,16 @@ mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"),
                family = binomial)
 
 #is edf = 1 in all models?
-summary(m3$gam)
+summary(m1$gam)
 
 
 #all models linear, move to GLMMs
 
-# # Using the mixed model components for AIC comparison
-MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
-       m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
-       m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
-# 
-# summary(m6$gam)
-# 
+# # # Using the mixed model components for AIC comparison
+# MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
+#        m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
+#        m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
+
 
 # GLMM --------------------------------------------------------------------
 
@@ -201,7 +199,7 @@ mnull <- glmer(Presence ~ 1 + (1|Tag_ID),
 MuMIn::AICc(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, mnull)
 
 
-summary(m11)
+summary(m12)
 #Using AICc, m11 is our minimum adequate model
 
 
@@ -216,24 +214,9 @@ summary(m11)
 # for logistic mixed effects model w interaction terms
 # Model contains splines or polynomial terms. Consider using terms="var_cont [all]" to get smooth plots.
 
-VCUR <- ggpredict(m11, c("anomaly_VCUR[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
-VCUR #does it work?
-GSLA <- ggpredict(m11, c("anomaly_GSLA[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+
+GSLA <- ggpredict(m15, c("anomaly_GSLA[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
 GSLA
-
-#clean up x - y labels and breaks
-VCUR1 <- VCUR + 
-  theme_minimal() +
-  labs(x = "North-south current direction temporal anomaly",
-       y = "Predicted probability of arrival",
-       title = "Female arrivals from south at Wolf Rock (n = 39)") +
-  scale_y_continuous(
-    breaks = c(0, 0.25, 0.5, 0.75, 1),
-    labels = c("0%", "25%", "50%", "75%", "100%"),
-    limits = c(0, 1))+
-  geom_line(size = 1)
-
-VCUR1
 
 #clean up x - y labels and breaks
 GSLA1 <- GSLA + 
@@ -247,11 +230,8 @@ GSLA1 <- GSLA +
   geom_line(size = 1)
 GSLA1
 
-#ggcombine that up bby
-p <- ggarrange(GSLA1 + VCUR1) #ncol / nrow = 1 to specify if u want 1 row or column
-p
 
 #save
-ggsave(path = "outputs/Graphs/Polishing/Models", "240123_WR_Female_Arrival_Nrth.pdf",
-       plot = p, width = 10, height = 5) #in inches because gg weird
+ggsave(path = "outputs/Graphs/Final/Models", "240806_WR_Female_Arrival_Nrth.pdf",
+       plot = GSLA1, width = 5, height = 5) #in inches because gg weird
 

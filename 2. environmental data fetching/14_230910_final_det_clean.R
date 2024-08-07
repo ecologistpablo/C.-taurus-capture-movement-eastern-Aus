@@ -13,7 +13,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 # pts ---------------------------------------------------------------------
 
 setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/230912_cur_det.csv")
+dat <- read_csv("Inputs/240806_cur_det.csv")
 
 # REMORA ------------------------------------------------------------------
 
@@ -38,7 +38,7 @@ dat1 <-
 #lunar illumination is measured on a scale of 0 - 1, it omits the need to model a continuous variable cyclically 
 #lunar cycle can be utilised, however it is harder to pick up ecological anomalies
 
-dat2 <- dat1
+dat2 <- dat
 
 dat2$lunar.illumination <- lunar.illumination(dat2$detection_datetime, shift = 10) #10 hrs shifted from UTM
 dat2$lunar.phase <- lunar.phase(dat2$detection_datetime, shift = 10) #10 hrs shifted from UTM
@@ -49,11 +49,7 @@ rad2deg <- function(rad) return(180*rad/pi)
 # Add a column for lunar.phase in degrees
 dat2$lunar.phase.deg <- rad2deg(dat2$lunar.phase)
 
-
-dat3 <- dat2 %>% 
-  dplyr::select(-receiver_deployment_latitude, -receiver_deployment_longitude)
-
 # save --------------------------------------------------------------------
 
-write_csv(dat2, "Inputs/230912a_complete_det_enviro.csv")
+write_csv(dat2, "Inputs/240806_complete_det_enviro.csv")
 

@@ -9,11 +9,11 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 #bring and clean data environment
 setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/230912a_complete_det_enviro.csv")
+dat <- read_csv("Inputs/240806_complete_det_enviro.csv")
 
 dat <- dat %>% 
-  dplyr::select(-detection_datetime, -Departure_date, -Arrival_date)
-
+  dplyr::select(-detection_datetime, -Departure_date, -Arrival_date,
+                -receiver_deployment_latitude, -receiver_deployment_longitude)
 summary(dat)
 
 
