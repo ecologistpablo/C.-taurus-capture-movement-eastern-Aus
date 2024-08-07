@@ -10,7 +10,7 @@ rm(list=ls())
 
 #bring and clean dat1a environment
 setwd("~/University/2023/Honours/R/data")
-dat <- read.csv("Inputs/231110_cleaned_pfuenzalida_dat.csv", stringsAsFactors = TRUE)
+dat <- read.csv("Inputs/240806_cleaned_model_dat.csv", stringsAsFactors = TRUE)
 
 dat1 <- dat %>% 
   mutate(Location = factor(Location),
@@ -19,9 +19,7 @@ dat1 <- dat %>%
          Presence = factor(Presence)) %>% 
   filter(Location == "Coffs Harbour") %>% 
   filter(movement == "Arrival") %>% 
-  filter(Sex == "M")
-
-dat1 <-dat1 %>% 
+  filter(Sex == "M") %>% 
   filter(Direction == "South")
 
 unique(dat1$Tag_ID)
@@ -144,7 +142,7 @@ SST1 <- SST +
   theme_minimal() +
   labs(x = "Sea surface temperature (⁰C) temporal anomaly",
        y = "Predicted probability of arrival",
-       title = "Male arrivals from north at Coffs Harbour (n = 57)") +
+       title = "Male arrivals from south at Coffs Harbour (n = 45)") +
   scale_y_continuous(
     breaks = c(0, 0.25, 0.5, 0.75, 1),
     labels = c("0%", "25%", "50%", "75%", "100%"),
@@ -155,6 +153,6 @@ SST1 <- SST +
 SST1
 
 #save
-ggsave(path = "outputs/Graphs/Polishing/Models", "240123_CH_Male_Arrivals_Sth.pdf",
+ggsave(path = "outputs/Graphs/Final/Models", "240807_CH_Male_Arrivals_Sth.pdf",
        plot = SST1, width = 5, height = 5) #in inches because gg weird
 

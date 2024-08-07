@@ -18,8 +18,8 @@ dat1 <- dat %>%
          Tag_ID = factor(Tag_ID),
          Presence = factor(Presence)) %>% 
   filter(Location == "Coffs Harbour") %>% 
-  filter(movement == "Departure") %>% 
-  filter(Sex == "F") %>% 
+  filter(movement == "Arrival") %>% 
+  filter(Sex == "M") %>% 
   filter(Direction == "North")
 
 unique(dat1$Tag_ID)
@@ -112,7 +112,7 @@ mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"),
                family = binomial)
 
 #first, are all estimated degrees of freedom linear? if so move to glmms
-summary(m13$gam)
+summary(m1$gam)
 
 #we have non linearity
 
@@ -135,15 +135,14 @@ summary(m12$mer)
 # for logistic mixed effects model w interaction terms
 # Model contains splines or polynomial terms. Consider using terms="var_cont [all]" to get smooth plots.
 
-moon <- ggpredict(m13, c("lunar.illumination[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
-moon
+SST <- ggpredict(m12, c("SST_anomaly[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+SST #does it work?
 
-#clean up x - y labels and breaks
-moon1 <- moon + 
+SST1 <- SST + 
   theme_minimal() +
-  labs(x = "Lunar Illumination (0 = new moon, 1 = full moon)",
-       y = "Predicted probability of departure",
-       title = "Female departures north at Coffs Harbour (n = 27)") +
+  labs(x = "Sea surface temperature (⁰C) temporal anomaly",
+       y = "Predicted probability of arrival",
+       title = "Male arrivals from north at Coffs Harbour (n = 69)") +
   scale_y_continuous(
     breaks = c(0, 0.25, 0.5, 0.75, 1),
     labels = c("0%", "25%", "50%", "75%", "100%"),
@@ -151,9 +150,9 @@ moon1 <- moon +
   geom_line(size = 1) +
   theme(plot.background = element_rect(fill = "white"))
 
-moon1
+SST1
 
 #save
-ggsave(path = "outputs/Graphs/Polishing/Models", "240123_CH_Male_Arrivals_Nrth.pdf",
+ggsave(path = "outputs/Graphs/Polishing/Models", "240807_CH_Male_Arrival_Nrth.pdf",
        plot = SST1, width = 5, height = 5) #in inches because gg weird
 
