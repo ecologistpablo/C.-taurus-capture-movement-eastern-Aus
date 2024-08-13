@@ -16,10 +16,10 @@ dat1 <- dat %>%
          Sex = factor(Sex),
          Tag_ID = factor(Tag_ID),
          Presence = factor(Presence)) %>% 
-  filter(Location == "Hawks Nest") %>% 
+  filter(Location == "Sydney") %>% 
   filter(movement == "Arrival") %>% 
   filter(Sex == "F") %>% 
-  filter(Direction == "South")
+  filter(Direction == "North")
 
 unique(dat1$Tag_ID)
 table(dat1$Tag_ID)
@@ -112,16 +112,16 @@ mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"),
                family = binomial)
 
 #first, are all estimated degrees of freedom linear? if so move to glmms
-summary(m2$gam)
-
-#we have curviness in our data
+summary(m5$gam)
 
 # Using the mixed model components for AIC comparison
 MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
-       m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
-       m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
+            m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
+            m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
 
+#SST prevails (as commonly found)
 summary(m12$gam)
+
 
 # predict -----------------------------------------------------------------
 
@@ -142,7 +142,7 @@ SST1 <- SST +
   theme_minimal() +
   labs(x = "Sea surface temperature (°C) temporal anomaly",
        y = "Predicted probability of arrival",
-       title = "Female arrivals from north at Hawks Nest (n = 24)") +
+       title = "Female arrivals from south at Sydney (n = 24)") +
   scale_y_continuous(
     breaks = c(0, 0.25, 0.5, 0.75, 1),
     labels = c("0%", "25%", "50%", "75%", "100%"),
@@ -153,6 +153,6 @@ SST1 <- SST +
 SST1
 
 #save
-ggsave(path = "outputs/Graphs/Final/Models", "240807_HN_Female_Arrival.pdf",
+ggsave(path = "outputs/Graphs/Final/Models", "240814_Sydney_Female_Arrival_Nths.pdf",
        plot = SST1, width = 5, height = 5) #in inches because gg weird
 
