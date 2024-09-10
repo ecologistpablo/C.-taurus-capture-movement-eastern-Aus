@@ -27,7 +27,8 @@ IMOSxy <- IMOS %>%
   group_by(station_name, receiver_deployment_latitude, receiver_deployment_longitude) %>%
   summarise(num_det = n(), .groups = 'drop')
 
-IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("receiver_deployment_longitude", "receiver_deployment_latitude"), crs= 4326, agr = "constant")
+IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("receiver_deployment_longitude",
+                                             "receiver_deployment_latitude"), crs= 4326, agr = "constant")
 
 # Interactive map
 mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "station_name", fbg = F)

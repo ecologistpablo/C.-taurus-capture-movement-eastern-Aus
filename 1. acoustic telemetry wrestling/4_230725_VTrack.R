@@ -10,6 +10,7 @@ rm(list=ls())
 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
+setwd("~/Documents/USC/Honours/R/data")
 setwd("~/University/2023/Honours/R/data") 
 IMOS <- read_csv("Inputs/240806_step3.csv")
 
@@ -75,7 +76,7 @@ TID.Res_all <-  #to understand RunResidenceExtraction, read vignette
 TID.Res_all.Logs <-
 TID.Res_all$residenceslog
 
-#TID.Res_all.Logs <- 
+TID.Res_all.Logs <- 
 TID.Res_all$residences
 
 # Explore Non-Residences/Movements
