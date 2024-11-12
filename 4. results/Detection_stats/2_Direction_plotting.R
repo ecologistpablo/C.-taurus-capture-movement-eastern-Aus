@@ -1,11 +1,10 @@
-#230721
+#2023_07_21
   #10
     #north - south analysis
 
 # Libraries
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-
+library(tidyverse)
 
 #bring and clean data environment
 rm(list=ls())

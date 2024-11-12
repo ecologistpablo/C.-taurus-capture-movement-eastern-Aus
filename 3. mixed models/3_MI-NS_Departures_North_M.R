@@ -3,10 +3,12 @@
 
 # helpers -----------------------------------------------------------------
 
-rm(list=ls())
 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
+rm(list=ls())
+
+#bring and clean dat1a environment
 setwd("~/University/2023/Honours/R/data")
 dat <- read.csv("Inputs/240806_cleaned_model_dat.csv", stringsAsFactors = TRUE)
 
@@ -15,23 +17,21 @@ dat1 <- dat %>%
          Sex = factor(Sex),
          Tag_ID = factor(Tag_ID),
          Presence = factor(Presence)) %>% 
-  filter(Location == "Wolf Rock") %>% 
-  filter(movement == "Arrival") %>% 
-  filter(Sex == "F") %>% 
-  filter(Direction == "North")
-
-#all from southern aggregation sites in our study so all heading north when arriving
+  filter(Location == "Flat Rock" | Location == "Moreton Island") %>% 
+  filter(movement == "Departure") %>% 
+  filter(Direction == "North") %>% 
+  filter(Sex == "M")
 
 unique(dat1$Tag_ID)
 table(dat1$Tag_ID)
 str(dat1)
-#8 tags   
 
 # gamm --------------------------------------------------------------------
 
 # Starting model with all four variables
 m1 <- gamm4(Presence ~ s(SST_anomaly) + s(lunar.illumination) + s(anomaly_VCUR) + s(anomaly_GSLA),
-            random = ~(1|Tag_ID),data = dat1,
+            random = ~(1|Tag_ID),
+            data = dat1,
             family = binomial)
 
 # Models with combinations of three variables
@@ -112,17 +112,11 @@ mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"),
                data = dat1, 
                family = binomial)
 
-#is edf = 1 in all models?
-summary(m1$gam)
 
+#first, are all estimated degrees of freedom linear? if so move to glmms
+summary(m15$gam)
 
-#all models linear, move to GLMMs
-
-# # # Using the mixed model components for AIC comparison
-# MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
-#        m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
-#        m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
-
+#all models are linear, move on to glmer
 
 # GLMM --------------------------------------------------------------------
 
@@ -200,7 +194,7 @@ MuMIn::AICc(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, mn
 
 
 summary(m12)
-#Using AICc, m11 is our minimum adequate model
+#Using AICc, m12 is our minimum adequate model
 
 
 # predict -----------------------------------------------------------------
@@ -214,24 +208,27 @@ summary(m12)
 # for logistic mixed effects model w interaction terms
 # Model contains splines or polynomial terms. Consider using terms="var_cont [all]" to get smooth plots.
 
-
-GSLA <- ggpredict(m15, c("anomaly_GSLA[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
-GSLA
+SST <- ggpredict(m12, c("SST_anomaly[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+SST
 
 #clean up x - y labels and breaks
-GSLA1 <- GSLA + 
+SST1 <- SST + 
   theme_minimal() +
-  labs(x = "Temporal anomaly of gridded sea level anomaly",
-       y = "Predicted probability of arrival",
-       title = "Female arrivals from south at Wolf Rock (n = 39)") + 
-  scale_y_continuous( breaks = c(0, 0.25, 0.5, 0.75, 1),
-                      labels = c("0%", "25%", "50%", "75%", "100%"),
-                      limits = c(0, 1)) +
-  geom_line(size = 1)
-GSLA1
+  labs(x = "Temporal anomaly of Sea Surface Temperature (°C)",
+       y = "Predicted probability of depatures",
+       title = "Male departures from south at Moreton - North Stradbroke Islands (n = 156)") +
+  scale_y_continuous(
+    breaks = c(0, 0.25, 0.5, 0.75, 1),
+    labels = c("0%", "25%", "50%", "75%", "100%"),
+    limits = c(0, 1))+
+  geom_line(size = 1) +
+  theme(plot.background = element_rect(fill = "white"))
 
+SST1
 
 #save
-ggsave(path = "outputs/Graphs/Final/Models", "240806_WR_Female_Arrival_Nrth.pdf",
-       plot = GSLA1, width = 5, height = 5) #in inches because gg weird
+ggsave(path = "outputs/Graphs/Final/Models", "240912_MI-FR_Male_Departure_North.pdf",
+       plot = SST1, width = 5, height = 5) #in inches because gg weird
+
+
 

@@ -10,17 +10,17 @@ rm(list=ls())
 
 #bring and clean dat1a environment
 setwd("~/University/2023/Honours/R/data")
-dat <- read.csv("Inputs/231110_cleaned_pfuenzalida_dat.csv", stringsAsFactors = TRUE)
+dat <- read.csv("Inputs/240806_cleaned_model_dat.csv", stringsAsFactors = TRUE)
 
 dat1 <- dat %>% 
   mutate(Location = factor(Location),
          Sex = factor(Sex),
          Tag_ID = factor(Tag_ID),
          Presence = factor(Presence)) %>% 
-  filter(Location == "Flat Rock") %>% 
-  filter(movement == "Arrival") %>% 
-  filter(Sex == "M") %>% 
-  filter(Direction == "North")
+  filter(Location == "Flat Rock" | Location == "Moreton Island") %>% 
+  filter(movement == "Departure") %>% 
+  filter(Direction == "South") %>% 
+  filter(Sex == "M")
 
 unique(dat1$Tag_ID)
 table(dat1$Tag_ID)
@@ -112,20 +112,20 @@ mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"),
                data = dat1, 
                family = binomial)
 
-#first, are all estimated degrees of freedom linear? if so move to glmms
-summary(m8$gam)
 
-#we have a non linear model
+#first, are all estimated degrees of freedom linear? if so move to glmms
+summary(m2$gam)
+
+#we have non-linearity
 
 # Using the mixed model components for AIC comparison
 MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
-       m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
-       m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
+            m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
+            m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
 
 summary(m12$gam)
 
-
-# predictive model --------------------------------------------------------
+# predict -----------------------------------------------------------------
 
 # fitting mixed effects models with sometimes two interaction terms in gamm4 and glmer
 # is harder than expected?!!!? (:O)
@@ -137,24 +137,26 @@ summary(m12$gam)
 # Model contains splines or polynomial terms. Consider using terms="var_cont [all]" to get smooth plots.
 
 SST <- ggpredict(m12, c("SST_anomaly[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
-SST #does it work?
-
+SST
 
 #clean up x - y labels and breaks
 SST1 <- SST + 
   theme_minimal() +
-  labs(x = "Sea surface temperature (⁰C) temporal anomaly",
+  labs(x = "Temporal anomaly of Sea Surface Temperature (°C)",
        y = "Predicted probability of arrival",
-       title = "Male arrivals from south at Flat Rock (n = 126)") +
+       title = "Male arrivals from south at Moreton - North Stradbroke Islands (n = 150)") +
   scale_y_continuous(
     breaks = c(0, 0.25, 0.5, 0.75, 1),
     labels = c("0%", "25%", "50%", "75%", "100%"),
     limits = c(0, 1))+
-  geom_line(size = 1)
+  geom_line(size = 1) +
+  theme(plot.background = element_rect(fill = "white"))
 
 SST1
 
 #save
-ggsave(path = "Outputs/Graphs/Final/Models", "240806_FR_Male_Arrival_Nrth.pdf",
-       plot = SST1, width = 5, height = 5) #in inches because gg weird
-  
+ggsave(path = "outputs/Graphs/Final/Models", "240912_MI-FR_Male_Departure_Sth.pdf",
+       plot = SST1, width = 8, height = 5) #in inches because gg weird
+
+
+

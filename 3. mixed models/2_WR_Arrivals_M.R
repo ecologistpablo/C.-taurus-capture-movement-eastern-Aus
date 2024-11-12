@@ -25,7 +25,9 @@ dat1 <- dat %>%
 unique(dat1$Tag_ID)
 table(dat1$Tag_ID)
 str(dat1)
-#8 tags   
+#7 tags   
+# 54 obs
+
 
 # gamm --------------------------------------------------------------------
 
@@ -113,15 +115,15 @@ mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"),
                family = binomial)
 
 #is edf = 1 in all models?
-summary(m5$gam)
+summary(m15$gam)
 
 
 #all models linear, move to GLMMs
 
 # Using the mixed model components for AIC comparison
-MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
-            m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
-            m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
+# MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
+#             m7$mer, m8$mer, m9$mer, m10$mer, m11$mer,
+#             m12$mer, m13$mer, m14$mer, m15$mer, mnull$mer)
 
 
 # GLMM --------------------------------------------------------------------
@@ -219,7 +221,7 @@ SST #does it work?
 
 SST1 <- SST + 
   theme_minimal() +
-  labs(x = "Sea surface temperature (⁰C) temporal anomaly",
+  labs(x = "Tempooral anomaly of Sea surface temperature (°C)",
        y = "Predicted probability of arrival",
        title = "Male arrivals from south at Wolf Rock (n = 54)") +
   scale_y_continuous(
@@ -232,6 +234,6 @@ SST1 <- SST +
 SST1
 
 #save
-ggsave(path = "outputs/Graphs/Final/Models", "240806_WR_Male_Arrival_Nrth.pdf",
+ggsave(path = "outputs/Graphs/Final/Models", "24910_WR_Male_Arrival_Nrth.pdf",
        plot = SST1, width = 5, height = 5) #in inches because gg weird
 

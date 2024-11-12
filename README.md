@@ -1,6 +1,9 @@
 ![GNS Carharias taurus G Smith flat](https://github.com/ecologistpablo/C.-taurus-capture-movement-eastern-Aus/assets/115206655/dd1bb381-6b1f-454a-bb86-10191fefd877)
 # Grey nurse shark (_Carcharias taurus_) capture and movement in eastern Australia
 This repository was created by Pablo Fuenzalida, as a part of an honours thesis completed in 2024. All code was written by me (unless otherwise stated) with the heavy assistance from my _fantastic_ supervisory team: Dr. Ross Dwyer, Associate Professor Kylie Scales and Professor David Schoeman. 
+
+#This paper is yet to be published and analysis yet to be finalised.
+
 Our research focuses on utilising acoustic telemetry detection data from IMOS (imos.org.au) as well as Queensland department of agriculture and fisheries (DAF) and NSW department of primary industries (DPI) shark control program bycatch data for grey nurse sharks (_Carcharias taurus_) to connect the migratory movements on a continent scale between certain key aggregation sites with bycatch occurences in the shark control programs. We also model what drives this movement using generalised linear and additive mixed models.
 
 # DISCLAIMER #

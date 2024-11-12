@@ -6,6 +6,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("~/University/2023/Honours/R/data")
 res_dat <- read_csv("Inputs/240806_residency.csv") #residence events
 IMOS <- read_csv("Inputs/240806_step3.csv") #after receiver renaming but before VTrack
+# residency does not include any pseudo absenses
 
 
 # preamble ----------------------------------------------------------------
