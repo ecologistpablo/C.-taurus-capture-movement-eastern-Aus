@@ -6,10 +6,9 @@
 # load library & data ----------------------------------------------------------
 
 rm(list=ls())
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-setwd("~/University/2023/Honours/R/data")
-IMOS <- read_csv("Inputs/230906_step1.csv")
-
+source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
+setwd("/Users/owuss/Documents/USC/Honours/R/data")
+IMOS <- read_csv("Inputs/241116_step1.csv")
 
 # munging -----------------------------------------------------------------
 
@@ -36,11 +35,9 @@ IMOS$animal_sex[is.na(IMOS$animal_sex)] <- ID$Sex[match(IMOS$Tag_ID[is.na(IMOS$a
 IMOS$animal_sex[is.na(IMOS$animal_sex)] <- ID1$Sex[match(IMOS$Tag_ID[is.na(IMOS$animal_sex)], ID1$`ID code`)]
 IMOS$animal_sex[is.na(IMOS$animal_sex)] <- ID2$animal_sex[match(IMOS$Tag_ID[is.na(IMOS$animal_sex)], ID2$`tag_id`)]
 
-#do we have more work?
-anyNA(IMOS$animal_sex)
+anyNA(IMOS$animal_sex) #do we have more work?
 
 unique(IMOS$animal_sex)
-
 
 IMOS <- IMOS %>%
   mutate(animal_sex = if_else(animal_sex == "FEMALE", "F", animal_sex))
@@ -49,11 +46,10 @@ unique(IMOS$animal_sex)
 
 #remove all data that does not have a Sex assigned
 table(IMOS$animal_sex)
-#only 12 / 16304 don't
 
 IMOS <- IMOS %>% 
   filter(!is.na(animal_sex), #filter NAs
-         animal_sex != "U") #filter U for unknowns
+         !animal_sex %in% c("U", "UNKNOWN")) #filter U for unknowns
 
 anyNA(IMOS$animal_sex) #this should be false
 
@@ -65,4 +61,4 @@ unique_sum <- IMOS %>%
 unique_sum #what's the split?
 
 # save --------------------------------------------------------------------
-write_csv(IMOS, "Inputs/240806_step2.csv")
+write_csv(IMOS, "Inputs/241116_step2.csv")

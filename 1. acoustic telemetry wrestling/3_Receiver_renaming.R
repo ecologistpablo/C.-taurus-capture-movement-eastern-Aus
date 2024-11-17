@@ -6,11 +6,8 @@ rm(list=ls()) # to clear workspace
 
 # load library & data ----------------------------------------------------------
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-
 setwd("~/University/2023/Honours/R/data") 
-IMOS <- read_csv("Inputs/240806_step2.csv")
-
+IMOS <- read_csv("Inputs/241116_step2.csv")
 
 # conceptualisation of script ---------------------------------------------
 
@@ -18,7 +15,6 @@ IMOS <- read_csv("Inputs/240806_step2.csv")
 # we will turn this into movements from different places
 # lets group our aggregations, curtains and bays into one location
 # this will allow us to detect movement between locations that hold large amounts of data
-
 
 # begin with an interactive plot, where are our data? ---------------------
 
@@ -125,6 +121,14 @@ IMOS <- IMOS %>% #all other receivers shall be named after the degree they are i
                            paste("deg_", floor(receiver_deployment_latitude), sep = ""),
                            Location))
 
+# combine Brisbane sites ------------------------------------------------------
+
+IMOS <- IMOS %>%
+  mutate(Location = case_when(
+    Location %in% c("Flat Rock", "Moreton Island") ~ "Brisbane",
+    TRUE ~ Location
+  ))
+
 #did it work? -----------------------------------------------------------------
 
 # Calculate the number of detections at each station
@@ -140,7 +144,7 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "Location", fbg = F) #colour
 
 # save it ----------------------------------------------------------------------
 
-write_csv(IMOS, "Inputs/240806_step3.csv")
+write_csv(IMOS, "Inputs/241116_step3.csv")
 
 # results for detections --------------------------------------------------
 # this code is for the results section of the paper
@@ -155,6 +159,8 @@ duration_data <- IMOS %>%
   ) %>%
   ungroup()
 
+write_csv(duration_data, "Outputs/241116_tag_duration_data.csv")
+
 # Calculating mean and standard deviation of durations
 mean_duration <- mean(duration_data$duration, na.rm = TRUE)
 sd_duration <- sd(duration_data$duration, na.rm = TRUE)
@@ -163,5 +169,4 @@ sd_duration <- sd(duration_data$duration, na.rm = TRUE)
 print(duration_data)
 print(paste("Mean duration: ", mean_duration))
 print(paste("SD of duration: ", sd_duration))
-
 
