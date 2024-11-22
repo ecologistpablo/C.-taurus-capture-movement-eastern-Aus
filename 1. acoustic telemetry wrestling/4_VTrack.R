@@ -8,11 +8,9 @@ rm(list=ls())
 
 # libraries ---------------------------------------------------------------
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-
-setwd("~/Documents/USC/Honours/R/data")
-setwd("~/University/2023/Honours/R/data") 
-IMOS <- read_csv("Inputs/240806_step3.csv")
+source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
+setwd("/Users/owuss/Documents/USC/Honours/R/data")
+IMOS <- read_csv("Inputs/241116_step3.csv")
 
 #ReadInputData -----------------------------------------------------------------------
 
@@ -65,7 +63,7 @@ TID.Res_all <-  #to understand RunResidenceExtraction, read vignette
                          iResidenceThreshold = 1,
                          iTimeThreshold = 0, 
                          sDistanceMatrix = NULL,
-                         iCores = parallel::detectCores() - 2) #parallel::detectCores() - 2
+                         iCores = parallelly::availableCores(omit = 2)) #parallel::detectCores() - 2
 
 # Data exploration ------------------------------------------------------------------
 
@@ -91,7 +89,6 @@ head(TID.Res.Movements)
 
 TID.Res.Movements <- TID.Res.Movements %>%
   filter(STATIONNAME1 != STATIONNAME2) #remove movements that return to the same location
-#641
 
 
 # residence munging -------------------------------------------------------
@@ -103,5 +100,5 @@ TID.Res_all.Logs <- TID.Res_all.Logs %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(TID.Res.Movements,file = "Inputs/240806_step4.csv")
-write_csv(TID.Res_all.Logs,file = "Inputs/240806_residency.csv")
+write_csv(TID.Res.Movements,file = "Inputs/241122_step4.csv")
+write_csv(TID.Res_all.Logs,file = "Inputs/241122_residency.csv")

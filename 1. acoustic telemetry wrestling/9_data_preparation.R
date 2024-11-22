@@ -3,9 +3,9 @@
     #step 7
 
 rm(list=ls()) 
-library(tidyverse)
-setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/240806_step8.csv")
+source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
+setwd("/Users/owuss/Documents/USC/Honours/R/data")
+dat <- read_csv("Inputs/241122_step8.csv")
 
 # just some more data curation and wrestling
 
@@ -15,7 +15,7 @@ dat <- read_csv("Inputs/240806_step8.csv")
 unique(dat$Location) #what do we have ?
 
 # Define the location order and which Locations we want to keep
-location_order <- c("Wolf Rock", "Moreton Island", "Flat Rock",  "Coffs Harbour",
+location_order <- c("Wolf Rock", "Brisbane",  "Coffs Harbour",
                     "Port Macquarie", "Seal Rocks", "Hawks Nest", "Sydney",
                     "Jervis Bay", "Montague Island")
 
@@ -59,5 +59,5 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "Location", fbg = F)
 
 #save it ----------------------------------------------------------------------------
 
-write_csv(dat3, file = "Inputs/240806_step9.csv")
+write_csv(dat3, file = "Inputs/241122_step9.csv")
 

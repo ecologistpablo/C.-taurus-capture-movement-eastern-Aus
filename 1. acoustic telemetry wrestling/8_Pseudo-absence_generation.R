@@ -1,12 +1,11 @@
 #15.07.23
   #Psuedo 2 IMOS generation
 
-rm(list=ls()) 
+rm( list=ls()) 
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-
-setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/240806_step7.csv")
+source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
+setwd("/Users/owuss/Documents/USC/Honours/R/data")
+dat <- read_csv("Inputs/241122_step7.csv")
 
 summary(dat$detection_datetime)
 
@@ -84,5 +83,5 @@ summary(dat1$detection_datetime)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(dat1, file = "Inputs/240806_step8.csv")
+write_csv(dat1, file = "Inputs/241122_step8.csv")
 

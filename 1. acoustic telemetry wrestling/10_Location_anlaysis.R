@@ -4,17 +4,17 @@
       #Wrangling 
 
 rm(list=ls()) 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-setwd("~/University/2023/Honours/R/data")
-cdat <- read_csv("Inputs/240806_step9.csv")
+source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
+setwd("/Users/owuss/Documents/USC/Honours/R/data")
+cdat <- read_csv("Inputs/241122_step9.csv")
 str(cdat)
 head(cdat)
 
 #lets find out what sites have the most data, to direct our attention to their analysis
 
-sites_to_keep <- c("Flat Rock", "Coffs Habour",
-                   "Sydney", "Moreton Island",
-                   "Wolf Rock", "Hawks Nest", "Jervis Bay")
+sites_to_keep <- c("Wolf Rock", "Brisbane", "Coffs Habour",
+                   "Sydney",
+                   "Hawks Nest", "Jervis Bay")
 
 cdat1 <- cdat %>%
   filter(Location %in% sites_to_keep)

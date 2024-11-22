@@ -3,9 +3,9 @@
     #We ran ddat & IMOS seperately through VTrack, let's combine the data now
 
 rm(list=ls()) 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-setwd("~/University/2023/Honours/R/data")
-cdat <- read_csv("Inputs/240806_step4.csv")
+source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
+setwd("/Users/owuss/Documents/USC/Honours/R/data")
+cdat <- read_csv("Inputs/241122_step4.csv")
 
 # metrics -----------------------------------------------------------------
 
@@ -23,8 +23,7 @@ cdat <- cdat %>%
 
 
 Location_levels <- c("deg_-24", "deg_-25", "Wolf Rock", "deg_-27", 
-                     "Moreton Island", 
-                     "Flat Rock",  "deg_-28", "deg_-29", "deg_-30",
+                     "Brisbane",  "deg_-28", "deg_-29", "deg_-30",
                      "Coffs Harbour", "deg_-31",
                      "deg_-32", "Port Macquarie", "deg_-33",
                      "Seal Rocks", "Hawks Nest", "deg_-34",  "Sydney",
@@ -44,5 +43,5 @@ summary(cdat1$Direction)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(cdat1,file = "Inputs/240806_step5.csv") 
+write_csv(cdat1,file = "Inputs/241122_step5.csv") 
 

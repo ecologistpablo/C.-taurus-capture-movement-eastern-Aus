@@ -2,12 +2,11 @@
   #connecting movement with detections
 
 rm(list=ls())
-#listen to your supervisors - helpers:
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
-setwd("~/University/2023/Honours/R/data") 
-IMOS <- read_csv("Inputs/240806_step3.csv") #after receiver renaming but before VTrack
-combined_data <- read_csv("Inputs/240806_step5.csv") #movements
+source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
+setwd("/Users/owuss/Documents/USC/Honours/R/data")
+IMOS <- read_csv("Inputs/241116_step3.csv") #after receiver renaming but before VTrack
+combined_data <- read_csv("Inputs/241122_step5.csv") #movements
 
 
 # description -------------------------------------------------------------
@@ -84,7 +83,7 @@ fdat2 <- fdat1 %>%
   arrange(original_id) #order them 
 
 # Create the expected vector with each number twice
-expected_ids <- rep(1:641, each = 2)
+expected_ids <- rep(1:653, each = 2)
 
 # Find which numbers are missing from fdat2$orginal_id
 missing_ids <- expected_ids[!expected_ids %in% fdat2$original_id]
@@ -129,4 +128,4 @@ fdat4 <- fdat3 %>% # we only are interested in focal locations
 
 #save it -----------------------------------------------------------------------
 
-write_csv(fdat4, file = "Inputs/240806_step6.csv")
+write_csv(fdat4, file = "Inputs/241122_step6.csv")

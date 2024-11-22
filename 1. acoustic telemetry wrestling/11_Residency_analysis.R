@@ -2,10 +2,10 @@
 # creating residence data
 
 rm(list=ls()) 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-setwd("~/University/2023/Honours/R/data")
-res_dat <- read_csv("Inputs/240806_residency.csv") #residence events
-IMOS <- read_csv("Inputs/240806_step3.csv") #after receiver renaming but before VTrack
+source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
+setwd("/Users/owuss/Documents/USC/Honours/R/data")
+res_dat <- read_csv("Inputs/241122_residency.csv") #residence events
+IMOS <- read_csv("Inputs/241116_step3.csv") #after receiver renaming but before VTrack
 # residency does not include any pseudo absenses
 
 
@@ -48,4 +48,4 @@ res_dat$animal_sex <- IMOS$animal_sex[matched_indices]
 
 str(res_dat)
 
-write_csv(res_dat, file = "Inputs/240806_res_dat.csv")
+write_csv(res_dat, file = "Inputs/241122_res_dat.csv")
