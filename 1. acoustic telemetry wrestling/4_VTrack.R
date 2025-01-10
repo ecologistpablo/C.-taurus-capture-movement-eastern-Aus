@@ -8,7 +8,9 @@ rm(list=ls())
 
 # libraries ---------------------------------------------------------------
 
-source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
+setwd("~/Documents/USC/Honours/R/data")
+source("~/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
+
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
 IMOS <- read_csv("Inputs/241116_step3.csv")
 
@@ -18,41 +20,26 @@ IMOS <- read_csv("Inputs/241116_step3.csv")
 # we need to bend our data into this so VTrack likes it
 # 05.03.23 Ross Dwyer code for ReadInputData (old function) to read in new IMOS ATF data
 
-IMOS <- IMOS %>%
-  mutate(transmitter_sensor_raw_value = 0,
-         transmitter_sensor_unit = 0)
+# Clean and format data for VTrack in one pipe
+detections_formatted_vtrack <- IMOS %>%
+  mutate(  # Add required sensor columns
+    transmitter_sensor_raw_value = 0,
+    transmitter_sensor_unit = 0
+  ) %>%  # Extract tag ID from transmitter_id
+  separate(transmitter_id, c("Frequency", "Code", "ID"), sep = "-") %>%
+  transmute(  # Select and rename columns in one step
+    DATETIME = as.POSIXct(detection_datetime),
+    TRANSMITTERID = as.numeric(ID),
+    SENSOR1 = as.numeric(transmitter_sensor_raw_value),
+    UNITS1 = as.numeric(transmitter_sensor_unit),
+    RECEIVERID = unlist(data.table::tstrsplit(receiver_name, "-", keep=2)),
+    STATIONNAME = as.factor(Location)
+  ) %>%
+  arrange(TRANSMITTERID, DATETIME) %>%  # Sort as required by VTrack
+  as.data.frame()
 
-detections_formatted <- 
-  IMOS %>%
-  dplyr::select(c(detection_datetime, transmitter_id, transmitter_sensor_raw_value, transmitter_sensor_unit, #select what to pull out of the dataframe
-                  receiver_name, Location, receiver_deployment_longitude, receiver_deployment_latitude))  %>% #and again
-  rename(Date.Time = detection_datetime, #rename them so VTrack knows what variables are
-         Transmitter.ID = transmitter_id, 
-         Sensor.1 = transmitter_sensor_raw_value,
-         Units.1 = transmitter_sensor_unit, 
-         Station.Name = Location, #we want a location-based analysis which is a little more coarse then looking at each individual receiver
-         Receiver.Name = receiver_name,
-         Station.Longitude = receiver_deployment_longitude, 
-         Station.Latitude = receiver_deployment_latitude)  %>%
-  separate(Transmitter.ID, #Just want the tag code from transmitter_ID
-           c("Frequency", "Code", "ID"), sep = "-") %>% # Extract just the tag code
-  mutate(Code.Space = paste0(Frequency,"-",Code)) %>% #mutate it
-  dplyr::select(c(Date.Time,Code.Space,ID,Sensor.1,Units.1,Receiver.Name, Station.Name,
-                  Station.Longitude, Station.Latitude))
-
-#Get dataframe in correct format for VTrack
-detections_formatted_vtrack <- detections_formatted %>%
-  mutate(DATETIME = Date.Time,
-         Code.Space = as.factor(Code.Space),
-         TRANSMITTERID = as.character(ID),
-         SENSOR1 = as.numeric(Sensor.1),
-         UNITS1 = as.character(Units.1),
-         RECEIVERID = unlist(tstrsplit(Receiver.Name,"-",keep=2)),
-         STATIONNAME = as.character(Station.Name)) %>% 
-  dplyr::select(DATETIME,TRANSMITTERID,SENSOR1,UNITS1,RECEIVERID,STATIONNAME) %>% 
-  arrange(TRANSMITTERID,DATETIME) %>% data.frame()
-
-head(detections_formatted_vtrack)
+# Verify structure
+str(detections_formatted_vtrack)
 
 
 #RunResidenceExtraction --------------------------------------------------------------------
@@ -63,12 +50,12 @@ TID.Res_all <-  #to understand RunResidenceExtraction, read vignette
                          iResidenceThreshold = 1,
                          iTimeThreshold = 0, 
                          sDistanceMatrix = NULL,
-                         iCores = parallelly::availableCores(omit = 2)) #parallel::detectCores() - 2
+                         iCores = parallelly::availableCores(omit = 2)) #parallel::detectCores() - 2 is old and doesn't work sometimes apparently
 
 # Data exploration ------------------------------------------------------------------
 
 #save(TID.Res_all, file = "Inputs/TID.Res_all_231020.RData")
-#load("TID.Res_all_230805.RData")
+load("Inputs/TID.Res_all_230805.RData")
 
 # Explore Residences log
 TID.Res_all.Logs <-

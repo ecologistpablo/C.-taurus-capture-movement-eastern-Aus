@@ -14,7 +14,7 @@ dat <- read.csv("Inputs/240806_cleaned_model_dat.csv", stringsAsFactors = TRUE)
 dat1 <- dat %>% 
   mutate(Location = factor(Location),
          Sex = factor(Sex),
-         Tag_ID = factor(Tag_ID),
+          Tag_ID = factor(Tag_ID),
          Presence = factor(Presence)) %>% 
   filter(Location == "Sydney") %>% 
   filter(movement == "Arrival") %>% 
@@ -112,7 +112,7 @@ mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"),
                family = binomial)
 
 #first, are all estimated degrees of freedom linear? if so move to glmms
-summary(m5$gam)
+summary(m5$gam) #m5 is non-linear
 
 # Using the mixed model components for AIC comparison
 MuMIn::AICc(m1$mer, m2$mer, m3$mer, m4$mer, m5$mer, m6$mer,
