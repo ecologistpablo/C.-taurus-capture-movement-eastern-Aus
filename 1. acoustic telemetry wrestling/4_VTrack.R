@@ -9,9 +9,9 @@ rm(list=ls())
 # libraries ---------------------------------------------------------------
 
 setwd("~/Documents/USC/Honours/R/data")
-source("~/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
-
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
+library(tidyverse)
+library(VTrack)
 IMOS <- read_csv("Inputs/241116_step3.csv")
 
 #ReadInputData -----------------------------------------------------------------------
@@ -35,17 +35,19 @@ detections_formatted_vtrack <- IMOS %>%
     RECEIVERID = unlist(data.table::tstrsplit(receiver_name, "-", keep=2)),
     STATIONNAME = as.factor(Location)
   ) %>%
-  arrange(TRANSMITTERID, DATETIME) %>%  # Sort as required by VTrack
+  arrange(DATETIME) %>%  # Sort as required by VTrack
   as.data.frame()
 
 # Verify structure
 str(detections_formatted_vtrack)
 
+head <- head(detections_formatted_vtrack)
+
 
 #RunResidenceExtraction --------------------------------------------------------------------
 
 TID.Res_all <-  #to understand RunResidenceExtraction, read vignette
-  VTrack::RunResidenceExtraction(sInputFile = detections_formatted_vtrack,
+  VTrack::RunResidenceExtraction(sInputFile = head,
                          sLocation = "STATIONNAME",
                          iResidenceThreshold = 1,
                          iTimeThreshold = 0, 
