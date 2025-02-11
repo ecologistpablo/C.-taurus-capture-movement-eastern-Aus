@@ -5,12 +5,12 @@
 rm(list=ls()) 
 source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-cdat <- read_csv("Inputs/241122_step4.csv")
+cdat <- read_csv("Inputs/250211_step4.csv")
 
 # metrics -----------------------------------------------------------------
 
 cdat <- cdat %>%
-  mutate(Num_days = as.numeric(ENDTIME - STARTTIME)) #calculate duration of movement
+  mutate(Num_days = as.numeric(DURATION / 3600)) #calculate duration of movement
 
 cdat <- cdat %>% 
   rename( #rename rows
@@ -22,13 +22,18 @@ cdat <- cdat %>%
   dplyr::select(-NONRESIDENCEEVENT, -DURATION)
 
 
+cdat <- cdat %>% 
+  mutate(Arrival_date = as.Date(Arrival_date),
+         Departure_date = as.Date(Departure_date))
+
+
 Location_levels <- c("deg_-24", "deg_-25", "Wolf Rock", "deg_-27", 
-                     "Brisbane",  "deg_-28", "deg_-29", "deg_-30",
+                     "Flat Rock",  "deg_-28", "deg_-29", "deg_-30",
                      "Coffs Harbour", "deg_-31",
-                     "deg_-32", "Port Macquarie", "deg_-33",
-                     "Seal Rocks", "Hawks Nest", "deg_-34",  "Sydney",
-                     "deg_-35", "Jervis Bay",
-                     "deg_-36", "Montague Island")
+                     "deg_-32", "deg_-33",
+                     "Hawks Nest", "deg_-34",  "Sydney",
+                     "deg_-35",
+                     "deg_-36", "deg_-37")
 
 cdat1 <- cdat %>%
   mutate( #create directionality as a row
@@ -41,7 +46,9 @@ cdat1 <- cdat %>%
 unique(cdat1$Direction)
 summary(cdat1$Direction)
 
+str(cdat1)
+
 #save it -----------------------------------------------------------------------
 
-write_csv(cdat1,file = "Inputs/241122_step5.csv") 
+write_csv(cdat1,file = "Inputs/250211_step5.csv") 
 

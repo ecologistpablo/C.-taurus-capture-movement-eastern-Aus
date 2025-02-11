@@ -5,9 +5,8 @@ rm(list=ls())
 
 source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-IMOS <- read_csv("Inputs/241116_step3.csv") #after receiver renaming but before VTrack
-combined_data <- read_csv("Inputs/241122_step5.csv") #movements
-
+IMOS <- read_csv("Inputs/250211_step3.csv") #after receiver renaming but before VTrack
+combined_data <- read_csv("Inputs/250211_step5.csv") #movements
 
 # description -------------------------------------------------------------
 
@@ -24,76 +23,69 @@ IMOS$Tag_ID <- as.character(IMOS$Tag_ID)
 combined_data <- combined_data %>%
   mutate(original_id = row_number())
 
+str(IMOS)
+str(combined_data)
+
 # find detections---------------------------------------------------------------
 
-find_correlated_detections <- function(IMOS_data, movement_dates) {
-  
+split_cols <- function(IMOS_data, movement_dates) {
   print(paste0("Initial row count: ", nrow(movement_dates)))
   
-  # Split the movement df by arrivals / departures
-  movement_dates_filtered_arrival <- movement_dates %>% 
-    filter(!is.na(Arrival_date))
+  # Convert necessary columns to character for matching
+  IMOS_data <- IMOS_data %>%
+    mutate(Tag_ID = as.character(Tag_ID),
+           Location = as.character(Location))
   
-  print(paste0("Rows after filtering Arrival_date: ", nrow(movement_dates_filtered_arrival)))
+  movement_dates <- movement_dates %>%
+    mutate(Tag_ID = as.character(Tag_ID),
+           Arrival_location = as.character(Arrival_location),
+           Departure_location = as.character(Departure_location))
   
-  movement_dates_filtered_departure <- movement_dates %>% 
-    filter(!is.na(Departure_date))
+  # Split into arrival and departure dataframes
+  arrival_data <- movement_dates %>%
+    dplyr::select(Tag_ID, Arrival_date, Arrival_location, everything()) %>%
+    mutate(movement_type = "Arrival") %>%
+    rename(Location = Arrival_location)  # Keep Arrival_location as Location
   
-  print(paste0("Rows after filtering Departure_date: ", nrow(movement_dates_filtered_departure)))
+  departure_data <- movement_dates %>%
+    dplyr::select(Tag_ID, Departure_date, Departure_location, everything()) %>%
+    mutate(movement_type = "Departure") %>%
+    rename(Location = Departure_location)  # Keep Departure_location as Location
   
-  # Join either Arrival or Departure date based on movement type
-  joined_data_arrival <- IMOS_data %>% 
-    left_join(movement_dates_filtered_arrival, by = "Tag_ID") %>% 
-    filter(detection_datetime == Arrival_date &
-             Location == Arrival_location & 
-             animal_sex == animal_sex) %>%
-    mutate(movement = "Arrival", Movement_date = Arrival_date) # Add "movement" and "Movement_date" column
+  # Combine arrival and departure data
+  combined_data <- bind_rows(arrival_data, departure_data)
   
-  print(paste0("Rows after joining and filtering Arrival_date: ", nrow(joined_data_arrival)))
+  # Add Sex information
+  combined_data <- combined_data %>%
+    mutate(Sex = ifelse(Tag_ID %in% IMOS_data$Tag_ID, IMOS_data$animal_sex[match(Tag_ID, IMOS_data$Tag_ID)], NA))
   
-  joined_data_departure <- IMOS_data %>% 
-    left_join(movement_dates_filtered_departure, by = "Tag_ID") %>% 
-    filter(detection_datetime == Departure_date &
-             Location == Departure_location &
-             animal_sex == animal_sex) %>%
-    mutate(movement = "Departure", Movement_date = Departure_date) # Add "movement" and "Movement_date" column
+  # Add latitude and longitude based on Location
+  combined_data <- combined_data %>%
+    mutate(latitude = ifelse(Location %in% IMOS_data$Location, 
+                             IMOS_data$receiver_deployment_latitude[match(Location, IMOS_data$Location)], NA),
+           longitude = ifelse(Location %in% IMOS_data$Location, 
+                              IMOS_data$receiver_deployment_longitude[match(Location, IMOS_data$Location)], NA))
   
-  print(paste0("Rows after joining and filtering Departure_date: ", nrow(joined_data_departure)))
+  # Remove the Location column
+  combined_data <- combined_data %>%
+    dplyr::select(-Location)
   
-  # Combine dfs
-  joined_data <- bind_rows(joined_data_arrival, joined_data_departure)
+  # Arrange by original_id
+  combined_data <- combined_data %>%
+    arrange(original_id)
   
-  return(joined_data)
+  # Print the final row count
+  print(paste0("Rows after adding metadata: ", nrow(combined_data)))
+  
+  # Return the final combined data
+  return(combined_data)
 }
+
 
 # run --------------------------------------------------------------------------
 
-fdat <- find_correlated_detections(IMOS, combined_data)
+fdat <- split_cols(IMOS, combined_data)
 
-
-# lets check our function did what we wanted it to do
-# any rows omitted that shouldn't have?
-
-fdat1 <- fdat %>% 
-  distinct(Tag_ID, detection_datetime, Arrival_date, Departure_date, Location,
-           Arrival_location, Departure_location, Num_days, animal_sex,
-           .keep_all = T) #in-case the function joined duplicate rows, remove 
-
-fdat2 <- fdat1 %>%
-  arrange(original_id) #order them 
-
-# Create the expected vector with each number twice
-expected_ids <- rep(1:653, each = 2)
-
-# Find which numbers are missing from fdat2$orginal_id
-missing_ids <- expected_ids[!expected_ids %in% fdat2$original_id]
-
-# Print the missing IDs
-print(missing_ids)
-
-# row 33 was missing, we don't even need that one its deg_34 - deg_35! 
-# you should manually inspect each function output to ensure R is playing friendly
-# cause it doesn't (a lot)...
 
 # distance metric --------------------------------------------------------------
 
@@ -101,24 +93,50 @@ print(missing_ids)
 # this accounts for earth being a sphere, so it's a little better than direct dist
 calculate_distance <- function(df) {
   df <- df %>%
-    group_by(Tag_ID, Arrival_location, Arrival_date, Departure_date) %>%
+    arrange(Tag_ID, original_id) %>%
+    group_by(Tag_ID, original_id) %>%
     mutate(
-      # Use distHaversine function to calculate distance between two points
+      # Calculate the distance between two rows with the same original_id
       distance = distHaversine(
-        matrix(c(receiver_deployment_longitude[1], receiver_deployment_latitude[1]), nrow = 1),
-        matrix(c(receiver_deployment_longitude[2], receiver_deployment_latitude[2]), nrow = 1)
-      ) / 1000 # Convert meters to kilometers
+        c(longitude[1], latitude[1]),
+        c(lead(longitude)[1], lead(latitude)[1])
+      ) / 1000 # Convert meters to km
     ) %>%
+    # Ensure the distance is applied to both rows and round to 2 decimal places
     mutate(
-      distance = round(distance, 0) # Round to 0 decimal places
-    )
+      distance = if_else(!is.na(distance), round(distance, 2), NA_real_)
+    ) %>%
+    ungroup()
+  
   return(df)
 }
-# run the function
-fdat3 <- calculate_distance(fdat2)
 
-summary(fdat3$distance)
-anyNA(fdat3$distance) #should be no NAs
+
+# run the function
+fdat1 <- calculate_distance(fdat)
+
+
+fdat2 <- fdat1 %>%
+  arrange(original_id, movement_type) %>%
+  group_by(original_id) %>%
+  mutate(
+    Arrival_location = if_else(is.na(Arrival_location), lag(Arrival_location), Arrival_location),
+    Departure_location = if_else(is.na(Departure_location), lag(Departure_location), Departure_location)
+  ) %>%
+  ungroup()
+
+head(fdat2)
+
+fdat3 <- fdat2 %>%
+  arrange(original_id, movement_type) %>%
+  group_by(original_id) %>%
+  mutate(
+    Arrival_location = if_else(is.na(Arrival_location), lead(Arrival_location), Arrival_location),
+    Departure_location = if_else(is.na(Departure_location), lead(Departure_location), Departure_location)
+  ) %>%
+  ungroup()
+
+head(fdat3)
 
 # Filter dat movements that go to and from just a degree -----------------------
 

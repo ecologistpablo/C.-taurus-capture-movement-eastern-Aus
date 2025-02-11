@@ -4,7 +4,7 @@
       #Who needs REMORA anyway
 
 setwd("~/Documents/USC/Honours/R/data/IMOS/SST/2012")
-> setwd("~/Documents/USC/Honours/R/data/IMOS")
+setwd("~/Documents/USC/Honours/R/data/IMOS")
 
 # Packages ----------------------------------------------------------------
 

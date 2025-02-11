@@ -6,7 +6,7 @@ rm(list=ls()) # to clear workspace
 
 # load library & data ----------------------------------------------------------
 
-setwd("~/University/2023/Honours/R/data") 
+setwd("~/Documents/USC/Honours/R/data")
 IMOS <- read_csv("Inputs/241116_step2.csv")
 
 # conceptualisation of script ---------------------------------------------
@@ -75,13 +75,7 @@ IMOS <- add_location_group(IMOS,
                                   "ST02 WR", # station name
                                   "Wolf Rock") # new Location name
 
-IMOS <- add_location_group(IMOS,
-                                  "Cherubs Cave", # station name
-                                  "Moreton Island") # new Location name
-
 IMOS$station_name <- ifelse(IMOS$station_name == "Flat Rock","FR",IMOS$station_name)
-
-
 IMOS <- add_location_group(IMOS,
                                   "FtR TC M1 2022/2023 101919", # station name
                                   "Flat Rock") # new Location name
@@ -89,11 +83,6 @@ IMOS <- add_location_group(IMOS,
 IMOS <- add_location_group(IMOS,
                                   "CHS 13", # station name
                                   "Coffs Harbour") # new Location name
-
-IMOS <- add_location_group(IMOS,
-                                  "Cod Grounds", # station name
-                                  "Port Macquarie") # new Location name
-
 IMOS <- add_location_group(IMOS,
                                   "MB-5", # station name
                                   "Hawks Nest") # new Location name
@@ -101,38 +90,18 @@ IMOS <- add_location_group(IMOS,
 IMOS <- add_location_group(IMOS,
                                   "BL 1", # station name
                                   "Sydney") # new Location name
-
-IMOS <- add_location_group(IMOS,
-                                  "JBGate8", # station name
-                                  "Jervis Bay") # new Location name
-
-IMOS <- add_location_group(IMOS,
-                           "N9", # station name
-                           "Montague Island") # new Location name
-
-IMOS <- add_location_group(IMOS,
-                           "SRL2", # station name
-                           "Seal Rocks") # new Location name
-
+IMOS$Location <- ifelse(IMOS$Location == "BL 15","Sydney",IMOS$Location)
 
 # filtering to degrees for other sites
-IMOS <- IMOS %>% #all other receivers shall be named after the degree they are in 
+IMOS1 <- IMOS %>% #all other receivers shall be named after the degree they are in 
   mutate(Location = ifelse(station_name == Location,
                            paste("deg_", floor(receiver_deployment_latitude), sep = ""),
                            Location))
 
-# combine Brisbane sites ------------------------------------------------------
-
-IMOS <- IMOS %>%
-  mutate(Location = case_when(
-    Location %in% c("Flat Rock", "Moreton Island") ~ "Brisbane",
-    TRUE ~ Location
-  ))
-
 #did it work? -----------------------------------------------------------------
 
 # Calculate the number of detections at each station
-IMOSxy <- IMOS %>%
+IMOSxy <- IMOS1 %>%
   group_by(Location, receiver_deployment_latitude, receiver_deployment_longitude) %>% #location
   summarise(num_det = n(), .groups = 'drop')
 
@@ -142,9 +111,21 @@ IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("receiver_deployment_longitude", "r
 mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "Location", fbg = F) #colour by LOCATION
 
 
+
+# Unique detections -------------------------------------------------------
+
+# now that we have 'locations' instead of receivers, we need to filter again
+# because we only want 1 detection per tag, per 'location', per day
+# to simplify the analysis to long-term patterns
+
+IMOS2 <- IMOS1 %>% 
+  distinct(Location, Tag_ID, detection_datetime, .keep_all = T)
+
+#that's better!
+
 # save it ----------------------------------------------------------------------
 
-write_csv(IMOS, "Inputs/241116_step3.csv")
+write_csv(IMOS2, "Inputs/250211_step3.csv")
 
 # results for detections --------------------------------------------------
 # this code is for the results section of the paper
@@ -159,7 +140,7 @@ duration_data <- IMOS %>%
   ) %>%
   ungroup()
 
-write_csv(duration_data, "Outputs/241116_tag_duration_data.csv")
+write_csv(duration_data, "Outputs/250211_tag_duration_data.csv")
 
 # Calculating mean and standard deviation of durations
 mean_duration <- mean(duration_data$duration, na.rm = TRUE)
