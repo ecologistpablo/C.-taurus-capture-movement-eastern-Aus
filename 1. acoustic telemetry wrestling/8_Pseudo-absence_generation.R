@@ -5,9 +5,9 @@ rm( list=ls())
 
 source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/241122_step7.csv")
+dat <- read_csv("Inputs/250211_step7.csv")
 
-summary(dat$detection_datetime)
+summary(dat$date)
 
 # preamble ----------------------------------------------------------------
 
@@ -27,8 +27,8 @@ generate_pseudo_absences <- function(...) {
   data_row <- tibble(...)
   
   # Extract the year and month from the detection_datetime
-  year <- lubridate::year(data_row$detection_datetime)
-  month <- lubridate::month(data_row$detection_datetime)
+  year <- lubridate::year(data_row$date)
+  month <- lubridate::month(data_row$date)
   
   # Specify the end date based on the year
   if(year == 2023) {
@@ -57,15 +57,15 @@ generate_pseudo_absences <- function(...) {
   
   # Create the pseudo-absence rows
   pseudo_absence_rows <- data_row %>%
-    slice(rep(1:n(), each = 2)) %>%
+    dplyr::slice(rep(1:n(), each = 2)) %>%
     mutate(
-      detection_datetime = random_dates,
-      Presence = 0
+      date = random_dates,
+      presence = 0
     )
   
   # Add Presence = 1 for the original detections
   data_row <- data_row %>%
-    mutate(Presence = 1)
+    mutate(presence = 1)
   
   # Bind the original and pseudo-absence rows together
   result <- bind_rows(data_row, pseudo_absence_rows)
@@ -79,9 +79,31 @@ generate_pseudo_absences <- function(...) {
 dat1 <- dat %>%
   pmap_dfr(generate_pseudo_absences)
 
-summary(dat1$detection_datetime)
+summary(dat1$date) #it worked
+
+# prep data ---------------------------------------------------------------
+
+dat2 <- dat1 %>% 
+mutate(month = lubridate::month(date))
+  
+dat3 <- dat2 %>%
+  mutate(location = if_else(movement_type == "Arrival", arrival_location, departure_location)) %>% 
+  rename(movement = movement_type)
+
+
+# plot it -----------------------------------------------------------------
+
+# Calculate the number of detections at each station
+IMOSxy <- dat3 %>%
+  group_by(location, latitude, longitude) %>%
+  summarise(num_det = n(), .groups = 'drop')
+
+IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("longitude", "latitude"),
+                          crs= 4326, agr = "constant")
+
+mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(dat1, file = "Inputs/241122_step8.csv")
+write_csv(dat1, file = "Inputs/250211_step8.csv")
 

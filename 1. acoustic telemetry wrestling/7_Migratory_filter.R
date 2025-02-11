@@ -5,7 +5,7 @@
 rm(list=ls()) 
 source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/241122_step6.csv")
+dat <- read_csv("Inputs/250211_step6.csv")
 
 # conceptual background on script -----------------------------------------
 
@@ -25,14 +25,14 @@ dat <- read_csv("Inputs/241122_step6.csv")
 
 # a departure at A, arrival at B, departure at B and arrival at A = 4 movements
 dat1 <- dat %>% 
-  arrange(Tag_ID, detection_datetime) %>%  # sort data by Tag_ID and detection_datetime
-  group_by(Tag_ID) %>%  # group data by Tag_ID
+  arrange(tag_id, date) %>%  # sort data by Tag_ID and detection_datetime
+  group_by(tag_id) %>%  # group data by Tag_ID
   filter(n() >= 4) %>%  # remove groups with fewer than 4 rows
   dplyr::slice(1:(n() %/% 4 * 4)) %>%  # keep the highest multiple of 4 rows for each group
     #(one Tag_ID can move multiple times)
   ungroup()  # remove grouping
 
-table(dat1$Tag_ID)
+table(dat1$tag_id)
 #nice, we have a df with ONLY multiples of 4 for unique Tag_IDs (ie 2 movements in 4 rows)
 
 #new column that numbers rows
@@ -43,12 +43,12 @@ dat1 <- dat1 %>%
   #(ie are the movements connected?)
 evaluate_rows <- function(df) {
   df %>%
-    group_by(Tag_ID) %>%
+    group_by(tag_id) %>%
     mutate(keep_row = case_when(
-      FRC %% 4 == 1 & Departure_location == lag(Arrival_location, default = first(Arrival_location)) ~ TRUE, # Check if movement 1 departure matches the last arrival location (movement 4)
-      FRC %% 4 == 2 & Arrival_location == lead(Departure_location) ~ TRUE, #TRUE IF row 2 = matching Arrival_location
-      FRC %% 4 == 3 & Departure_location == lag(Arrival_location) ~ TRUE, #TRUE IF row 3 = matching Departure_location
-      FRC %% 4 == 0 & Arrival_location == lag(Departure_location, default = first(Departure_location)) ~ TRUE, # Check if movement 4 arrival matches the first departure location (movement 1)
+      FRC %% 4 == 1 & departure_location == lag(arrival_location, default = first(arrival_location)) ~ TRUE, # Check if movement 1 departure matches the last arrival location (movement 4)
+      FRC %% 4 == 2 & arrival_location == lead(departure_location) ~ TRUE, #TRUE IF row 2 = matching Arrival_location
+      FRC %% 4 == 3 & departure_location == lag(arrival_location) ~ TRUE, #TRUE IF row 3 = matching Departure_location
+      FRC %% 4 == 0 & arrival_location == lag(departure_location, default = first(departure_location)) ~ TRUE, # Check if movement 4 arrival matches the first departure location (movement 1)
       TRUE ~ FALSE #if it aint true, its false
     )) %>%
     ungroup()
@@ -65,7 +65,7 @@ table(dat2$keep_row)
 dat3 <- dat2 %>%
   # Create a new grouping variable that identifies each set of 4 rows
   mutate(group_of_4 = ceiling(FRC / 4)) %>%
-  group_by(Tag_ID, group_of_4) %>%
+  group_by(tag_id, group_of_4) %>%
   mutate(any_true = any(keep_row, na.rm = TRUE)) %>%
   ungroup() %>%
   # Filter the dataframe
@@ -83,7 +83,7 @@ date_filter_rows <- function(df, temporal_threshold) {
   df <- df %>% 
     mutate(group_of_4 = ceiling(FRC / 4)) %>%  # Create groups of 4 rows
     group_by(group_of_4) %>%  # Group by the new groups of 4
-    mutate(keep_row_date = ifelse(row_number() == 2 & lead(Arrival_date, 1) - Departure_date <= temporal_threshold, TRUE, FALSE)) %>%  # If the row is 2nd in a group, compare its Departure_date with the Arrival_date of the next row
+    mutate(keep_row_date = ifelse(row_number() == 2 & lead(arrival_date, 1) - departure_date <= temporal_threshold, TRUE, FALSE)) %>%  # If the row is 2nd in a group, compare its Departure_date with the Arrival_date of the next row
     ungroup() %>%  # Ungroup to discard groupings by group_of_4
     group_by(group_of_4) %>%  # Group by the groups of 4 again
     filter(any(keep_row_date == TRUE)) %>%  # If in a group of 4, all rows have FALSE in keep_row_date, then remove the group
@@ -95,7 +95,6 @@ date_filter_rows <- function(df, temporal_threshold) {
 temporal_threshold <- 1 # day filter, but you can change this as you wish
 dat4 <- date_filter_rows(dat3, temporal_threshold)
 #manually inspect, is each group of 4 within 1 d from their beginning to end?
-unique(dat4$Location)
 
 # spatial filter ---------------------------------------------------------------
 
@@ -112,10 +111,25 @@ spatial_filter_rows <- function(df, spatial_threshold) {
 }
 
 # Using the function
-spatial_threshold <- 30 #the km threshold we want to use
+spatial_threshold <- 50 #the km threshold we want to use
 dat5 <- spatial_filter_rows(dat4, spatial_threshold)
 summary(dat5)
-unique(dat5$Location)
+
+# inspect -----------------------------------------------------------------
+
+#let's see where the data we are removing occur
+
+# Calculate the number of detections at each station
+IMOSxy <- dat5 %>%
+  group_by(departure_location, latitude, longitude) %>% #location
+  summarise(num_det = n(), .groups = 'drop')
+
+IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("longitude", "latitude"),
+                          crs= 4326, agr = "constant")
+
+mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "departure_location", fbg = F) #colour by LOCATION
+
+# cool, some just outside sydney line, some just outside Flat Rock
 
 
 dat5 <- dat5 %>% 
@@ -123,12 +137,12 @@ dat5 <- dat5 %>%
 
 #filter foraging movements -----------------------------------------------------
 
-OG <- read_csv("Inputs/241122_step6.csv")
+OG <- read_csv("Inputs/250211_step6.csv")
 
-columns <- c("Tag_ID", "station_name", "Location",
-             "Arrival_date", "Departure_date",
-             "Arrival_location", "Departure_location",
-             "detection_datetime", "Num_days", "movement")
+columns <- c("tag_id","arrival_date", "departure_date", "departure_location",
+             "num_days","direction","movement_type","arrival_location", 
+             "sex","latitude", "longitude","distance"          
+             ,"date" ) 
 
 # perform the anti_join operation
 OG1 <- anti_join(OG, dat5, by = columns)
@@ -143,5 +157,4 @@ OG1 <- anti_join(OG, dat5, by = columns)
 
 #save it ----------------------------------------------------------------------------
 
-write_csv(OG1, file = "Inputs/241122_step7.csv")
-s
+write_csv(OG1, file = "Inputs/250211_step7.csv")

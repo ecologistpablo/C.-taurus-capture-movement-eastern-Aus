@@ -41,8 +41,7 @@ dat3 <- dat2 %>%
   mutate(month = lubridate::month(detection_datetime)) %>% 
   rename(Sex = animal_sex)
 
-colnames(dat3)
-
+ 
 # plot it -----------------------------------------------------------------
 
 # Calculate the number of detections at each station

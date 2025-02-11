@@ -16,9 +16,6 @@ combined_data <- read_csv("Inputs/250211_step5.csv") #movements
 
 # pre-munging -------------------------------------------------------------
 
-combined_data$Tag_ID <- as.character(combined_data$Tag_ID)
-IMOS$Tag_ID <- as.character(IMOS$Tag_ID)
-
 # Assign a unique ID to each row before the split
 combined_data <- combined_data %>%
   mutate(original_id = row_number())
@@ -144,6 +141,16 @@ fdat4 <- fdat3 %>% # we only are interested in focal locations
   filter(!(startsWith(Departure_location, "deg_") & #but this is methods specific
              startsWith(Arrival_location, "deg_")))
 
+fdat5 <- fdat4 %>%
+  mutate(
+    date = if_else(movement_type == "Arrival", Arrival_date, Departure_date)
+  )
+
+
+fdat6 <- janitor::clean_names(fdat5)
+
+fdat6 <- fdat6[,-7] #don't need original_id anymore
+
 #save it -----------------------------------------------------------------------
 
-write_csv(fdat4, file = "Inputs/241122_step6.csv")
+write_csv(fdat6, file = "Inputs/250211_step6.csv")

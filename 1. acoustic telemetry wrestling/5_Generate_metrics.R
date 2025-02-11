@@ -9,10 +9,10 @@ cdat <- read_csv("Inputs/250211_step4.csv")
 
 # metrics -----------------------------------------------------------------
 
-cdat <- cdat %>%
-  mutate(Num_days = as.numeric(DURATION / 3600)) #calculate duration of movement
+cdat1 <- cdat %>%
+  mutate(num_days = round(DURATION / 86400, 2)) # calculate duration of movement in days and round to 1 decimal
 
-cdat <- cdat %>% 
+cdat2 <- cdat1 %>% 
   rename( #rename rows
     Departure_date = STARTTIME,
     Arrival_date = ENDTIME,
@@ -22,7 +22,7 @@ cdat <- cdat %>%
   dplyr::select(-NONRESIDENCEEVENT, -DURATION)
 
 
-cdat <- cdat %>% 
+cdat3 <- cdat2 %>% 
   mutate(Arrival_date = as.Date(Arrival_date),
          Departure_date = as.Date(Departure_date))
 
@@ -35,7 +35,7 @@ Location_levels <- c("deg_-24", "deg_-25", "Wolf Rock", "deg_-27",
                      "deg_-35",
                      "deg_-36", "deg_-37")
 
-cdat1 <- cdat %>%
+cdat4 <- cdat3 %>%
   mutate( #create directionality as a row
     Departure_location = factor(Departure_location, levels = Location_levels),
     Arrival_location = factor(Arrival_location, levels = Location_levels),
@@ -43,12 +43,11 @@ cdat1 <- cdat %>%
                         "North", "South") 
   )
 
-unique(cdat1$Direction)
-summary(cdat1$Direction)
+unique(cdat4$Direction)
 
-str(cdat1)
+str(cdat4)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(cdat1,file = "Inputs/250211_step5.csv") 
+write_csv(cdat4,file = "Inputs/250211_step5.csv") 
 

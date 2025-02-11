@@ -6,19 +6,11 @@
 rm(list=ls()) 
 source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-cdat <- read_csv("Inputs/241122_step9.csv")
+cdat <- read_csv("Inputs/250211_step8.csv")
 str(cdat)
 head(cdat)
 
 #lets find out what sites have the most data, to direct our attention to their analysis
-
-sites_to_keep <- c("Wolf Rock", "Brisbane", "Coffs Habour",
-                   "Sydney",
-                   "Hawks Nest", "Jervis Bay")
-
-cdat1 <- cdat %>%
-  filter(Location %in% sites_to_keep)
-
 
 # our lil function --------------------------------------------------------
 
@@ -42,7 +34,7 @@ count_arrival_departure_by_location <- function(data) {
 }
 
 # Call the function
-movement_counts <- count_arrival_departure_by_location(cdat1)
+movement_counts <- count_arrival_departure_by_location(cdat)
 
 movement_counts
 
