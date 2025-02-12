@@ -20,16 +20,27 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 # pts ---------------------------------------------------------------------
 
 setwd("~/University/2023/Honours/R/data")
-rcs <- read_csv("Inputs/230909_XY_receivers.csv") #this should be a csv with your XY coordinates for your receivers
+rcs <- read_csv("Inputs/250211_xy_coordinates.csv") #this should be a csv with your XY coordinates for your receivers
 WGS84 <- crs("EPSG:4326")# Coordinate reference systems
 
 head(rcs) #its all there
 
-pts.UTM <- st_as_sf(rcs, coords = c("receiver_deployment_longitude", #convert to an SF object
-                                   "receiver_deployment_latitude")) 
+pts.UTM <- st_as_sf(rcs, coords = c("longitude", #convert to an SF object
+                                   "latitude")) 
 
 st_crs(pts.UTM) <- crs(WGS84) #remember to assign crs
 
+# plot --------------------------------------------------------------------
+
+# Calculate the number of detections at each station
+IMOSxy <- rcs %>%
+  group_by(location, latitude, longitude) %>% #location
+  summarise(num_det = n(), .groups = 'drop')
+
+IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("longitude", "latitude"),
+                          crs= 4326, agr = "constant")
+
+mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F) #colour by LOCATION
 
 # rstack ------------------------------------------------------------------
 
@@ -76,9 +87,9 @@ sum(is.na(sst.pts2))
 
 # read and write ----------------------------------------------------------
 
-write_csv(sst.pts2, file = "Inputs/230911_SST_vals_12-22_pts2.csv")
+#write_csv(sst.pts2, file = "Inputs/230911_SST_vals_12-22_pts2.csv")
 
-sst.pts2 <- read_csv("Inputs/230909_SST_vals_12-22_pts2.csv")
+#sst.pts2 <- read_csv("Inputs/230909_SST_vals_12-22_pts2.csv")
 
 # increase coarseness -----------------------------------------------------
 
@@ -99,8 +110,7 @@ sst.pts10km <- extract(rstack10km, pts.UTM, ID = F)
 sst.pts10km1 <- fill1dneighbour(sst.pts10km) #find the function in the helpers script
 
 sum(is.na(sst.pts10km1))
-(46489 / 441294) * 100
-#10.53% NA, not bad
+(11615 / 69678) * 100
 
 # 5 d mean ----------------------------------------------------------------
 
@@ -113,30 +123,44 @@ colnames(sst.pts10km2) <- colnames(sst.pts10km1)
 
 sum(is.na(sst.pts10km2))
 (46464 / 441294) * 100
-#still 10.53
-  
 
 #fill values of 10km res into our 2km res
 sst.pts3 <- fill_vals(sst.pts2, sst.pts10km2) #fill_vals can be found in helpers
 
 sum(is.na(sst.pts3))
 
-(46464 / 441294) * 100
-#10.53% of our data is NA which is manageable for 114 unique coordinates across 4015 days 
-
-41 - 14
-#25% of our data are sampled at 10km spatial resolution
+(11613 / 69678) * 100
+#10.53% of our data is NA which is manageable for 18 unique coordinates across 4015 days 
 
 # fill gaps bilinear ------------------------------------------------------
 
-bl <- read_csv("Inputs/230911_SST_bl_vals_12-22.csv")
+bl <- extract(rstack10km, pts.UTM, method = "bilinear", ID = FALSE)
 
 #fill vals of bilinear interpolation into our data
 sst.pts4 <- fill_vals(sst.pts3, bl)
 
 sum(is.na(sst.pts3)) - sum(is.na(sst.pts4)) #how many did the bilinear interpolation fill ?
+# one row filled, nice. Montague Island and Jervis bay still don't seem to want to be filled...
 
-#none were filled :o
+
+# # 25 km resolution --------------------------------------------------------
+# 
+# 0.09 * 2.5 #0.09 is 10km so we want 25km
+# 0.225 / 0.02 #this value = the multiplication of base reso to 25km
+# 
+# rstack25km <- aggregate(rstack, fact = 11.25, #factor of whatever your resolution is in the OG raster / stack
+#                         fun = mean, na.rm = TRUE) #na.rm = T means it will interpolate into land
+# #this is aprox. 10km resolution now
+# 
+# sst.pts25km <- extract(rstack25km, pts.UTM, ID = F)
+# 
+# #fill vals of bilinear interpolation into our data
+# sst.pts4 <- fill_vals(sst.pts3, bl)
+# 
+# sum(is.na(sst.pts3)) - sum(is.na(sst.pts4)) #how many did the bilinear interpolation fill ?
+# # one row filled, nice. Montague Island and Jervis bay still don't seem to want to be filled...
+# 25km did nothing
+rm(sst.pts25km)
 
 # add station name --------------------------------------------------------
 
@@ -144,12 +168,13 @@ rcs <-  rcs %>% mutate(RowNumber = row_number()) #make a row number
 sst.pts3 <-  sst.pts3 %>% mutate(RowNumber = row_number()) #make a row number 
 
 
-sst.pts4 <- left_join(sst.pts3, rcs %>% dplyr::select(RowNumber, station_name), by = "RowNumber")
+sst.pts4 <- left_join(sst.pts3, rcs 
+                      %>% dplyr::select(RowNumber, location), by = "RowNumber")
 
 #re-order it
-sst.pts4 <- sst.pts4 %>%
+sst.pts5 <- sst.pts4 %>%
   dplyr::select(-RowNumber) %>% 
-  dplyr::select(station_name, everything())
+  dplyr::select(location, everything())
 
 # summary -----------------------------------------------------------------
 
@@ -161,7 +186,7 @@ sst.pts4 <- sst.pts4 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(sst.pts4, file = "Inputs/230911_SST_vals_12-22.csv")
+write_csv(sst.pts5, file = "Inputs/250211_SST_vals_12-22.csv")
 
 #finish script
 

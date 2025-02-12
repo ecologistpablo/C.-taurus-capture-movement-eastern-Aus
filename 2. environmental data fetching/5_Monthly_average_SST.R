@@ -13,8 +13,8 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 setwd("~/University/2023/Honours/R/data")
 
-dat <- read_csv("Inputs/230911_SST_vals_12-22.csv")
-rcs <- read_csv("Inputs/230909_XY_receivers.csv")
+dat <- read_csv("Inputs/250211_SST_vals_12-22.csv")
+#rcs <- read_csv("Inputs/230909_XY_receivers.csv")
 
 # wrestle monthly averages ------------------------------------------------
 
@@ -36,11 +36,10 @@ calc_monthly_avg <- function(year, df) {
 m_avg <- map_dfc(2012:2022, ~ calc_monthly_avg(.x, dat))
 
 # Combine the original data frame with the new columns
-m_avg <- bind_cols(dat %>% dplyr::select(station_name), m_avg)
+m_avg <- bind_cols(dat %>% dplyr::select(location), m_avg)
 
 # View the first few rows of the final data
 head(m_avg)
-
 
 # 12 - 22 avrg ------------------------------------------------------------
 
@@ -48,7 +47,7 @@ calc_overall_monthly_mean <- function(df, prefixes) {
   months <- c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
   
   # Initialize result dataframe with just the station_name column
-  result_df <- df %>% dplyr::select(station_name)
+  result_df <- df %>% dplyr::select(location)
   
   for (month in months) {
     
@@ -96,18 +95,6 @@ head(dat1)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat1, file = "Inputs/230911_SST_m_avrg_12-22.csv")
+write_csv(dat1, file = "Inputs/250211_SST_m_avrg_12-22.csv")
 
 
-# temp --------------------------------------------------------------------
-
-# Assuming dat1 is your dataset
-dat2 <- dat1 %>% 
-  dplyr::slice(1:19) %>% # Subsetting the first 19 rows
-  dplyr::select(-station_name) # Removing the station_name column
-
-# Calculating the mean for each column, excluding any NA values
-column_means <- map_dbl(dat2, ~mean(.x, na.rm = TRUE))
-
-# Viewing the means
-print(column_means)

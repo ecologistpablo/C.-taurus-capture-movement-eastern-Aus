@@ -105,5 +105,12 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(dat1, file = "Inputs/250211_step8.csv")
+write_csv(dat3, file = "Inputs/250211_step8.csv")
+
+# xy coordinates ----------------------------------------------------------
+
+xy <- det %>% 
+  distinct(latitude, longitude, location)
+
+write_csv(xy, file = "Inputs/250211_xy_coordinates.csv")
 
