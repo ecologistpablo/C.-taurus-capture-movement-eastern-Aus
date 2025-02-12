@@ -12,7 +12,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 # pts ---------------------------------------------------------------------
 
 setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/230912_Currents_vals_12-22.csv")
+dat <- read_csv("Inputs/250212_Currents_vals_12-22.csv")
 
 # wrestle monthly averages ------------------------------------------------
 
@@ -49,7 +49,7 @@ prefixes <- c("GSLA", "UCUR", "VCUR")
 dat1 <- calc_monthly_avg(years, dat, prefixes)
 
 # Add the station_name and the calculated averages
-dat2 <- bind_cols(dat %>% dplyr::select(station_name), dat1)
+dat2 <- bind_cols(dat %>% dplyr::select(location), dat1)
 
 # View the first few rows
 head(dat2)
@@ -62,7 +62,7 @@ calc_overall_monthly_mean <- function(df, prefixes) {
   months <- c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
   
   # Initialize result dataframe with just the station_name column
-  result_df <- df %>% dplyr::select(station_name)
+  result_df <- df %>% dplyr::select(location)
   
   for (month in months) {
     
@@ -107,4 +107,4 @@ head(dat3)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat3, file = "Inputs/230912_CUR_m_avrg_12-22.csv")
+write_csv(dat3, file = "Inputs/250212_CUR_m_avrg_12-22.csv")
