@@ -89,4 +89,4 @@ cur.pts5 <- cur.pts4 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(cur.pts3, file = "Inputs/250212_Currents_vals_12-22.csv")
+write_csv(cur.pts5, file = "Inputs/250212_Currents_vals_12-22.csv")
