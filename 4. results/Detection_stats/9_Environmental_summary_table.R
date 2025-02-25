@@ -7,21 +7,15 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 #bring and clean data environment
 rm(list=ls())
 setwd("~/University/2023/Honours/R/data")
-#dat <- read_csv("Inputs/230726_step8.csv")
-dat <- read_csv("Inputs/230912a_complete_det_enviro.csv")
+dat <- read_csv("Inputs/250212_det_enviro_complete.csv")
 
-unique(dat$Location)
+# cleaning  ---------------------------------------------------------------
 
-#dat munging -------------------------------------------------------------------
-
-# Remove rows where Presence is equal to 0
-dat1 <- dat[dat$Presence != 0, ]
+dat1 <- dat[dat$presence != 0, ]
 
 dat2 <- dat1 %>% 
-  filter(Location %in% c("Wolf Rock", "Moreton Island", "Flat Rock", "Coffs Harbour",
-                         "Hawks Nest", "Sydney", "Jervis Bay"))
-
-
+  filter(location %in% c("Wolf Rock", "Flat Rock", "Coffs Harbour",
+                         "Hawks Nest", "Sydney"))
 
 # stats -------------------------------------------------------------------
 
@@ -47,12 +41,12 @@ summarize_stats <- function(data, variable) {
 
 # Function to calculate and organize stats for a given location
 calculate_stats <- function(location, data) {
-  loc_data <- data %>% filter(Location == location)
-  males <- loc_data %>% filter(Sex == "M")
-  females <- loc_data %>% filter(Sex == "F")
+  loc_data <- data %>% filter(location == location)
+  males <- loc_data %>% filter(sex == "M")
+  females <- loc_data %>% filter(sex == "F")
   
   # List of variables
-  variables <- c("SST", "SST_anomaly", "cur_GSLA", "anomaly_GSLA", "cur_VCUR", "anomaly_VCUR")
+  variables <- c("sst", "sst_anomaly", "cur_GSLA", "anomaly_GSLA", "cur_VCUR", "anomaly_VCUR")
   
   # Calculate stats for each variable and sex using map
   stats <- map_dfr(variables, ~ {
@@ -61,7 +55,7 @@ calculate_stats <- function(location, data) {
     
     tibble(
       Location = location,
-      Sex = c("Males", "Females"),
+      sex = c("Males", "Females"),
       Variable = .x,
       Range = c(male_stats$range, female_stats$range),
       Mean_SD = c(male_stats$mean_sd, female_stats$mean_sd)
@@ -72,14 +66,14 @@ calculate_stats <- function(location, data) {
 }
 
 # Apply this function for each location
-locations <- unique(dat2$Location)
+locations <- unique(dat2$location)
 all_stats <- map_dfr(locations, calculate_stats, data = dat2)
 all_stats
 
 # Reshape the data for the desired output format
 final_stats <- all_stats %>%
   pivot_wider(names_from = Variable, values_from = c(Range, Mean_SD)) %>%
-  unite("Location_Sex", Location, Sex, sep = " ")
+  unite("Location_Sex", Location, sex, sep = " ")
 
 # View the results
 print(final_stats)
