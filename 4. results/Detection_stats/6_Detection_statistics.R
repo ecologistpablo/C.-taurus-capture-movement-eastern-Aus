@@ -5,26 +5,25 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 #bring and clean data environment
 rm(list=ls())
 setwd("~/University/2023/Honours/R/data")
-#dat <- read_csv("Inputs/230726_step8.csv")
-dat <- read_csv("Inputs/230912a_complete_det_enviro.csv")
+dat <- read_csv("Inputs/250212_det_enviro_complete.csv")
 
-unique(dat$Location)
+unique(dat$location)
 
 #dat munging -------------------------------------------------------------------
 
 # Remove rows where Presence is equal to 0
-dat1 <- dat[dat$Presence != 0, ]
+dat1 <- dat[dat$presence != 0, ]
 
 dat2 <- dat1 %>% 
-  filter(Location %in% c("Wolf Rock", "Moreton Island", "Flat Rock", "Coffs Harbour",
-                         "Hawks Nest", "Sydney", "Jervis Bay"))
+  filter(location %in% c("Wolf Rock", "Flat Rock", "Coffs Harbour",
+                         "Hawks Nest", "Sydney"))
 
-unique(dat2$Tag_ID)
+unique(dat2$tag_id)
 
 # high performing tags ----------------------------------------------------
 
 tag29124 <- dat2 %>% 
-  filter(Tag_ID == "29124")
+  filter(tag_id == "29124")
 
 summary(tag29124)
 
@@ -47,12 +46,12 @@ tag29145 <- Males %>%
 
 # Calculate the duration for each tag
 tag_durations <- dat2 %>%
-  group_by(Tag_ID) %>%
+  group_by(tag_id) %>%
   summarize(
-    Start_Date = min(detection_datetime),
-    End_Date = max(detection_datetime),
-    Duration = as.numeric(End_Date - Start_Date)
-  )
+    start_date = min(date),
+    end_date = max(date),
+    duration = as.numeric(end_date - start_date))
+
 
 #lets save that in-case we want to come back to it
 write_csv(tag_durations, file = "Inputs/231228_tag_performance_results.csv")
@@ -60,13 +59,13 @@ write_csv(tag_durations, file = "Inputs/231228_tag_performance_results.csv")
 # Calculate summary statistics
 summary_stats <- tag_durations %>%
   summarize(
-    Mean = mean(Duration),
-    Median = median(Duration),
-    SD = sd(Duration),
-    Min = min(Duration),
-    Max = max(Duration),
-    Q1 = quantile(Duration, 0.25),
-    Q3 = quantile(Duration, 0.75)
+    mean = mean(duration),
+    median = median(duration),
+    SD = sd(duration),
+    Min = min(duration),
+    Max = max(duration),
+    Q1 = quantile(duration, 0.25),
+    Q3 = quantile(duration, 0.75)
   )
 
 # Print summary statistics
@@ -135,11 +134,11 @@ calculate_stats <- function(data, variable) {
 # Analysis split by sex
 analysis_by_sex <- function(data) {
   # Split the data by sex
-  males <- filter(data, Sex == "M")
-  females <- filter(data, Sex == "F")
+  males <- filter(data, sex == "M")
+  females <- filter(data, sex == "F")
   
   # Variables for analysis
-  variables <- c("Num_days", "distance")
+  variables <- c("num_days", "distance")
   
   # Calculate stats for each variable and sex
   stats <- map_dfr(variables, ~ {
@@ -162,5 +161,7 @@ print(tag_movement_stats)
 
 write_csv(tag_movement_stats, "Outputs/231229_distance_duration_sex.csv")
 
-
+sex_unique <- dat2 %>% 
+  distinct(tag_id, .keep_all = T)
+table(sex_unique$sex)
 

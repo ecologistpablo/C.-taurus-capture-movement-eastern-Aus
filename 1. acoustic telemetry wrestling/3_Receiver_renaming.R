@@ -131,7 +131,7 @@ write_csv(IMOS2, "Inputs/250211_step3.csv")
 # this code is for the results section of the paper
 
 # Calculating min, max datetime and duration for each Tag ID
-duration_data <- IMOS %>%
+duration_data <- IMOS2 %>%
   group_by(Tag_ID) %>%
   summarise(
     min_datetime = min(detection_datetime, na.rm = TRUE),
@@ -139,6 +139,11 @@ duration_data <- IMOS %>%
     duration = max_datetime - min_datetime
   ) %>%
   ungroup()
+
+
+duration_data$duration <- as.numeric(duration_data$duration)
+summary(duration_data)
+sd(duration_data$duration)
 
 write_csv(duration_data, "Outputs/250211_tag_duration_data.csv")
 
