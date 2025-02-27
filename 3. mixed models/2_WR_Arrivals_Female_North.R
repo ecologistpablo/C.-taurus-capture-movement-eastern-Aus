@@ -3,50 +3,48 @@
 
 # helpers -----------------------------------------------------------------
 
+source("~/Documents/USC/Honours/R/data/git/C.-taurus-capture-movement-eastern-Aus/00_helpers.R")
 rm(list=ls())
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-
-setwd("~/University/2023/Honours/R/data")
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read.csv("Inputs/240806_cleaned_model_dat.csv", stringsAsFactors = TRUE)
+dat <- read_csv("Inputs/250212_det_enviro_complete.csv")
 
 dat1 <- dat %>% 
-  mutate(Location = factor(Location),
-         Sex = factor(Sex),
-         Tag_ID = factor(Tag_ID),
-         Presence = factor(Presence)) %>% 
+  mutate(Location = factor(location),
+         Sex = factor(sex),
+         Tag_ID = factor(tag_id),
+         Presence = factor(presence)) %>% 
   filter(Location == "Wolf Rock") %>% 
   filter(movement == "Arrival") %>% 
-  filter(Sex == "F") %>% 
-  filter(Direction == "North")
+  filter(sex == "F") %>% 
+  filter(direction == "North")
 
 #all from southern aggregation sites in our study so all heading north when arriving
 
-unique(dat1$Tag_ID) 
-table(dat1$Tag_ID)
+unique(dat1$tag_id)  #ensure there is more than 3 tags
+table(dat1$tag_id)
 str(dat1)
 #8 tags   
 
 # gamm --------------------------------------------------------------------
 
 # Starting model with all four variables
-m1 <- gamm4(Presence ~ s(SST_anomaly) + s(lunar.illumination) + s(anomaly_VCUR) + s(anomaly_GSLA),
+m1 <- gamm4(Presence ~ s(sst_anomaly) + s(lunar.illumination) + s(anomaly_VCUR) + s(anomaly_GSLA),
             random = ~(1|Tag_ID),data = dat1,
             family = binomial)
 
 # Models with combinations of three variables
-m2 <- gamm4(Presence ~ s(SST_anomaly) + s(lunar.illumination) + s(anomaly_VCUR),
+m2 <- gamm4(Presence ~ s(sst_anomaly) + s(lunar.illumination) + s(anomaly_VCUR),
             random = ~(1|Tag_ID),
             data = dat1,
             family = binomial)
 
-m3 <- gamm4(Presence ~ s(SST_anomaly) + s(lunar.illumination) + s(anomaly_GSLA),
+m3 <- gamm4(Presence ~ s(sst_anomaly) + s(lunar.illumination) + s(anomaly_GSLA),
             random = ~(1|Tag_ID),
             data = dat1,
             family = binomial)
 
-m4 <- gamm4(Presence ~ s(SST_anomaly) + s(anomaly_VCUR) + s(anomaly_GSLA),
+m4 <- gamm4(Presence ~ s(sst_anomaly) + s(anomaly_VCUR) + s(anomaly_GSLA),
             random = ~(1|Tag_ID),
             data = dat1,
             family = binomial)
@@ -57,17 +55,17 @@ m5 <- gamm4(Presence ~ s(lunar.illumination) + s(anomaly_VCUR) + s(anomaly_GSLA)
             family = binomial)
 
 # two variables
-m6 <- gamm4(Presence ~ s(SST_anomaly) + s(lunar.illumination),
+m6 <- gamm4(Presence ~ s(sst_anomaly) + s(lunar.illumination),
             random = ~(1|Tag_ID),
             data = dat1,
             family = binomial)
 
-m7 <- gamm4(Presence ~ s(SST_anomaly) + s(anomaly_VCUR),
+m7 <- gamm4(Presence ~ s(sst_anomaly) + s(anomaly_VCUR),
             random = ~(1|Tag_ID),
             data = dat1,
             family = binomial)
 
-m8 <- gamm4(Presence ~ s(SST_anomaly) + s(anomaly_GSLA),
+m8 <- gamm4(Presence ~ s(sst_anomaly) + s(anomaly_GSLA),
             random = ~(1|Tag_ID),
             data = dat1,
             family = binomial)
@@ -88,7 +86,7 @@ m11 <- gamm4(Presence ~ s(anomaly_VCUR) + s(anomaly_GSLA),
              family = binomial)
 
 # single variables
-m12 <- gamm4(Presence ~ s(SST_anomaly),
+m12 <- gamm4(Presence ~ s(sst_anomaly),
              random = ~(1|Tag_ID),
              data = dat1,
              family = binomial)
@@ -114,7 +112,7 @@ mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"),
                family = binomial)
 
 #is edf = 1 in all models?
-summary(m15$gam)
+summary(m1$gam)
 
 
 #all models linear, move to GLMMs
@@ -128,20 +126,20 @@ summary(m15$gam)
 # GLMM --------------------------------------------------------------------
 
 # Starting model with all four variables
-m1 <- glmer(Presence ~ SST_anomaly + lunar.illumination + anomaly_VCUR + anomaly_GSLA + (1|Tag_ID),
+m1 <- glmer(Presence ~ sst_anomaly + lunar.illumination + anomaly_VCUR + anomaly_GSLA + (1|Tag_ID),
             data = dat1,
             family = binomial)
 
 # Models with combinations of three variables
-m2 <- glmer(Presence ~ SST_anomaly + lunar.illumination + anomaly_VCUR + (1|Tag_ID),
+m2 <- glmer(Presence ~ sst_anomaly + lunar.illumination + anomaly_VCUR + (1|Tag_ID),
             data = dat1,
             family = binomial)
 
-m3 <- glmer(Presence ~ SST_anomaly + lunar.illumination + anomaly_GSLA + (1|Tag_ID),
+m3 <- glmer(Presence ~ sst_anomaly + lunar.illumination + anomaly_GSLA + (1|Tag_ID),
             data = dat1,
             family = binomial)
 
-m4 <- glmer(Presence ~ SST_anomaly + anomaly_VCUR + anomaly_GSLA + (1|Tag_ID),
+m4 <- glmer(Presence ~ sst_anomaly + anomaly_VCUR + anomaly_GSLA + (1|Tag_ID),
             data = dat1,
             family = binomial)
 
@@ -150,15 +148,15 @@ m5 <- glmer(Presence ~ lunar.illumination + anomaly_VCUR + anomaly_GSLA + (1|Tag
             family = binomial)
 
 # Models with two variables
-m6 <- glmer(Presence ~ SST_anomaly + lunar.illumination + (1|Tag_ID),
+m6 <- glmer(Presence ~ sst_anomaly + lunar.illumination + (1|Tag_ID),
             data = dat1,
             family = binomial)
 
-m7 <- glmer(Presence ~ SST_anomaly + anomaly_VCUR + (1|Tag_ID),
+m7 <- glmer(Presence ~ sst_anomaly + anomaly_VCUR + (1|Tag_ID),
             data = dat1,
             family = binomial)
 
-m8 <- glmer(Presence ~ SST_anomaly + anomaly_GSLA + (1|Tag_ID),
+m8 <- glmer(Presence ~ sst_anomaly + anomaly_GSLA + (1|Tag_ID),
             data = dat1,
             family = binomial)
 
@@ -175,7 +173,7 @@ m11 <- glmer(Presence ~ anomaly_VCUR + anomaly_GSLA + (1|Tag_ID),
              family = binomial)
 
 # Models with a single variable
-m12 <- glmer(Presence ~ SST_anomaly + (1|Tag_ID),
+m12 <- glmer(Presence ~ sst_anomaly + (1|Tag_ID),
              data = dat1,
              family = binomial)
 
@@ -216,7 +214,7 @@ summary(m15)
 # Model contains splines or polynomial terms. Consider using terms="var_cont [all]" to get smooth plots.
 
 
-GSLA <- ggpredict(m11, c("anomaly_GSLA[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+GSLA <- ggpredict(m15, c("anomaly_GSLA[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
 GSLA
 
 #clean up x - y labels and breaks
@@ -233,6 +231,6 @@ GSLA1
 
 
 #save
-ggsave(path = "outputs/Graphs/Final/Models", "240912_WR_Female_Arrival_Nrth.pdf",
+ggsave(path = "outputs/Graphs/Final/Models", "250226_WR_Female_Arrival_Nrth.pdf",
        plot = GSLA1, width = 5, height = 5) #in inches because gg weird
 

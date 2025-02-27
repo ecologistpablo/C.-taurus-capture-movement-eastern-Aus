@@ -2,11 +2,10 @@
   #doing more detection stats
     #some summary tables
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-
+library(tidyverse)
 #bring and clean data environment
 rm(list=ls())
-setwd("~/University/2023/Honours/R/data")
+setwd("~/Documents/USC/Honours/R/data")
 dat <- read_csv("Inputs/250212_det_enviro_complete.csv")
 
 # cleaning  ---------------------------------------------------------------
@@ -80,21 +79,34 @@ print(final_stats)
 
 #can save that to a csv now and put in results
 
-write_csv(final_stats, file = "outputs/231228_enviro_SDs.csv")
+write_csv(final_stats, file = "outputs/250226_enviro_SDs.csv")
 
 # Male SD + Mean SST ------------------------------------------------------
 
-male_sst_stats <- dat2 %>%
-  filter(Sex == "M") %>%
+dat2 %>%
+  filter(sex == "M") %>%
   summarise(
-    Mean_SST = mean(SST, na.rm = TRUE),
-    SD_SST = sd(SST, na.rm = TRUE)
-  )
+    Mean_SST = mean(sst, na.rm = TRUE),
+    SD_SST = sd(sst, na.rm = TRUE))
+
+dat2 %>%
+  filter(sex == "F") %>%
+  summarise(
+    Mean_SST = mean(sst, na.rm = TRUE),
+    SD_SST = sd(sst, na.rm = TRUE))
 
 msst <- dat2 %>% 
-  filter(Sex == "M")
+  filter(sex == "M")
 
-summary(msst$SST)
+summary(msst$sst)
+summary(msst$sst_anomaly)
+summary(msst$anomaly_GSLA)
+
+fsst <- dat2 %>% 
+  filter(sex == "F")
+summary(fsst$sst)
+summary(fsst$sst_anomaly)
+summary(fsst$anomaly_GSLA)
 
 msst1 <- msst %>% 
   summarise(SD = sd(SST, na.rm = T))

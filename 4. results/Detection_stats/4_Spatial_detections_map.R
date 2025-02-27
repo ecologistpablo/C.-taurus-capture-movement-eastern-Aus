@@ -1,13 +1,10 @@
 #19.10.2023
 
 rm(list=ls())
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-
 #bring and clean data environment
 setwd("~/University/2023/Honours/R/data")
-dato <- read_csv("Inputs/230906_step2.csv")
-
 dat <- read_csv("Inputs/250212_det_enviro_complete.csv")
+IMOS <- read_csv("Inputs/241116_step2.csv")
 
 dat <- dat[dat$presence != 0, ]
 
@@ -42,38 +39,35 @@ dat1 <- dat %>%
   summarise(num_det = n(), .groups = 'drop') %>% 
   ungroup()
   
-#dat1 <- dat1 %>% 
-#mutate(Location = ifelse(str_starts(Location, "deg_"), "other", Location))
-
 dat1 <- dat1 %>% 
-  mutate(location = fct_relevel(location,"Wolf Rock", "Flat Rock", "Coffs Harbour", 
-                            "Hawks Nest", "Sydney"))
-
+  mutate(Location = ifelse(str_starts(Location, "deg_"), "other", Location))
 
 dat2 <- dat1 %>% 
+  mutate(location = fct_relevel(location,"Wolf Rock", "Flat Rock", "Coffs Harbour", 
+                            "Hawks Nest", "Sydney")) %>% 
   filter(location  %in% c("Wolf Rock", "Flat Rock", "Coffs Harbour", 
                          "Hawks Nest", "Sydney"))
 
 # shp map -----------------------------------------------------------------
 
 
-colour_palette <- c("firebrick", "goldenrod", "aquamarine3", "lightskyblue", "plum" )
+colour_palette <- c("blue3", "red3", "gold2", "plum", "green3" )
 
 m <-
 ggplot() +
   geom_rect(data = bands, aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), 
             fill = "grey0", alpha = 0.3) + 
   geom_sf(data = Au) +  # Shapefile layer
-  geom_point(data = dato, aes(x = receiver_deployment_longitude, y = receiver_deployment_latitude), colour = "black", size = 1) +  # Points layer from dato in grey
+  geom_point(data = IMOS, aes(x = receiver_deployment_longitude, y = receiver_deployment_latitude), colour = "black", size = 1) +  # Points layer from dato in grey
   geom_point(data = dat2, aes(x = longitude, y = latitude, colour = location, size = num_det)) +  # Points layer
   labs(x = "Longitude", y = "Latitude") +
   theme_minimal() +
   scale_colour_manual(values = colour_palette) +   
-  coord_sf(xlim = c(149, 155), ylim = c(-37, -25)) +  # Zoom into specific lat-lon box
+  coord_sf(xlim = c(149, 154), ylim = c(-37, -23.5)) +  # Zoom into specific lat-lon box
   annotation_scale(location = "bl") +
   annotation_north_arrow(style = north_arrow_nautical, location = "tl")
 
 plot(m)
 
-ggsave(path = "Outputs/Graphs/Final/detection", "250212_det_spatial_map.pdf",
+ggsave(path = "Outputs/Graphs/Final/detection", "250226_det_spatial_map.pdf",
        plot = m, width = 6, height = 8) #in inches because gg weird

@@ -6,6 +6,7 @@ rm(list=ls()) # to clear workspace
 
 # load library & data ----------------------------------------------------------
 
+library(tidyverse)
 setwd("~/Documents/USC/Honours/R/data")
 IMOS <- read_csv("Inputs/241116_step2.csv")
 
@@ -155,4 +156,16 @@ sd_duration <- sd(duration_data$duration, na.rm = TRUE)
 print(duration_data)
 print(paste("Mean duration: ", mean_duration))
 print(paste("SD of duration: ", sd_duration))
+
+# abacus plot -------------------------------------------------------------
+
+
+
+ggplot(data = IMOS2, aes(x = detection_datetime, y = as.factor(tag_id),
+                         fill= Location)) +
+  geom_point() +
+  scale_fill_viridis_d(direction = -1)
+  
+
+
 

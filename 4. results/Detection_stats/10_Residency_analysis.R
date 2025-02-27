@@ -47,7 +47,7 @@ a <- ggplot(dat3, aes(x = month, y = avg_residency, fill = sex)) +
   labs(x = "Month",
        y = "Mean residency (days)",
        fill = "Sex") +
-  theme_grey() +
+  theme_bw() +
   scale_fill_manual(values = c("indianred4", "cyan4"))
 a  
 
@@ -64,7 +64,7 @@ b <- ggplot(dat2, aes(x = month, y = unique_tags, fill = sex)) +
   labs(x = "Month",
        y = "Total number of tagged sharks",
        fill = "Sex") +
-  theme_grey() +
+  theme_bw() +
   #scale_x_continuous(breaks = 1:12, labels = month.abb, name = "Month")  +
   scale_fill_manual(values = c("indianred4", "cyan4"))
 b
@@ -78,6 +78,6 @@ z
 colorspace::cvd(z)
 
 #save
-ggsave(path = "outputs/Graphs/Final/detection", "250212_det_residency_bars.pdf",
-       plot = z, width = 8, height = 8) #in inches because gg weird
+ggsave(path = "outputs/Graphs/Final/detection", "250226_mean_monthly_resisdency.pdf",
+       plot = a, width = 7, height = 9) #in inches because gg weird
 
