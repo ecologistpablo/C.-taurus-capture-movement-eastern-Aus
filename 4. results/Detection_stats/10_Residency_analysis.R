@@ -6,7 +6,7 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 rm(list=ls())
 
 setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/250211_res_dat.csv") 
+dat <- read_csv("Inputs/250301_res_dat.csv") 
 
 str(dat)
 head(dat)
@@ -71,13 +71,13 @@ b
 
 b <- b + ylim(0, 35) #make the y limits the same in both graphs
 
-z <- ggarrange(b, a, common.legend = T, legend = "right")
+z <- ggpubr::ggarrange(b, a, common.legend = T, legend = "right")
 z
 
 #for red - green colourblind people
 colorspace::cvd(z)
 
 #save
-ggsave(path = "outputs/Graphs/Final/detection", "250226_mean_monthly_resisdency.pdf",
-       plot = a, width = 7, height = 9) #in inches because gg weird
+ggsave(path = "outputs/Graphs/Final/detection", "250301_tag_monthly_resisdency.pdf",
+       plot = b, width = 7, height = 9) #in inches because gg weird
 

@@ -5,7 +5,7 @@
 rm(list=ls()) 
 source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-cdat <- read_csv("Inputs/250211_step4.csv")
+cdat <- read_csv("Inputs/250301_step4.csv")
 
 # metrics -----------------------------------------------------------------
 
@@ -49,5 +49,5 @@ str(cdat4)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(cdat4,file = "Inputs/250211_step5.csv") 
+write_csv(cdat4,file = "Inputs/250301_step5.csv") 
 

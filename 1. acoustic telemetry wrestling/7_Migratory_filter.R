@@ -137,7 +137,7 @@ dat5 <- dat5 %>%
 
 #filter foraging movements -----------------------------------------------------
 
-OG <- read_csv("Inputs/250211_step6.csv")
+OG <- read_csv("Inputs/250301_step6.csv")
 
 columns <- c("tag_id","arrival_date", "departure_date", "departure_location",
              "num_days","direction","movement_type","arrival_location", 
@@ -157,4 +157,4 @@ OG1 <- anti_join(OG, dat5, by = columns)
 
 #save it ----------------------------------------------------------------------------
 
-write_csv(OG1, file = "Inputs/250211_step7.csv")
+write_csv(OG1, file = "Inputs/250301_step7.csv")

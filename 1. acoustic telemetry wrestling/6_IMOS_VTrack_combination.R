@@ -5,8 +5,8 @@ rm(list=ls())
 
 source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-IMOS <- read_csv("Inputs/250211_step3.csv") #after receiver renaming but before VTrack
-combined_data <- read_csv("Inputs/250211_step5.csv") #movements
+IMOS <- read_csv("Inputs/250301_step3.csv") #after receiver renaming but before VTrack
+combined_data <- read_csv("Inputs/250301_step5.csv") #movements
 
 # description -------------------------------------------------------------
 
@@ -94,7 +94,7 @@ calculate_distance <- function(df) {
     group_by(Tag_ID, original_id) %>%
     mutate(
       # Calculate the distance between two rows with the same original_id
-      distance = distHaversine(
+      distance = geosphere::distHaversine(
         c(longitude[1], latitude[1]),
         c(lead(longitude)[1], lead(latitude)[1])
       ) / 1000 # Convert meters to km
@@ -149,8 +149,8 @@ fdat5 <- fdat4 %>%
 
 fdat6 <- janitor::clean_names(fdat5)
 
-fdat6 <- fdat6[,-7] #don't need original_id anymore
+fdat7 <- fdat6[,-7] #don't need original_id anymore
 
 #save it -----------------------------------------------------------------------
 
-write_csv(fdat6, file = "Inputs/250211_step6.csv")
+write_csv(fdat7, file = "Inputs/250301_step6.csv")

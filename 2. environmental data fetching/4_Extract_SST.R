@@ -16,12 +16,15 @@ rm(list=ls())
 # Packages ----------------------------------------------------------------
 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
+library(terra)
+library(sf)
+library(sp)
 
 # pts ---------------------------------------------------------------------
 
 setwd("~/University/2023/Honours/R/data")
-rcs <- read_csv("Inputs/250211_xy_coordinates.csv") #this should be a csv with your XY coordinates for your receivers
-WGS84 <- crs("EPSG:4326")# Coordinate reference systems
+rcs <- read_csv("Inputs/250301_xy_coordinates.csv") #this should be a csv with your XY coordinates for your receivers
+WGS84 <- terra::crs("EPSG:4326")# Coordinate reference systems
 
 head(rcs) #its all there
 
@@ -29,6 +32,8 @@ pts.UTM <- st_as_sf(rcs, coords = c("longitude", #convert to an SF object
                                    "latitude")) 
 
 st_crs(pts.UTM) <- crs(WGS84) #remember to assign crs
+crs(pts.UTM) # did it assign correctly?
+head(pts.UTM) # do we have an orderly dataframe?
 
 # plot --------------------------------------------------------------------
 

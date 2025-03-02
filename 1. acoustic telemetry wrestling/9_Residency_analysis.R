@@ -4,8 +4,8 @@
 rm(list=ls()) 
 source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-res_dat <- read_csv("Inputs/250211_residency.csv") #residence events
-IMOS <- read_csv("Inputs/250211_step3.csv") #after receiver renaming but before VTrack
+res_dat <- read_csv("Inputs/250301_residency.csv") #residence events
+IMOS <- read_csv("Inputs/250301_step3.csv") #after receiver renaming but before VTrack
 # residency does not include any pseudo absenses
 
 
@@ -50,4 +50,4 @@ res_dat3$sex <- IMOS$animal_sex[matched_indices]
 anyNA(res_dat3$sex) #should be false
 
 
-write_csv(res_dat3, file = "Inputs/250211_res_dat.csv")
+write_csv(res_dat3, file = "Inputs/250301_res_dat.csv")

@@ -5,7 +5,7 @@ rm( list=ls())
 
 source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250211_step7.csv")
+dat <- read_csv("Inputs/250301_step7.csv")
 
 summary(dat$date)
 
@@ -78,7 +78,7 @@ generate_pseudo_absences <- function(...) {
 
 dat1 <- dat %>%
   pmap_dfr(generate_pseudo_absences)
-
+# do you have dat1 = dat * 3 ?
 summary(dat1$date) #it worked
 
 # prep data ---------------------------------------------------------------
@@ -105,12 +105,12 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(dat3, file = "Inputs/250211_step8.csv")
+write_csv(dat3, file = "Inputs/250301_step8.csv")
 
 # xy coordinates ----------------------------------------------------------
 
-xy <- det %>% 
-  distinct(latitude, longitude, location)
+xy <- dat3 %>% 
+  dplyr::distinct(latitude, longitude, location)
 
-write_csv(xy, file = "Inputs/250211_xy_coordinates.csv")
+write_csv(xy, file = "Inputs/250301_xy_coordinates.csv")
 

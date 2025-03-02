@@ -8,11 +8,10 @@ rm(list=ls())
 
 # libraries ---------------------------------------------------------------
 
-#setwd("~/Documents/USC/Honours/R/data")
-setwd("/Users/owuss/Documents/USC/Honours/R/data")
+setwd("~/Documents/USC/Honours/R/data")
 library(tidyverse)
 library(VTrack)
-IMOS <- read_csv("Inputs/250211_step3.csv")
+IMOS <- read_csv("Inputs/241116_step2.csv")
 
 #ReadInputData -----------------------------------------------------------------------
 
@@ -33,7 +32,7 @@ detections_formatted_vtrack <- IMOS %>%
     SENSOR1 = as.numeric(transmitter_sensor_raw_value),
     UNITS1 = as.numeric(transmitter_sensor_unit),
     RECEIVERID = unlist(data.table::tstrsplit(receiver_name, "-", keep=2)),
-    STATIONNAME = as.factor(Location)
+    STATIONNAME = as.factor(station_name)
   ) %>%
   arrange(DATETIME) %>%  # Sort as required by VTrack
   as.data.frame()
@@ -55,7 +54,7 @@ TID.Res_all <-  #to understand RunResidenceExtraction, read vignette
 
 # Data exploration ------------------------------------------------------------------
 
-save(TID.Res_all, file = "Inputs/TID.Res_all_250211.RData")
+save(TID.Res_all, file = "Inputs/TID.Res_all_250301.RData")
 #load("Inputs/TID.Res_all_250211.RData")
 
 # Explore Residences log
@@ -86,5 +85,5 @@ TID.Res_all.Logs <- TID.Res_all.Logs %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(TID.Res.Movements,file = "Inputs/250211_step4.csv")
-write_csv(TID.Res_all.Logs,file = "Inputs/250211_residency.csv")
+write_csv(TID.Res.Movements,file = "Inputs/250301_step4.csv")
+write_csv(TID.Res_all.Logs,file = "Inputs/250301_residency.csv")
