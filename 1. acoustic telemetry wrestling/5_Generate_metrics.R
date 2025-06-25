@@ -1,11 +1,11 @@
 #29.05.23
-  #data combination
-    #We ran ddat & IMOS seperately through VTrack, let's combine the data now
+  # data preparation 
+    # Pablo Fuenzalida
 
 rm(list=ls()) 
-source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
+library(tidyverse)
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-cdat <- read_csv("Inputs/250301_step4.csv")
+cdat <- read_csv("Inputs/250625_step4_receivers.csv")
 
 # metrics -----------------------------------------------------------------
 
@@ -49,5 +49,5 @@ str(cdat4)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(cdat4,file = "Inputs/250301_step5.csv") 
+write_csv(cdat3,file = "Inputs/250625_step5_receivers.csv") 
 

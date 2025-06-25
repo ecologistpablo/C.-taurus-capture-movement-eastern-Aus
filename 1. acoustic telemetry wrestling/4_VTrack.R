@@ -2,75 +2,80 @@
   #12.06.23
     #Pablo Fuenzalida
 
-#for info on how we utilised VTrack, read: https://github.com/RossDwyer/VTrack
-
 rm(list=ls()) 
+
+# explanation -------------------------------------------------------------
+
+# VTrack was written to quantify movement between sites in acoustic telemetry
+# It uses two detections, and determines departure and arrival sites, times etc.
+# You need to format a dataframe correctly, using distinct names & data structures
+# You cannot have any NAs in a few of these columns, so data prep is important
+# Once you pass these data through runresidenceextraction, you can quantiy both
+# residency and non-residency (movement) simultaneously
+#for more info on VTrack, read: https://github.com/RossDwyer/VTrack
 
 # libraries ---------------------------------------------------------------
 
 setwd("~/Documents/USC/Honours/R/data")
 library(tidyverse)
 library(VTrack)
-IMOS <- read_csv("Inputs/241116_step2.csv")
+IMOS <- read.csv("Inputs/250302_step3.csv")
 
 #ReadInputData -----------------------------------------------------------------------
 
-# VTrack only works with specific column names and structures
-# we need to bend our data into this so VTrack likes it
-# 05.03.23 Ross Dwyer code for ReadInputData (old function) to read in new IMOS ATF data
-
-# Clean and format data for VTrack in one pipe
-detections_formatted_vtrack <- IMOS %>%
+detections_formatted_vtrack <- IMOS %>% #clean and format VTrack 
   mutate(  # Add required sensor columns
-    transmitter_sensor_raw_value = 0,
-    transmitter_sensor_unit = 0
+    transmitter_sensor_raw_value = 0, # required col
+    transmitter_sensor_unit = 0 # required col
   ) %>%  # Extract tag ID from transmitter_id
   separate(transmitter_id, c("Frequency", "Code", "ID"), sep = "-") %>%
   transmute(  # Select and rename columns in one step
-    DATETIME = as.POSIXct(detection_datetime),
+    DATETIME = as.POSIXct(detection_datetime, format = "%Y-%m-%d"),
     TRANSMITTERID = as.numeric(ID),
     SENSOR1 = as.numeric(transmitter_sensor_raw_value),
     UNITS1 = as.numeric(transmitter_sensor_unit),
     RECEIVERID = unlist(data.table::tstrsplit(receiver_name, "-", keep=2)),
-    STATIONNAME = as.factor(station_name)
+    STATIONNAME = as.factor(Location)
   ) %>%
   arrange(DATETIME) %>%  # Sort as required by VTrack
-  as.data.frame()
+  as.data.frame() #names, order and structure needs to be exactly as above
 
-# Verify structure
-str(detections_formatted_vtrack)
+str(detections_formatted_vtrack) # Verify structure
 
 head <- head(detections_formatted_vtrack)
+#for
+
+# VTrack can't handle NAs in these rows, so remove beforehand
+detections_formatted_vtrack1 <- detections_formatted_vtrack %>%
+  filter(!is.na(DATETIME), !is.na(TRANSMITTERID), !is.na(STATIONNAME))
 
 #RunResidenceExtraction --------------------------------------------------------------------
 
 TID.Res_all <-  #to understand RunResidenceExtraction, read vignette
-  VTrack::RunResidenceExtraction(sInputFile = detections_formatted_vtrack,
+  VTrack::RunResidenceExtraction(sInputFile = detections_formatted_vtrack1,
                          sLocation = "STATIONNAME",
                          iResidenceThreshold = 1,
                          iTimeThreshold = 0, 
                          sDistanceMatrix = NULL,
-                         iCores = parallel::detectCores() - 2) 
+                         iCores = parallel::detectCores() - 2) # parallel processing
 
 # Data exploration ------------------------------------------------------------------
 
-save(TID.Res_all, file = "Inputs/TID.Res_all_250301.RData")
+save(TID.Res_all, file = "Inputs/TID.Res_all_250623.RData")
 #load("Inputs/TID.Res_all_250211.RData")
 
-# Explore Residences log
-TID.Res_all.Logs <-
+TID.Res_all.Logs <- # Explore Residences log
 TID.Res_all$residenceslog
 
 TID.Res_all.Logs <- 
 TID.Res_all$residences
 
-# Explore Non-Residences/Movements
-TID.Res.Movements <- 
+TID.Res.Movements <- # Explore Non-Residences/Movements
   TID.Res_all$nonresidences
 
 TID.Res.Movements <- TID.Res.Movements[ , -c(8, 9)] #remove unnessecary columns
 
-colnames(TID.Res.Movements)
+colnames(TID.Res.Movements) # how's it looking
 
 TID.Res.Movements <- TID.Res.Movements %>%
   filter(STATIONNAME1 != STATIONNAME2) #remove movements that return to the same location
@@ -85,5 +90,5 @@ TID.Res_all.Logs <- TID.Res_all.Logs %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(TID.Res.Movements,file = "Inputs/250301_step4.csv")
-write_csv(TID.Res_all.Logs,file = "Inputs/250301_residency.csv")
+write_csv(TID.Res.Movements,file = "Inputs/250623_step4.csv")
+write_csv(TID.Res_all.Logs,file = "Inputs/250623_residency.csv")

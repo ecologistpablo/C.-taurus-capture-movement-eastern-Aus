@@ -108,7 +108,7 @@ IMOS1 <- IMOS %>% #all other receivers shall be named after the degree they are 
 #did it work? -----------------------------------------------------------------
 
 # Calculate the number of detections at each station
-IMOSxy <- IMOS1 %>%
+IMOSxy <- IMOS %>%
   group_by(Location, receiver_deployment_latitude, receiver_deployment_longitude) %>% #location
   summarise(num_det = n(), .groups = 'drop')
 
@@ -132,7 +132,7 @@ IMOS2 <- IMOS1 %>%
 
 # save it ----------------------------------------------------------------------
 
-write_csv(IMOS2, "Inputs/250301_step3.csv")
+write_csv(IMOS1, "Inputs/250302_step3.csv")
 
 # results for detections --------------------------------------------------
 # this code is for the results section of the paper
