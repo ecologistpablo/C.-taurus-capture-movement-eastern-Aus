@@ -35,15 +35,13 @@ detections_formatted_vtrack <- IMOS %>% #clean and format VTrack
     SENSOR1 = as.numeric(transmitter_sensor_raw_value),
     UNITS1 = as.numeric(transmitter_sensor_unit),
     RECEIVERID = unlist(data.table::tstrsplit(receiver_name, "-", keep=2)),
-    STATIONNAME = as.factor(Location)
+    STATIONNAME = as.factor(location) # loction or station name
   ) %>%
   arrange(DATETIME) %>%  # Sort as required by VTrack
   as.data.frame() #names, order and structure needs to be exactly as above
 
 str(detections_formatted_vtrack) # Verify structure
-
-head <- head(detections_formatted_vtrack)
-#for
+# head <- head(detections_formatted_vtrack)
 
 # VTrack can't handle NAs in these rows, so remove beforehand
 detections_formatted_vtrack1 <- detections_formatted_vtrack %>%
@@ -61,7 +59,7 @@ TID.Res_all <-  #to understand RunResidenceExtraction, read vignette
 
 # Data exploration ------------------------------------------------------------------
 
-save(TID.Res_all, file = "Inputs/TID.Res_all_250623.RData")
+save(TID.Res_all, file = "Inputs/TID.Res_all_250625_receivers.RData")
 #load("Inputs/TID.Res_all_250211.RData")
 
 TID.Res_all.Logs <- # Explore Residences log
@@ -90,5 +88,5 @@ TID.Res_all.Logs <- TID.Res_all.Logs %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(TID.Res.Movements,file = "Inputs/250623_step4.csv")
-write_csv(TID.Res_all.Logs,file = "Inputs/250623_residency.csv")
+write_csv(TID.Res.Movements,file = "Inputs/250625_step4_receivers.csv")
+write_csv(TID.Res_all.Logs,file = "Inputs/250625_residency_receivers.csv")
