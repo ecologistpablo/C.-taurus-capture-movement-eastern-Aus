@@ -5,7 +5,7 @@
 rm(list=ls()) 
 library(tidyverse)
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-cdat <- read_csv("Inputs/250625_step4_receivers.csv")
+cdat <- read_csv("Inputs/250625_step4.csv")
 
 # metrics -----------------------------------------------------------------
 

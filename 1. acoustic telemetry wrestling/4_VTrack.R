@@ -60,7 +60,7 @@ TID.Res_all <-  #to understand RunResidenceExtraction, read vignette
 # Data exploration ------------------------------------------------------------------
 
 save(TID.Res_all, file = "Inputs/TID.Res_all_250625_receivers.RData")
-#load("Inputs/TID.Res_all_250211.RData")
+load("Inputs/TID.Res_all_250623.RData")
 
 TID.Res_all.Logs <- # Explore Residences log
 TID.Res_all$residenceslog
@@ -89,4 +89,4 @@ TID.Res_all.Logs <- TID.Res_all.Logs %>%
 # save --------------------------------------------------------------------
 
 write_csv(TID.Res.Movements,file = "Inputs/250625_step4_receivers.csv")
-write_csv(TID.Res_all.Logs,file = "Inputs/250625_residency_receivers.csv")
+write_csv(TID.Res_all.Logs,file = "Inputs/250626_residency.csv")

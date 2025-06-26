@@ -2,12 +2,11 @@
 # creating residence data
 
 rm(list=ls()) 
-source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
+library(tidyverse)
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-res_dat <- read_csv("Inputs/250301_residency.csv") #residence events
-IMOS <- read_csv("Inputs/250301_step3.csv") #after receiver renaming but before VTrack
+res_dat <- read_csv("Inputs/250626_residency.csv") #residence events
+IMOS <- read_csv("Inputs/250302_step3.csv") #after receiver renaming but before VTrack
 # residency does not include any pseudo absenses
-
 
 # preamble ----------------------------------------------------------------
 
@@ -19,8 +18,7 @@ IMOS <- read_csv("Inputs/250301_step3.csv") #after receiver renaming but before 
 # dplyr wrestling ---------------------------------------------------------
 
 res_dat1 <- res_dat %>% 
-  rename( #rename rows
-    date = STARTTIME,
+  rename(date = STARTTIME,
     tag_id = TRANSMITTERID,
     location = STATIONNAME) %>% 
   dplyr::select(-ENDREASON, -NUMRECS, -ENDTIME)
@@ -50,4 +48,4 @@ res_dat3$sex <- IMOS$animal_sex[matched_indices]
 anyNA(res_dat3$sex) #should be false
 
 
-write_csv(res_dat3, file = "Inputs/250301_res_dat.csv")
+write_csv(res_dat3, file = "Inputs/250626_res_dat.csv")
