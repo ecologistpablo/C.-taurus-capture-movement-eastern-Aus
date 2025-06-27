@@ -1,6 +1,6 @@
 # 04 September 2023
-# Who needs REMORA anyway
-# extracting SST values
+  # Who needs REMORA anyway
+    # extracting SST values
 
 #script begun by Prof. D. Schoeman
 
@@ -27,26 +27,12 @@ library(tidyr)
 setwd("~/University/2023/Honours/R/data")
 rcs <- read_csv("Inputs/250626_xy_coordinates.csv") #this should be a csv with your XY coordinates for your receivers
 WGS84 <- terra::crs("EPSG:4326")# Coordinate reference systems
+
 head(rcs) #its all there
 
-# data prep ---------------------------------------------------------------
+pts.UTM <- st_as_sf(rcs, coords = c("longitude", #convert to an SF object
+                                   "latitude")) 
 
-# some of our station names are not unique
-# because lots of different people assign names in weird ways
-# so let's make them unique
-rcs1 <- rcs %>% 
-  group_by(station_name) %>%
-  mutate(station_name = if (n_distinct(latitude, longitude) > 1) 
-      paste0(station_name, "_", row_number()) 
-    else 
-      station_name) %>%
-  ungroup()
-
-# if station name is the same, and latitude and longitude are unique
-# make station names different 
-
-pts.UTM <- st_as_sf(rcs1, coords = c("longitude", #convert to an SF object
-                                    "latitude")) 
 st_crs(pts.UTM) <- crs(WGS84) #remember to assign crs
 crs(pts.UTM) # did it assign correctly?
 head(pts.UTM) # do we have an orderly dataframe?
@@ -54,7 +40,7 @@ head(pts.UTM) # do we have an orderly dataframe?
 # plot --------------------------------------------------------------------
 
 # Calculate the number of detections at each station
-IMOSxy <- rcs1 %>%
+IMOSxy <- rcs %>%
   group_by(station_name, latitude, longitude) %>% #location
   summarise(num_det = n(), .groups = 'drop')
 
@@ -94,76 +80,93 @@ layer_dates <- as.Date(gsub("SST_", "", names(rstack10km)), format="%Y%m%d")
 # Convert from wide (one col per date) to long format
 sst.pts10km1 <- sst.pts10km %>%
   pivot_longer(cols = -station_name,
-               names_to = "date",
-               values_to = "value") %>%
+              names_to = "date",
+              values_to = "value") %>%
   mutate(date = as.Date(gsub("SST_", "", date), format="%Y%m%d"))
 
-#weekly average
+sst.pts10km2 <- sst.pts10km1 %>%
+  arrange(station_name, date) %>%
+  group_by(station_name) %>%
+  mutate(value_7d = zoo::rollapply(
+      value, width = 7, FUN = mean,
+      align = "center", fill = NA, na.rm = TRUE)) %>%
+  ungroup()
+
 sst.pts10km2 <- sst.pts10km1 %>%
   mutate(week_start = floor_date(date, unit = "week", week_start = 7)) %>%
   group_by(station_name, week_start) %>%
   mutate(value_7d = if (all(is.na(value))) NA_real_ else mean(value, na.rm = TRUE)) %>%
   ungroup()
 
-# let's find out how many stations are full of NAs
-# our data is coastal, so it sometimes happens that environmental data
-# does not land on the coordinates close to land
+# 4. Bilinear interpolation ----------------------------------------------
 
-# calculate number of stations with only NAs
-sst.pts10km2 %>%
-  group_by(station_name) %>%
-   summarise(total_rows = n(),
-    num_na = sum(is.na(value_7d)),
-    all_na = all(is.na(value_7d)),
-    prop_na = mean(is.na(value_7d))) %>%
-   arrange(desc(all_na), desc(prop_na)) %>% print(n = 237)
+sst.bilinear <- extract(rstack10km, pts.UTM, method = "bilinear", ID = FALSE) %>%
+  mutate(location = pts.UTM$location)
 
-# bi-linear interpolation -------------------------------------------------
+sst.bilinear_long <- sst.bilinear %>%
+  setNames(c(paste0("SST_", format(layer_dates, "%Y%m%d")), "location")) %>%
+  pivot_longer(cols = starts_with("SST_"),
+               names_to = "date", values_to = "value_bl") %>%
+  mutate(date = as.Date(gsub("SST_", "", date), format = "%Y%m%d"))
 
-# Extract bilinear-interpolated SST
-bl <- extract(rstack10km, pts.UTM, method = "bilinear", ID = FALSE)
-bl$station_name <- pts.UTM$station_name
 
-# Long format conversion
-bl1 <- bl %>%
-  setNames(c(as.character(layer_dates), "station_name")) %>%
-  pivot_longer(cols = -station_name,
+# fill using BL -----------------------------------------------------------
+
+sst.pts10km3 <- left_join(sst.pts10km2,
+                          sst.bilinear_long, by = c("location", "date")) %>%
+  mutate(value_filled = ifelse(is.na(value), value_bl, value)) %>%
+  group_by(location) %>% # Weekly gap fill (after bilinear)
+  mutate(value_filled = fill_weekly_mean(date, value_filled),
+    value_filled_7d = zoo::rollapply(value_filled,
+                7, mean, fill = NA, align = "center", na.rm = TRUE)) %>%
+  ungroup() # Then apply 7-day rolling average
+  
+# # 25 km resolution --------------------------------------------------------
+
+0.09 * 2.5 #0.09 is 10km so we want 25km
+0.225 / 0.02 #this value = the multiplication of base reso to 25km
+
+rstack25km <- aggregate(rstack, fact = 11.25, #factor of whatever your resolution is in the OG raster / stack
+                        fun = mean, na.rm = TRUE) #na.rm = T means it will interpolate into land
+#this is aprox. 10km resolution now
+
+sst.pts25km <- extract(rstack25km, pts.UTM, ID = F)
+sst.pts25km$location <- pts.UTM$location
+
+# fill values from 25km res into 10km df and make a new df
+sst.pts <- fill_vals(sst.pts10km, sst.pts25km)
+
+layer_dates <- as.Date(gsub("SST_", "", names(sst.pts)), format="%Y%m%d")
+
+# Convert from wide (one col per date) to long format
+sst.pts1 <- sst.pts %>%
+  pivot_longer(cols = -location,
                names_to = "date",
                values_to = "value") %>%
-  mutate(date = as.Date(date))
+  mutate(date = as.Date(gsub("SST_", "", date), format="%Y%m%d"))
 
-bl2 <- bl1 %>%
-  mutate(week_start = floor_date(date, unit = "week", week_start = 7)) %>%
-  group_by(station_name, week_start) %>%
-  mutate(bl_value_7d = if (all(is.na(value))) NA_real_ else mean(value, na.rm = TRUE)) %>%
+sst.pts2 <- sst.pts1 %>%
+  arrange(location, date) %>%
+  group_by(location) %>%
+  mutate(value_7d = zoo::rollapply(
+    value, width = 7, FUN = mean,
+    align = "center", fill = NA, na.rm = TRUE)) %>%
   ungroup()
 
-# join both ---------------------------------------------------------------
 
-sst.pts10km3 <- sst.pts10km2 %>%
-  left_join(bl2 %>% select(station_name, date, bl_value_7d),
-            by = c("station_name", "date")) %>%
-  mutate(value_7d_filled = if_else(is.na(value_7d), bl_value_7d, value_7d)) %>%
-  select(station_name, date, value, value_7d, bl_value_7d, value_7d_filled)
+# add station name --------------------------------------------------------
 
-# how many NAs are still around
+rcs <-  rcs %>% mutate(RowNumber = row_number()) #make a row number 
+sst.pts3 <-  sst.pts3 %>% mutate(RowNumber = row_number()) #make a row number 
 
-sst.pts10km3 %>%
-  group_by(station_name) %>%
-  summarise(total_rows = n(),
-            num_na = sum(is.na(value_7d_filled)),
-            all_na = all(is.na(value_7d_filled)),
-            prop_na = mean(is.na(value_7d_filled))) %>%
-  arrange(desc(all_na), desc(prop_na)) %>% print(n = 237)
 
-# 6 stations, out of 237 stations, are NA
-# the rest of stations are less than 10% NA
+sst.pts4 <- left_join(sst.pts3, rcs 
+                      %>% dplyr::select(RowNumber, location), by = "RowNumber")
 
-# clean - up --------------------------------------------------------------
-
-sst.pts10km4 <- sst.pts10km3 %>% 
-  distinct(station_name, date, value_7d_filled) %>% 
-  rename(SST = value_7d_filled)
+#re-order it
+sst.pts5 <- sst.pts4 %>%
+  dplyr::select(-RowNumber) %>% 
+  dplyr::select(location, everything())
 
 # summary -----------------------------------------------------------------
 
@@ -175,5 +178,7 @@ sst.pts10km4 <- sst.pts10km3 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(sst.pts10km4, file = "Inputs/250627_SST_vals_12-22.csv")
+write_csv(sst.pts5, file = "Inputs/250211_SST_vals_12-22.csv")
+
+#finish script
 

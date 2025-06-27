@@ -95,7 +95,7 @@ write_csv(dat2, file = "Inputs/250626_step10.csv")
 # xy coordinates ----------------------------------------------------------
 
 xy <- dat2 %>% 
-  dplyr::distinct(latitude, longitude, location)
+  dplyr::distinct(latitude, longitude, location, station_name)
 
 write_csv(xy, file = "Inputs/250626_xy_coordinates.csv")
 

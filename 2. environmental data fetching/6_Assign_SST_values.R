@@ -4,58 +4,51 @@
 
 rm(list=ls())
 
-source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
+library(tidyverse)
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
 
-sst <- read_csv("Inputs/250211_SST_vals_12-22.csv") #sst values raw for each day
-m_avg <- read_csv("Inputs/250211_SST_m_avrg_12-22.csv")  #Climatological averages for month
-det <- read_csv("Inputs/250211_step8.csv") #dataframe you use to model
+m_avg <- read_csv("Inputs/250627_SST_m_avrg_12-22.csv")  #Climatological averages for month
+det <- read_csv("Inputs/250626_step10.csv") #dataframe you use to model
 
-head(sst)
-head(m_avg)
-head(det)
+summary(det)
+summary(m_avg)
 
-# bind enviro dat ----------------------------------------------------------
+# rm duplicates -----------------------------------------------------------
 
-# Using map_dfr to loop through each row of det, and bind the results into a new dataframe
-det1 <- map_dfr(seq_len(nrow(det)), ~{
-  row <- det[.x, ]  # Extract the current row from det
-  
-  # Create column names based on the detection date in det
-  sst_colname <- paste0("SST_", format(row$date, "%Y%m%d"))  # For sst
-  
-  # Convert the detection_datetime to a monthly format and create a corresponding m_avg column name
-  m_avg_colname <- paste0("MonthlyMean_", format(row$date, "%m"))  # For m_avg
-  
-  # Check if the column exists in sst, else return NA
-  sst_value <- if (sst_colname %in% names(sst)) {
-    sst[sst$location == row$location, sst_colname]  # From sst
-  } else {
-    NA
-  }
-  
-  # same for monthly average
-  m_avg_value <- if (m_avg_colname %in% names(m_avg)) {
-    m_avg[m_avg$location == row$location, m_avg_colname]  # From m_avg
-  } else {
-    NA
-  }
-  
-  # Add new columns to the current row
-  row$sst <- as.numeric(sst_value)  # Adding SST
-  row$sst_m_avrg <- as.numeric(m_avg_value)  # Adding SST_m_avrg
-  
-  return(row)  # Return the modified row
-})
+# now remember, we had duplicate names in our station_name column
+# so we need to clear that up, by using the same function
+unique(det$station_name) #200 cols, should be 237
 
+# Identify station_names with more than one lat/lon combo
+station_duplicates <- det %>%
+  distinct(station_name, latitude, longitude) %>%
+  add_count(station_name) %>%
+  filter(n > 1) %>%
+  pull(station_name)
 
-sum(is.na(det1$sst))
-sum(is.na(det1$sst_m_avrg))
+# Fix duplicates by suffixing only where needed
+det1 <- det %>%
+  group_by(station_name) %>%
+  mutate(station_name = case_when(
+      station_name %in% station_duplicates ~ paste0(
+        station_name, "_", match(interaction(latitude, longitude),
+                                 unique(interaction(latitude, longitude)))),
+      TRUE ~ station_name)) %>%
+  ungroup()
 
-# anomaly -----------------------------------------------------------------
+unique(det1$station_name) #did it work?
+setequal(unique(det1$station_name), unique(m_avg$station_name)) # are two dfs the same?
+# if this is false, you have a problem
 
+# left_join to the rescue -------------------------------------------------
+
+# combine SST data with our detections
 det2 <- det1 %>%
-  mutate(sst_anomaly = sst - sst_m_avrg)
+  left_join(m_avg %>% 
+      select(station_name, date, SST, sst_month, sst_anomaly),
+    by = c("station_name", "date")) %>% 
+  rename(sst = SST)
+head(det2)
 
 # where do the NAs go ? ---------------------------------------------------
 
@@ -65,17 +58,14 @@ NAsst <- det2 %>%
   group_by(location) %>%
   summarise(na_count = sum(is.na(sst)))
 
-det3 <- det2 %>% 
+ det2 %>% 
   group_by(location) %>%
-  summarise(sum = n())
-
-# Join det3 and NAsst by Location and calculate the difference
-diff <- det3 %>%
+  summarise(sum = n()) %>%
   left_join(NAsst, by = "location") %>% # Join on Location
   mutate(difference = sum - ifelse(is.na(na_count), 0, na_count)) # Calculate the difference
 
-diff 
-#Montague Isl & Port Macq, gone :(
+# all focal locations still have plenty of data 
+# NAs are not an enormous problem
 
 # save --------------------------------------------------------------------
 
