@@ -1,92 +1,132 @@
 # 11 September 2023
-  # P. Fuenzalida
-    # extracting currrent data
+# P. Fuenzalida
+# extracting currrent data
 
 rm(list=ls())
 
 # Packages ----------------------------------------------------------------
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
-
+library(terra)
+library(sf)
+library(sp)
+library(viridis)
+library(lubridate)
+library(tidyr)
 # pts ---------------------------------------------------------------------
 
 setwd("~/University/2023/Honours/R/data")
 
 cstack <- rast("IMOS/Currents/230912_cstack_12-22.tif") #currents stack
-rcs <- read_csv("Inputs/250211_xy_coordinates.csv") #xy points
+rcs <- read_csv("Inputs/250626_xy_coordinates.csv") #xy points
 WGS84 <- crs("EPSG:4326")# Coordinate reference systems
 
-pts.WGS <- st_as_sf(rcs, coords = c("longitude", #convert to an SF object
-                                   "latitude")) 
+rcs1 <- rcs %>% # fixing duplicate station_name rows 
+  group_by(station_name) %>%
+  mutate(station_name = if (n_distinct(latitude, longitude) > 1) 
+    paste0(station_name, "_", row_number()) 
+    else 
+      station_name) %>%
+  ungroup()
 
+unique(rcs1$station_name) # should be 237 or numb of observations
+
+pts.WGS <- st_as_sf(rcs1, coords = c("longitude", #convert to an SF object
+                                     "latitude")) 
 st_crs(pts.WGS) <- crs(WGS84) #remember to assign crs
 pts.WGS
 
 # plotting ----------------------------------------------------------------
 
 plot(cstack[[3]], col = viridis(255))
-plot(pts.WGS, add = T)
- 
+pplot(pts.WGS, add = T)
+
 # extract -----------------------------------------------------------------
 
 cur.pts <- extract(cstack, pts.WGS, ID = F) # ID = FALSE  
 
-sum(is.na(cur.pts))
-18 * 12045
-(84374 / 216810) * 100 
+# 7 day averages ----------------------------------------------------------
 
-# nearest temporal neighbour ----------------------------------------------
+# reshape matrix into long format
+cur.pts1 <- cur.pts %>%
+  pivot_longer(cols = -station_name, names_to = "var_date", values_to = "value") %>%
+  tidyr::extract(var_date, into = c("var", "date"), regex = "([A-Z]+)_(\\d{8})") %>%
+  mutate(date = as.Date(date, format = "%Y%m%d"))
 
-cur.pts1 <- fill1dneighbour(cur.pts)
-sum(is.na(cur.pts1)) 
-
-(84315 / 216810) * 100 
-
-# 5 d mean filling --------------------------------------------------------
-
-cur.pts2 <- t(apply(cur.pts1, 1, mean_5d))
-cur.pts2 <- as.data.frame(cur.pts2)
-colnames(cur.pts2) <- colnames(cur.pts1)
-sum(is.na(cur.pts2))
-
-#all stations that hold data are filled, stations that fall too close to the coast hold only NAs
+# make 7-day averages for data
+cur.pts2 <- cur.pts1 %>%
+  mutate(week_start = floor_date(date, unit = "week", week_start = 7)) %>%
+  group_by(station_name, var, week_start) %>%
+  mutate(value_7d = if (all(is.na(value)))
+    NA_real_ else mean(value, na.rm = TRUE)) %>%
+  ungroup()
 
 
-# bilinear interpolation --------------------------------------------------
 
-# Extract using bilinear extractione
-bl <- extract(cstack, pts.WGS, method = "bilinear")
-#bilinear returns values that are interpolated from the four nearest cells
+# let's find out how many stations are full of NAs
+# our data is coastal, so it sometimes happens that environmental data
+# does not land on the coordinates close to land
 
-bl <- bl[,-1] #remove ID row
+# calculate number of stations with only NAs
+cur.pts2 %>%
+  group_by(station_name, var) %>%
+  summarise(total_rows = n(),
+            num_na = sum(is.na(value_7d)),
+            all_na = all(is.na(value_7d)),
+            prop_na = mean(is.na(value_7d)),
+            .groups = "drop") %>%
+  arrange(desc(all_na), desc(prop_na)) %>%
+  print(n = Inf)
 
-sum(is.na(bl)) 
+# around %15 NA, which is ok without bi-linear interpolation
 
-(24098 / 216810) * 100
-#11% is NA with bilinear interpolation
+# bi-linear interpolation -------------------------------------------------
 
-# fill with bilinear interpolation ----------------------------------------
+bl <- extract(cstack, pts.WGS, method = "bilinear", ID = FALSE)
+bl$station_name <- pts.WGS$station_name
 
-cur.pts3 <- fill_vals(cur.pts2, bl)
-sum(is.na(cur.pts3))
+bl1 <- bl %>%
+  setNames(c(names(cstack), "station_name")) %>%
+  pivot_longer(cols = -station_name, names_to = "var_date", values_to = "value") %>%
+  tidyr::extract(var_date, into = c("var", "date"), regex = "([A-Z]+)_(\\d{8})") %>%
+  mutate(date = as.Date(date, format = "%Y%m%d"))
 
-38 - 11
-#27% bilinear interpolation
+bl2 <- bl1 %>%
+  mutate(week_start = floor_date(date, unit = "week", week_start = 7)) %>%
+  group_by(station_name, var, week_start) %>%
+  mutate(bl_value_7d = if (all(is.na(value)))
+    NA_real_ else mean(value, na.rm = TRUE)) %>%
+  ungroup() 
 
-# add location row --------------------------------------------------------
+# join both ---------------------------------------------------------------
 
-rcs <-  rcs %>% mutate(RowNumber = row_number()) #make a row number 
-cur.pts3 <-  cur.pts3 %>% mutate(RowNumber = row_number()) #make a row number 
+cur.pts3 <- cur.pts2 %>%
+  left_join(bl2 %>% select(station_name, date, var, bl_value_7d), 
+            by = c("station_name", "date", "var")) %>%
+  mutate(value_7d_filled = if_else(is.na(value_7d), bl_value_7d, value_7d))
 
 
-cur.pts4 <- left_join(cur.pts3, rcs 
-                      %>% dplyr::select(RowNumber, location), by = "RowNumber")
+# how many NAs are still around
 
-cur.pts5 <- cur.pts4 %>%
-  dplyr::select(-RowNumber) %>% 
-  dplyr::select(location, everything())
+cur.pts3 %>%
+  group_by(station_name, var) %>%
+  summarise(total_rows = n(),
+            num_na = sum(is.na(value_7d_filled)),
+            all_na = all(is.na(value_7d_filled)),
+            prop_na = mean(is.na(value_7d_filled))) %>%
+  arrange(desc(all_na), desc(prop_na)) %>% print(n = Inf)
 
+# 18 stations out of 711 are NA
+
+# that's 2.5% NAs
+# nice
+
+# clean - up --------------------------------------------------------------
+
+# clean and pivot
+cur.pts4 <- cur.pts3 %>% 
+  distinct(station_name,var, date, value_7d_filled) %>% 
+  pivot_wider(names_from = var, values_from = value_7d_filled)
 
 # save --------------------------------------------------------------------
 
-write_csv(cur.pts5, file = "Inputs/250212_Currents_vals_12-22.csv")
+write_csv(cur.pts4, file = "Inputs/250627_Currents_vals_12-22.csv")

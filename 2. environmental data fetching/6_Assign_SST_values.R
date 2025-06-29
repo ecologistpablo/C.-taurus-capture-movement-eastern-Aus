@@ -60,7 +60,7 @@ NAsst <- det2 %>%
 
  det2 %>% 
   group_by(location) %>%
-  summarise(sum = n()) %>%
+  summarise(sum = n()) 
   left_join(NAsst, by = "location") %>% # Join on Location
   mutate(difference = sum - ifelse(is.na(na_count), 0, na_count)) # Calculate the difference
 
@@ -69,4 +69,4 @@ NAsst <- det2 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(det2, file = "Inputs/250211_SST_det.csv")
+write_csv(det2, file = "Inputs/250627_SST_det.csv")
