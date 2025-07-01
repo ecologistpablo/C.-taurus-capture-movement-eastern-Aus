@@ -1,6 +1,6 @@
 # 11 September 2023
-# P. Fuenzalida
-# extracting currrent data
+  # P. Fuenzalida
+    # extracting currrent data
 
 rm(list=ls())
 
@@ -12,6 +12,8 @@ library(sp)
 library(viridis)
 library(lubridate)
 library(tidyr)
+library(tidyverse)
+
 # pts ---------------------------------------------------------------------
 
 setwd("~/University/2023/Honours/R/data")
@@ -30,8 +32,7 @@ rcs1 <- rcs %>% # fixing duplicate station_name rows
 
 unique(rcs1$station_name) # should be 237 or numb of observations
 
-pts.WGS <- st_as_sf(rcs1, coords = c("longitude", #convert to an SF object
-                                     "latitude")) 
+pts.WGS <- st_as_sf(rcs1, coords = c("longitude", "latitude")) #sf object
 st_crs(pts.WGS) <- crs(WGS84) #remember to assign crs
 pts.WGS
 
@@ -61,6 +62,7 @@ cur.pts2 <- cur.pts1 %>%
   ungroup()
 
 
+# NA check ----------------------------------------------------------------
 
 # let's find out how many stations are full of NAs
 # our data is coastal, so it sometimes happens that environmental data
@@ -106,7 +108,6 @@ cur.pts3 <- cur.pts2 %>%
 
 
 # how many NAs are still around
-
 cur.pts3 %>%
   group_by(station_name, var) %>%
   summarise(total_rows = n(),

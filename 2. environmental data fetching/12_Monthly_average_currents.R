@@ -7,104 +7,45 @@ rm(list=ls())
 
 # Packages ----------------------------------------------------------------
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
+library(lubridate)
+library(tidyverse)
+# extract, filter, lag, and select are conflicting in dplyr
 
 # pts ---------------------------------------------------------------------
 
-setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/250212_Currents_vals_12-22.csv")
+setwd("~/Documents/USC/Honours/R/data")
+dat <- read_csv("Inputs/250627_Currents_vals_12-22.csv")
 
 # wrestle monthly averages ------------------------------------------------
 
-calc_monthly_avg <- function(years, df, prefixes) {
-  months <- c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
-  
-  all_results <- map_dfc(years, ~{
-    year <- .x
-    map_dfc(prefixes, ~{
-      prefix <- .x
-      map_dfc(months, ~{
-        month <- .x
-        pattern <- paste0(prefix, "_", year, month)
-        cols <- grep(pattern, colnames(df))
-        
-        if (length(cols) == 0) {
-          return(tibble())
-        }
-        
-        avg_column <- rowMeans(df[, cols], na.rm = TRUE)
-        new_col_name <- paste0(prefix, "_", year, month, "_avg")
-        
-        tibble(avg_column) %>% setNames(new_col_name)
-      })
-    })
-  })
-  
-  return(all_results)
-}
+# 1. Monthly averages per station/year/month
+monthly_avg <- dat %>%
+  mutate(year = year(date), month = sprintf("%02d", month(date))) %>%
+  group_by(station_name, year, month) %>%
+  summarise(mean_GSLA = mean(GSLA, na.rm = TRUE),
+    mean_UCUR = mean(UCUR, na.rm = TRUE),
+    mean_VCUR = mean(VCUR, na.rm = TRUE),
+    .groups = "drop")
 
+# 2. Climatological monthly averages (across all years)
+monthly_climatology <- monthly_avg %>%
+  group_by(station_name, month) %>%
+  summarise(clim_GSLA = mean(mean_GSLA, na.rm = TRUE),
+    clim_UCUR = mean(mean_UCUR, na.rm = TRUE),
+    clim_VCUR = mean(mean_VCUR, na.rm = TRUE),
+    .groups = "drop")
 
-years <- 2012:2022
-prefixes <- c("GSLA", "UCUR", "VCUR")
-dat1 <- calc_monthly_avg(years, dat, prefixes)
+# 3. Join to compute temporal anomalies
+dat1 <- dat %>%
+  mutate(month = sprintf("%02d", month(date))) %>%
+  left_join(monthly_climatology, by = c("station_name", "month")) %>%
+  mutate(GSLA_anomaly = GSLA - clim_GSLA,
+    UCUR_anomaly = UCUR - clim_UCUR,
+    VCUR_anomaly = VCUR - clim_VCUR) %>%
+  select(-month)
 
-# Add the station_name and the calculated averages
-dat2 <- bind_cols(dat %>% dplyr::select(location), dat1)
-
-# View the first few rows
-head(dat2)
-
-#we still have some NAs in sites similar to SST NAs, we may have to omit from analysis... :(
-
-# climatology -------------------------------------------------------------
-
-calc_overall_monthly_mean <- function(df, prefixes) {
-  months <- c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
-  
-  # Initialize result dataframe with just the station_name column
-  result_df <- df %>% dplyr::select(location)
-  
-  for (month in months) {
-    
-    # Initialize an empty character vector to collect relevant columns
-    all_cols_for_month <- character(0)
-    
-    for (prefix in prefixes) {
-      
-      # Regex pattern to match prefix, any year, and the specific month
-      pattern <- paste0(prefix, ".*", month, "_avg")
-      cols <- grep(pattern, colnames(df), value = TRUE)
-      
-      if (length(cols) == 0) {
-        cat("No columns found for prefix:", prefix, " and month:", month, "\n")
-        next
-      }
-      
-      all_cols_for_month <- c(all_cols_for_month, cols)
-    }
-    
-    # Skip to next iteration if no columns are found for the month
-    if (length(all_cols_for_month) == 0) {
-      cat("No columns found for month:", month, "\n")
-      next
-    }
-    
-    # Calculate mean across all relevant columns
-    monthly_mean <- rowMeans(df[, all_cols_for_month, drop = FALSE], na.rm = TRUE)
-    
-    # Add the calculated mean to the result dataframe
-    new_col_name <- paste0("MonthlyMean_", month)
-    result_df <- result_df %>% dplyr::mutate(!!new_col_name := monthly_mean)
-  }
-  
-  return(result_df)
-}
-
-# Usage
-dat3 <- calc_overall_monthly_mean(dat2, prefixes)
-
-head(dat3)
+head(dat1)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat3, file = "Inputs/250212_CUR_m_avrg_12-22.csv")
+write_csv(dat1, file = "Inputs/250701_CUR_m_avrg_12-22.csv")

@@ -2,18 +2,17 @@
   #we have our environmental values: daily, monthly average and the anomaly
     #lets clean our df up and add a few more environmental variables
   
-  
 rm(list=ls())
-setwd("~/University/2023/Honours/R/data/git/NC-wrestling")
 
 # Packages ----------------------------------------------------------------
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
+library(tidyverse)
+library(lunar)
 
 # pts ---------------------------------------------------------------------
 
 setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/250212_cur_det.csv")
+dat <- read_csv("Inputs/250701_cur_det.csv")
 
 # REMORA ------------------------------------------------------------------
 
@@ -44,6 +43,14 @@ dat <- read_csv("Inputs/250212_cur_det.csv")
 dat1 <- dat
 
 dat1$lunar.illumination <- lunar.illumination(dat1$date, shift = 10) #10 hrs shifted from UTM
+
+# if you want to work with circular data, you can use lunar phase
+# it outputs data in radians, and you can convert it to degrees
+# you can make cute rose / circular plots with this, but it's hard to model
+# because 0-1 can be binomial, 0 - 360 is circular and requires 
+# a different type of manipulation in statistical models to fit relationships
+# correctly
+
 #dat2$lunar.phase <- lunar.phase(dat2$detection_datetime, shift = 10) #10 hrs shifted from UTM
 
 # #turn radians into degrees to plot circularly
@@ -52,7 +59,31 @@ dat1$lunar.illumination <- lunar.illumination(dat1$date, shift = 10) #10 hrs shi
 # # Add a column for lunar.phase in degrees
 # dat2$lunar.phase.deg <- rad2deg(dat2$lunar.phase)
 
+colnames(dat1)
+str(dat1)
+
+# final clean -------------------------------------------------------------
+
+dat2 <- dat1 %>% 
+  select(-vcur, -vcur_anomaly, -original_id) %>% 
+  mutate(tag_id = as.character(tag_id))
+
+colnames(dat2)
+str(dat2)
+
+
+# plot it -----------------------------------------------------------------
+
+datxy <- dat2 %>%
+  group_by(location, latitude, longitude) %>%
+  summarise(num_det = n(), .groups = 'drop')
+
+datxy_sf <- sf::st_as_sf(datxy, coords = c("longitude", "latitude"),
+                        crs = 4326, agr = "constant")
+
+mapview::mapview(datxy_sf, cex = "num_det", zcol = "location", fbg = FALSE)
+
 # save --------------------------------------------------------------------
 
-write_csv(dat1, "Inputs/250212_det_enviro_complete.csv")
+write_csv(dat1, "Inputs/250701_det_enviro_complete.csv")
 
