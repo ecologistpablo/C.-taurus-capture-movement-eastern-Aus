@@ -21,9 +21,7 @@
 rm( list=ls()) 
 library(tidyverse) 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250626_step9.csv")
-
-summary(dat$date)
+dat <- read_csv("Inputs/250705_step9.csv")
 
 # Psuedo Presence x 2 ----------------------------------------------------------
 

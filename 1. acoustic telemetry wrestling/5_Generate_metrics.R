@@ -5,7 +5,7 @@
 rm(list=ls()) 
 library(tidyverse)
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-cdat <- read_csv("Inputs/250625_step4.csv")
+cdat <- read_csv("Inputs/250705_step4.csv")
 
 # metrics -----------------------------------------------------------------
 
@@ -28,7 +28,7 @@ cdat3 <- cdat2 %>%
 
 
 Location_levels <- c("deg_-24", "deg_-25", "Wolf Rock", "deg_-27", 
-                     "Flat Rock",  "deg_-28", "deg_-29", "deg_-30",
+                     "Flat Rock",  "deg_-28", "Ballina", "deg_-29", "deg_-30",
                      "Coffs Harbour", "deg_-31",
                      "deg_-32", "deg_-33",
                      "Hawks Nest", "deg_-34",  "Sydney",
@@ -40,8 +40,7 @@ cdat4 <- cdat3 %>%
     Departure_location = factor(Departure_location, levels = Location_levels),
     Arrival_location = factor(Arrival_location, levels = Location_levels),
     Direction = if_else(as.integer(Departure_location) > as.integer(Arrival_location),
-                        "North", "South") 
-  )
+                        "North", "South"))
 
 unique(cdat4$Direction)
 
@@ -49,5 +48,5 @@ str(cdat4)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(cdat3,file = "Inputs/250625_step5_receivers.csv") 
+write_csv(cdat3,file = "Inputs/250705_step5.csv") 
 

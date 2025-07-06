@@ -22,6 +22,8 @@ IMOS <- read_csv("Inputs/241116_step2.csv")
 IMOS$station_name <- ifelse(IMOS$station_name == "Flat Rock","FR",IMOS$station_name)
 IMOS$station_name <- ifelse(IMOS$station_name == "Hawks Nest","Hawks Nest1",IMOS$station_name)
 IMOS$station_name <- ifelse(IMOS$station_name == "Coffs Harbour","CH",IMOS$station_name) #it doesn't work well when they're the same name
+IMOS$station_name <- ifelse(IMOS$station_name == "Ballina","Ballina1",IMOS$station_name) #it doesn't work well when they're the same name
+
 # the function below doesn't deal well 
 # when you re-name a location to the same name as the station
 # so change names to something different pls
@@ -79,8 +81,9 @@ IMOS <- add_location_group(IMOS,
 IMOS <- add_location_group(IMOS,
                                   "FtR TC M1 2022/2023 101919", # station name
                                   "Flat Rock") # new Location name
-
-
+IMOS <- add_location_group(IMOS,
+                                  "Lennox Point", #station name
+                                  "Ballina") #new location name
 IMOS <- add_location_group(IMOS,
                                   "CHS 13", # station name
                                   "Coffs Harbour") # new Location name
@@ -108,7 +111,7 @@ IMOS1 <- IMOS %>% #all other receivers shall be named after the degree they are 
 #did it work? -----------------------------------------------------------------
 
 # Calculate the number of detections at each station
-IMOSxy <- IMOS %>%
+IMOSxy <- IMOS1 %>%
   group_by(Location, receiver_deployment_latitude, receiver_deployment_longitude) %>% #location
   summarise(num_det = n(), .groups = 'drop')
 
@@ -129,10 +132,13 @@ IMOS2 <- IMOS1 %>%
   distinct(Location, Tag_ID, detection_datetime, .keep_all = T)
 
 #that's better!
+IMOS2 %>% 
+  filter(Location == "Ballina") %>% 
+  count()
 
 # save it ----------------------------------------------------------------------
 
-write_csv(IMOS1, "Inputs/250302_step3.csv")
+write_csv(IMOS1, "Inputs/250705_step3.csv")
 
 # results for detections --------------------------------------------------
 # this code is for the results section of the paper

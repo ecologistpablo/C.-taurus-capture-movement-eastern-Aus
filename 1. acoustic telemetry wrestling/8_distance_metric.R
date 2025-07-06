@@ -6,8 +6,8 @@ rm(list=ls())
 
 library(tidyverse)
 
-setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250626_step7.csv") #movements
+setwd("/Documents/USC/Honours/R/data")
+dat <- read_csv("Inputs/250705_step7.csv") #movements
 
 # distance metric --------------------------------------------------------------
 
@@ -38,7 +38,7 @@ dat1 <- calculate_distance(dat)
 
 # save it -----------------------------------------------------------------
 
-write_csv(dat1, file = "Inputs/250626_step8.csv")
+write_csv(dat1, file = "Inputs/250705_step8.csv")
 
 # plot it  ----------------------------------------------------------------
 

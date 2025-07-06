@@ -4,8 +4,8 @@
 # helpers -----------------------------------------------------------------
 
 rm(list=ls())
-setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/250212_det_enviro_complete.csv")
+setwd("~/Documents/USC/Honours/R/data")
+dat <- read_csv("Inputs/250701_det_enviro_complete.csv")
 
 # munging -----------------------------------------------------------------
 
@@ -15,7 +15,9 @@ dat1 <- dat %>%
                          "Coffs Harbour", "Hawks Nest", "Sydney")) %>%
   mutate(location = factor(location, levels = c("Wolf Rock",
                         "Flat Rock", "Coffs Harbour",
-                        "Hawks Nest", "Sydney")))
+                        "Hawks Nest", "Sydney"))) %>% 
+  select(-station_name)
+
 
 # sst ---------------------------------------------------------------------
 
@@ -40,7 +42,7 @@ sst <-
 sst
 
 #save
-ggsave(path = "Outputs/Graphs/final/SST", "250225_SST_pfuenzalida.pdf",
+ggsave(path = "Outputs/Graphs/final/SST", "250701_raw_sst.pdf",
        plot = sst, width = 10, height = 7) #in inches because gg weird
 
 # Plot
@@ -64,7 +66,7 @@ facet_wrap(~sex)
 print(sstanom)
 
 #save
-ggsave(path = "Outputs/Graphs/final/SST", "240125_SST_anomaly_pfuenzalida.pdf",
+ggsave(path = "Outputs/Graphs/final/SST", "250701_SST_anomaly.pdf",
        plot = sstanom, width = 10, height = 7) #in inches because gg weird
 
 # distance vs movement ---------------------------------------------------------

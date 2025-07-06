@@ -22,7 +22,7 @@
 rm(list=ls()) 
 library(tidyverse)
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250626_step8.csv")
+dat <- read_csv("Inputs/250705_step8.csv")
 
 # begin wrestling --------------------------------------------------------------
 
@@ -133,10 +133,10 @@ dat5 <- dat5 %>%
 
 #filter foraging movements -----------------------------------------------------
 
-OG <- read_csv("Inputs/250626_step8.csv")
+OG <- read_csv("Inputs/250705_step8.csv")
 
 columns <- c("tag_id","arrival_date", "departure_date", "departure_location",
-             "num_days","direction", "arrival_location", 
+             "num_days", "arrival_location", 
              "sex","latitude", "longitude","distance", "date" ) 
 
 # perform the anti_join operation
@@ -153,4 +153,4 @@ OG1 <- anti_join(OG, dat5, by = columns)
 
 #save it ----------------------------------------------------------------------------
 
-write_csv(OG1, file = "Inputs/250626_step9.csv")
+write_csv(OG1, file = "Inputs/250705_step9.csv")

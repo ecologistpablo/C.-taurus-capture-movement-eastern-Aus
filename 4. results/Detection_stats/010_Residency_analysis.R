@@ -2,11 +2,12 @@
   #making a residency bargraph
     #to add to our beautiful spatial barplot
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
+pacman::p_load("tidyverse", "viridis", "ggpubr", "plotly", "sf", "rnaturalearth", "ggspatial",
+               "terra")
 rm(list=ls())
 
 setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/250301_res_dat.csv") 
+dat <- read_csv("Inputs/250626_res_dat.csv") 
 
 str(dat)
 head(dat)
@@ -20,25 +21,18 @@ dat1 <- dat %>%
                                                 "Flat Rock", "Coffs Harbour",
                                                 "Hawks Nest", "Sydney")),
          month = factor(month(date), labels = month.abb),
-         year = factor(year(date)))  # Use abbreviated month names for readability
-
+         year = factor(year(date)))
 # take 4 ------------------------------------------------------------------
 
 # calculate the number of days each tag is present at each location per month and year
 dat2 <- dat1 %>%
   group_by(tag_id, location, sex, year, month) %>%
-  summarise(
-    days_present = n_distinct(date),  # Number of unique days the tag was detected
-    .groups = 'drop'
-  )
+  summarise(days_present = n_distinct(date), .groups = 'drop')
 
 # aggregate across all years to get the average residency per location for each month and sex
 dat3 <- dat2 %>%
   group_by(location, sex, month) %>%
-  summarise(
-    avg_residency = mean(days_present),  # Average number of days present per site, per month, split by sex
-    .groups = 'drop'
-  )
+  summarise(avg_residency = mean(days_present), .groups = 'drop')
 
 # ggplot
 a <- ggplot(dat3, aes(x = month, y = avg_residency, fill = sex)) +
@@ -78,6 +72,6 @@ z
 colorspace::cvd(z)
 
 #save
-ggsave(path = "outputs/Graphs/Final/detection", "250301_tag_monthly_resisdency.pdf",
-       plot = b, width = 7, height = 9) #in inches because gg weird
+ggsave(path = "outputs/Graphs/Final/detections", "250705_residency_bargraphs.pdf",
+       plot = z, width = 7, height = 9) #in inches because gg weird
 

@@ -3,11 +3,10 @@
 
 rm(list=ls())
 
-library(tidyverse)
-library(purrr)
+pacman::p_load("tidyverse", "purrr")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-IMOS <- read_csv("Inputs/250302_step3.csv") #after receiver renaming but before VTrack
-combined_data <- read_csv("Inputs/250623_step5.csv") #movements
+IMOS <- read_csv("Inputs/250705_step3.csv") #after receiver renaming but before VTrack
+combined_data <- read_csv("Inputs/250705_step5.csv") #movements
 
 IMOS1 <- IMOS %>%
   distinct(detection_datetime, Tag_ID, animal_sex, Location,
@@ -78,4 +77,4 @@ fdat <- split_cols(IMOS, combined_data)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(fdat, file = "Inputs/250626_step6.csv")
+write_csv(fdat, file = "Inputs/250705_step6.csv")

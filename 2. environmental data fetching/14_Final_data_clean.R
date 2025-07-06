@@ -85,5 +85,5 @@ mapview::mapview(datxy_sf, cex = "num_det", zcol = "location", fbg = FALSE)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat1, "Inputs/250701_det_enviro_complete.csv")
+write_csv(dat2, "Inputs/250701_det_enviro_complete.csv")
 

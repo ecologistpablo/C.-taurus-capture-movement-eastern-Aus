@@ -7,8 +7,8 @@ rm(list=ls())
 library(tidyverse)
 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-raw <- read_csv("Inputs/250302_step3.csv") #after receiver renaming but before VTrack
-dat <- read_csv("Inputs/250626_step6.csv") #movements
+raw <- read_csv("Inputs/250705_step3.csv") #after receiver renaming but before VTrack
+dat <- read_csv("Inputs/250705_step6.csv") #movements
 
 
 # get munging -------------------------------------------------------------
@@ -80,13 +80,13 @@ dat7 <- dat6 %>%
   rename(latitude = receiver_deployment_latitude,
          longitude = receiver_deployment_longitude) %>%
   select(tag_id, sex, date, location, station_name, latitude,
-         longitude, num_days, movement_type, direction,
+         longitude, num_days, movement_type,
          arrival_location, departure_location, arrival_date, departure_date, original_id)
 
 # plot it -----------------------------------------------------------------
 
 # check did we get all our xy coords into our movement df? 
-IMOSxy <-  dat7 %>%
+IMOSxy <-  b %>%
   group_by(location, latitude, longitude) %>% #location
   summarise(num_det = n(), .groups = 'drop')
 
@@ -96,6 +96,7 @@ IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("longitude",
 
 mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F) #colour by LOCATION
 
+
 #save it -----------------------------------------------------------------------
 
-write_csv(dat7, file = "Inputs/250626_step7.csv")
+write_csv(dat7, file = "Inputs/250705_step7.csv")
