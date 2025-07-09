@@ -6,7 +6,7 @@
 # load library & data ----------------------------------------------------------
 
 rm(list=ls())
-pacman::p_load("tidyverse", "parallel", "remora", "lubridate", "rnaturalearth")
+pacman::p_load("tidyverse", "parallel", "remora", "lubridate")
 
 #Quality control ---------------------------------------------------------------
 
@@ -23,15 +23,10 @@ qc_data <- tag_qc %>%
   unnest(cols = QC) %>%
   ungroup()
 
-#clean up our df, qc gave us useless columns
-qc_data <- qc_data %>%
-  dplyr::select(-c(34:42))
-
 # remove Western Australia detections, as we focus on eastern Aus
 WA <- c("SL9", "SL18", "SL19", "SL2", "SL22", "PRT24", "PRT27", "PRT28",
         "PRT31", "PRT35", "PRT36", "PRT37",
         "PRT47", "PRT48", "PRT49", "PRT63", "PRT74", "PRT73", "PRT75")
-
 
 # Filter out the rows with station names in the list
 qc_data1 <- qc_data %>%
@@ -43,28 +38,10 @@ qc_data1$detection_datetime <- as.POSIXct(qc_data1$detection_datetime)
 qc_data2 <- qc_data1 %>% #filter out 2023 and 2024
   filter(!format(detection_datetime, "%Y") %in% c("2023", "2024"))
 
-
-# Get Australia map data
-aus <- ne_countries(scale = "medium", country = "australia", returnclass = "sf")
-
-unique_det <- qc_data2 %>%
-  mutate(date = as.Date(detection_datetime)) %>% 
-  distinct(date, receiver_deployment_longitude, receiver_deployment_latitude,
-           station_name) 
-
-# Create the map
-ggplot() +
-  geom_sf(data = aus, fill = "lightgrey") +
-  geom_point(data = unique_det, aes(x = receiver_deployment_longitude, 
-                 y = receiver_deployment_latitude), size = 1) +
-  coord_sf(xlim = c(145, 155), ylim = c(-38, -20)) + # Focus on east coast
-  theme_minimal()
-rm(unique_det)
-
 qc_data3 <- qc_data2 %>% 
   distinct(transmitter_id, animal_sex, detection_datetime, 
            receiver_deployment_longitude, receiver_deployment_latitude,
-           station_name) %>% 
+           station_name, receiver_name) %>% 
   rename(sex = animal_sex,
          datetime = detection_datetime,
          latitude = receiver_deployment_latitude,
@@ -80,7 +57,7 @@ rm(WA)
 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
 write_csv(qc_data3, file = "Inputs/250708_qc_data.csv")
-qc_data <- read_csv("Inputs/241116_qc_data.csv")
+#qc_data <- read_csv("Inputs/241116_qc_data.csv")
 
 # Dwyer dat ---------------------------------------------------------------
 
@@ -89,11 +66,12 @@ ddat <- janitor::clean_names(ddat)
 colnames(ddat)
 
 ddat1 <- ddat %>% 
-  rename(transmitter_id = transmitter) %>% 
+  rename(transmitter_id = transmitter,
+         receiver_name = receiver) %>% 
    mutate(datetime = dmy_hm(datetime)) %>% #convert to datetime str 
   mutate(datetime = datetime + hours(10)) %>%  # convert UTC to EST 
   distinct(station_name, transmitter_id, latitude, longitude, 
-           datetime, sex)
+           datetime, sex, receiver_name)
   
 ddat1 %>%
   count(transmitter_id, datetime, station_name, latitude, longitude, sex) %>%
@@ -114,7 +92,7 @@ adat <- bind_rows(qc_data3, ddat2)
 # #Because we joined two dfs, let's make sure there arent duplicate rows
 adat1 <- adat %>%
   distinct(transmitter_id, station_name, datetime, latitude, longitude, sex,
-           .keep_all = TRUE) #keep everything else
+           receiver_name, .keep_all = TRUE) #keep everything else
 # 
 # #NA check, do we have any coords that are NA ? 
 which(is.na(adat1$longitude))
@@ -137,12 +115,9 @@ anyNA(adat2$longitude)
 # save it ----------------------------------------------------------------------
 
 write_csv(adat2, file = "Inputs/230708_step1.csv")
-#save(adat, file = "Inputs/230807_step1.RData")
-
-load("Inputs/250708_step1.RData")
+#load("Inputs/250708_step1.RData")
 
 # NSW DPI dat -------------------------------------------------------------
-#06.09.23
 
 bdat <- read_csv("Dwyer dat/GNS_det_data_Paul_Butcher_230904.csv")
 
@@ -158,7 +133,8 @@ bdat1 <- bdat %>%
     datetime= detection_datetime) %>%
   dplyr::select(-TL) %>% 
   mutate(datetime = dmy_hm(datetime),
-         transmitter_id = as.character(transmitter_id))
+         transmitter_id = as.character(transmitter_id),
+         receiver_name = as.character('VR4G'))
 
 str(bdat1)
 
@@ -175,9 +151,10 @@ unique(zdat1$tag_id)
 
 zdat2 <- zdat1 %>%
   distinct(datetime, tag_id, transmitter_id, station_name, latitude, longitude,
-           sex, .keep_all = TRUE) %>% 
+           sex, receiver_name, .keep_all = TRUE) %>% 
   select(-transmitter_id) # we have tag ids as a shortened version now
 
+str(zdat2)
 # save it ----------------------------------------------------------------------
 
 write_csv(zdat2, file = "Inputs/250708_step1.csv")

@@ -35,7 +35,6 @@ IMOS$sex[is.na(IMOS$sex)] <- ID1$Sex[match(IMOS$tag_id[is.na(IMOS$sex)], ID1$`ID
 IMOS$sex[is.na(IMOS$sex)] <- ID2$sex[match(IMOS$tag_id[is.na(IMOS$sex)], ID2$`tag_id`)]
 
 anyNA(IMOS$sex) #do we have more work?
-
 unique(IMOS$sex)
 
 IMOS1 <- IMOS %>%
@@ -62,4 +61,4 @@ IMOS2 %>%
 # save --------------------------------------------------------------------
 write_csv(IMOS2, "Inputs/250708_step2.csv")
 
-# 1,696,253
+# 1,696,261

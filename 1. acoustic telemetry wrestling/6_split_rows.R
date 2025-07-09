@@ -4,13 +4,13 @@
 rm(list=ls())
 
 pacman::p_load("tidyverse", "purrr")
-setwd("/Users/owuss/Documents/USC/Honours/R/data")
-IMOS <- read_csv("Inputs/250706_step3.csv") #after receiver renaming but before VTrack
-combined_data <- read_csv("Inputs/250706_step5.csv") #movements
+setwd("~/Documents/USC/Honours/R/data")
+IMOS <- read_csv("Inputs/250708_step3.csv") #after receiver renaming but before VTrack
+combined_data <- read_csv("Inputs/250709_step5.csv") #movements
 
 IMOS1 <- IMOS %>%
-  distinct(detection_datetime, Tag_ID, animal_sex, Location,
-           station_name, receiver_deployment_latitude, receiver_deployment_longitude)
+  distinct(datetime, tag_id, sex, location,
+           station_name, latitude, longitude)
 
 # description -------------------------------------------------------------
 
@@ -34,31 +34,32 @@ split_cols <- function(IMOS_data, movement_dates) {
   
   # Convert necessary columns to character for matching
   IMOS_data <- IMOS_data %>%
-    mutate(Tag_ID = as.character(Tag_ID),
-           Location = as.character(Location))
+    mutate(tag_id = as.character(tag_id),
+           location = as.character(location))
   
   movement_dates <- movement_dates %>%
-    mutate(Tag_ID = as.character(Tag_ID),
-           Arrival_location = as.character(Arrival_location),
-           Departure_location = as.character(Departure_location))
+    mutate(tag_id = as.character(tag_id),
+           arrival_location = as.character(arrival_location),
+           departure_location = as.character(departure_location))
   
   # Split into arrival and departure dataframes
   arrival_data <- movement_dates %>%
-    dplyr::select(Tag_ID, Arrival_date, Arrival_location, everything()) %>%
+    dplyr::select(tag_id, arrival_date, arrival_location, everything()) %>%
     mutate(movement_type = "Arrival") %>%
-    rename(Location = Arrival_location)  # Keep Arrival_location as Location
+    rename(location = arrival_location)  # Keep Arrival_location as Location
   
   departure_data <- movement_dates %>%
-    dplyr::select(Tag_ID, Departure_date, Departure_location, everything()) %>%
+    dplyr::select(tag_id, departure_date, departure_location, everything()) %>%
     mutate(movement_type = "Departure") %>%
-    rename(Location = Departure_location)  # Keep Departure_location as Location
+    rename(location = departure_location)  # Keep Departure_location as Location
   
   # Combine arrival and departure data
   combined_data <- bind_rows(arrival_data, departure_data)
   
   # Add Sex information
   combined_data <- combined_data %>%
-    mutate(Sex = ifelse(Tag_ID %in% IMOS_data$Tag_ID, IMOS_data$animal_sex[match(Tag_ID, IMOS_data$Tag_ID)], NA))
+    mutate(sex = ifelse(tag_id %in% IMOS_data$tag_id,
+                        IMOS_data$sex[match(tag_id, IMOS_data$tag_id)], NA))
   
   # Arrange by original_id
   combined_data <- combined_data %>%
@@ -77,4 +78,4 @@ fdat <- split_cols(IMOS, combined_data)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(fdat, file = "Inputs/250706_step6.csv")
+write_csv(fdat, file = "Inputs/250709_step6.csv")
