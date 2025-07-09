@@ -6,20 +6,15 @@
 # load library & data ----------------------------------------------------------
 
 rm(list=ls())
-source("/Users/owuss/Documents/USC/Honours/R/data/git/GNS-Movement/000_helpers.R")
+pacman::p_load("tidyverse", "parallel", "remora", "lubridate", "rnaturalearth")
 
 #Quality control ---------------------------------------------------------------
 
 setwd("/Users/owuss/Documents/USC/Honours/R/data/IMOS/IMOS_detections_2024-11-16_09-24-44")
-#detections folder downloaded from IMOS, last downloaded data 16 November 2024
-
-files <- list(det = "IMOS_detections.csv", #,
-              #rmeta = "path_to/IMOS_receiver_deployment_metadata.csv",
-              #tm %>% eta = "path_to/IMOS_transmitter_deployment_metadata.csv",
-              meas = "IMOS_animal_measurements.csv")
+files <- list(det = "IMOS_detections.csv",meas = "IMOS_animal_measurements.csv")
 
 #Quality control of REMORA
-tag_qc <- runQC(files, 
+tag_qc <- remora::runQC(files, 
                 .parallel = detectCores() - 2,  #leave me 2 cores
                 .progress = TRUE)  #show me progress
 
@@ -33,49 +28,49 @@ qc_data <- qc_data %>%
   dplyr::select(-c(34:42))
 
 # remove Western Australia detections, as we focus on eastern Aus
-WA <- c("SL9", "SL18", "SL19", "SL2", "SL22",
-                   "PRT27", "PRT35", "PRT37", "PRT74", "PRT73", "PRT75")
+WA <- c("SL9", "SL18", "SL19", "SL2", "SL22", "PRT24", "PRT27", "PRT28",
+        "PRT31", "PRT35", "PRT36", "PRT37",
+        "PRT47", "PRT48", "PRT49", "PRT63", "PRT74", "PRT73", "PRT75")
+
 
 # Filter out the rows with station names in the list
 qc_data1 <- qc_data %>%
   filter(!(station_name %in% WA))
 
 #convert to date
-qc_data1$detection_datetime <- as.Date(qc_data1$detection_datetime)
+qc_data1$detection_datetime <- as.POSIXct(qc_data1$detection_datetime)
 
-#let's knock it down to one detection per day using distinct
-qc_data2 <- qc_data1 %>%
-  distinct(detection_datetime, transmitter_id, station_name, .keep_all = TRUE)
-
-summary(qc_data2$detection_datetime)
-
-qc_data3 <- qc_data2 %>% #filter out 2023 and 2024
+qc_data2 <- qc_data1 %>% #filter out 2023 and 2024
   filter(!format(detection_datetime, "%Y") %in% c("2023", "2024"))
 
 
 # Get Australia map data
 aus <- ne_countries(scale = "medium", country = "australia", returnclass = "sf")
 
-# Get unique stations
-unique_stations <- qc_data3 %>%
-  distinct(station_name, receiver_deployment_longitude, receiver_deployment_latitude)
+unique_det <- qc_data2 %>%
+  mutate(date = as.Date(detection_datetime)) %>% 
+  distinct(date, receiver_deployment_longitude, receiver_deployment_latitude,
+           station_name) 
 
 # Create the map
 ggplot() +
   geom_sf(data = aus, fill = "lightgrey") +
-  geom_point(data = unique_stations, 
-             aes(x = receiver_deployment_longitude, 
-                 y = receiver_deployment_latitude),
-             color = "red", size = 2) +
+  geom_point(data = unique_det, aes(x = receiver_deployment_longitude, 
+                 y = receiver_deployment_latitude), size = 1) +
   coord_sf(xlim = c(145, 155), ylim = c(-38, -20)) + # Focus on east coast
-  theme_minimal() +
-  labs(title = "Receiver Stations on Australian East Coast",
-       x = "Longitude", 
-       y = "Latitude")
+  theme_minimal()
+rm(unique_det)
 
-(rm(aus))
+qc_data3 <- qc_data2 %>% 
+  distinct(transmitter_id, animal_sex, detection_datetime, 
+           receiver_deployment_longitude, receiver_deployment_latitude,
+           station_name) %>% 
+  rename(sex = animal_sex,
+         datetime = detection_datetime,
+         latitude = receiver_deployment_latitude,
+         longitude = receiver_deployment_longitude)
 
-#ok, we can confirm we have data only from 
+colnames(qc_data3)
 
 # save it ----------------------------------------------------------------------
 
@@ -84,114 +79,67 @@ rm(tag_qc)
 rm(WA)
 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-write_csv(qc_data3, file = "Inputs/241116_qc_data.csv")
+write_csv(qc_data3, file = "Inputs/250708_qc_data.csv")
 qc_data <- read_csv("Inputs/241116_qc_data.csv")
 
 # Dwyer dat ---------------------------------------------------------------
 
 ddat <- read_csv("Inputs/230806_step0.csv")
+ddat <- janitor::clean_names(ddat)
+colnames(ddat)
 
-# First, get one detection per day
-ddat <- ddat %>% 
-  distinct(Date, Transmitter.Name, Station.Name, .keep_all = TRUE)
-
-# Rename columns to match qc_data format
-ddat <- ddat %>%
-  rename(
-    transmitter_id = Transmitter,
-    station_name = Station.Name,
-    receiver_name = Receiver,
-    receiver_deployment_latitude = Latitude,
-    receiver_deployment_longitude = Longitude,
-    detection_datetime = Date,
-    transmitter_serial_number = Transmitter.Name,
-    transmitter_deployment_datetime = DATETIME
-  )
-
-# Add missing columns with appropriate NA types and convert transmitter_serial_number
-ddat <- ddat %>%
-  mutate(
-    filename = NA_character_,
-    tag_id = NA_real_,
-    transmitter_deployment_id = NA_real_,
-    transmitter_deployment_datetime = as.POSIXct(NA),  # Ensure NA is POSIXct
-    tagging_project_name = NA_character_,
-    species_common_name = NA_character_,
-    species_scientific_name = NA_character_,
-    CAAB_species_id = NA_real_,
-    WORMS_species_aphia_id = NA_real_,
-    animal_sex = NA_character_,
-    receiver_id = NA_real_,
-    receiver_deployment_id = NA_real_,
-    receiver_project_name = NA_character_,
-    installation_name = NA_character_,
-    transmitter_sensor_type = NA_character_,
-    transmitter_sensor_raw_value = NA_real_,
-    transmitter_sensor_unit = NA_character_,
-    transmitter_sensor_slope = NA_real_,
-    transmitter_sensor_intercept = NA_real_,
-    transmitter_type = NA_character_,
-    transmitter_estimated_battery_life = NA_real_,
-    transmitter_status = NA_character_,
-    transmitter_deployment_longitude = NA_real_,
-    transmitter_deployment_latitude = NA_real_,
-    transmitter_dual_sensor = NA,  # Will be converted to logical later
-    Detection_QC = NA_real_,
-    transmitter_serial_number = as.character(transmitter_serial_number)  # Convert to character
-  )
-
-# Add any missing columns from 'qc_data' to 'ddat'
-missing_cols <- setdiff(colnames(qc_data3), colnames(ddat))
-for (col in missing_cols) {
-  ddat[[col]] <- NA
-}
+ddat1 <- ddat %>% 
+  rename(transmitter_id = transmitter) %>% 
+   mutate(datetime = dmy_hm(datetime)) %>% #convert to datetime str 
+  mutate(datetime = datetime + hours(10)) %>%  # convert UTC to EST 
+  distinct(station_name, transmitter_id, latitude, longitude, 
+           datetime, sex)
+  
+ddat1 %>%
+  count(transmitter_id, datetime, station_name, latitude, longitude, sex) %>%
+  filter(n > 1) # 
 
 # Reorder columns in 'ddat' to match 'qc_data'
-ddat <- ddat[colnames(qc_data3)]
+ddat2 <- ddat1[colnames(qc_data3)]
+colnames(ddat2)
+colnames(qc_data3)
+str(ddat2)
+str(qc_data3)
+# are they the same str and format ? 
 
-# Convert data types of 'ddat' columns to match those in 'qc_data'
-# Ensure detection_datetime is in Date format
-ddat$detection_datetime <- as.Date(ddat$detection_datetime)
+# bind dataframes ---------------------------------------------------------
 
-# Bind rows from both datastreams
-adat <- bind_rows(qc_data3, ddat)
+adat <- bind_rows(qc_data3, ddat2)
 
-adat$tag_id <- str_extract(adat$transmitter_id, "\\d{4,5}$")#fix the damn tag_id column again
-
-#Because we joined two dfs, let's make sure there arent duplicate rows
-adat <- adat %>%
-  distinct(detection_datetime, transmitter_id, station_name, #keep only one per day (per tag id)
+# #Because we joined two dfs, let's make sure there arent duplicate rows
+adat1 <- adat %>%
+  distinct(transmitter_id, station_name, datetime, latitude, longitude, sex,
            .keep_all = TRUE) #keep everything else
-
-#NA check, do we have any coords that are NA ? 
-which(is.na(adat$receiver_deployment_longitude))
+# 
+# #NA check, do we have any coords that are NA ? 
+which(is.na(adat1$longitude))
 
 # what are their station names lets look them up manually
 
 # Replace lat/lon for missing values (physically inspected XY coordinates and corelated to IMOS database)
-adat <- adat %>%
-  mutate(receiver_deployment_latitude = replace(receiver_deployment_latitude, 
-                                                station_name == 'Cabbage Tree Island - West', 
-                                                -31.97845),
-         receiver_deployment_longitude = replace(receiver_deployment_longitude, 
-                                                 station_name == 'Cabbage Tree Island - West', 
-                                                 152.59832),
-         receiver_deployment_latitude = replace(receiver_deployment_latitude, 
-                                                station_name == 'SIMP 9 - Groper Island', 
-                                                -30.16000),
-         receiver_deployment_longitude = replace(receiver_deployment_longitude, 
-                                                 station_name == 'SIMP 9 - Groper Island', 
-                                                 153.2300))
+adat2 <- adat1 %>%
+  mutate(latitude = replace(latitude, 
+         station_name == 'Cabbage Tree Island - West', -31.97845),
+         longitude = replace(longitude, 
+         station_name == 'Cabbage Tree Island - West', 152.59832),
+         latitude = replace(latitude, 
+         station_name == 'SIMP 9 - Groper Island', -30.16000),
+         longitude = replace(longitude, 
+         station_name == 'SIMP 9 - Groper Island', 153.2300))
 
-anyNA(adat$receiver_deployment_longitude)
-#this NEEDs to be 0
+anyNA(adat2$longitude)
 
 # save it ----------------------------------------------------------------------
 
-#write_csv(adat, file = "Inputs/230807_step1.csv")
+write_csv(adat2, file = "Inputs/230708_step1.csv")
 #save(adat, file = "Inputs/230807_step1.RData")
 
-load("Inputs/230807_step1.RData")
+load("Inputs/250708_step1.RData")
 
 # NSW DPI dat -------------------------------------------------------------
 #06.09.23
@@ -202,132 +150,48 @@ str(bdat)
 
 # Step 1: Rename existing columns in 'ddat' to match corresponding columns in 'qc_data'
 bdat1 <- bdat %>%
-  rename(
-    tag_id = ID,
-    animal_sex = Sex,
-    receiver_deployment_latitude = `VR4G Lat.`,
-    receiver_deployment_longitude = `VR4G Long.`,
-    station_name = Location) %>%
-  dplyr::select(-TL)
+  rename(transmitter_id = ID,
+    sex = Sex,
+    latitude = `VR4G Lat.`,
+    longitude = `VR4G Long.`,
+    station_name = Location,
+    datetime= detection_datetime) %>%
+  dplyr::select(-TL) %>% 
+  mutate(datetime = dmy_hm(datetime),
+         transmitter_id = as.character(transmitter_id))
 
-# Step 2: Create new columns in 'ddat' to match those in 'qc_data' that don't have a corresponding column in 'ddat'.
-# We'll fill these with NA for now.
-bdat2 <- bdat1 %>%
-  mutate(
-    filename = NA_character_,
-    transmitter_deployment_id = NA_character_,
-    transmitter_deployment_datetime = NA_Date_,
-    tagging_project_name = NA_character_,
-    species_common_name = NA_character_,
-    species_scientific_name = NA_character_,
-    CAAB_species_id = NA_real_,
-    WORMS_species_aphia_id = NA_real_,
-    receiver_id = NA_real_,
-    receiver_deployment_id = NA_real_,
-    receiver_project_name = NA_character_,
-    installation_name = NA_character_,
-    transmitter_sensor_type = NA_character_,
-    transmitter_sensor_raw_value = NA_real_,
-    transmitter_sensor_unit = NA_character_,
-    transmitter_sensor_slope = NA_real_,
-    transmitter_sensor_intercept = NA_real_,
-    transmitter_type = NA_character_,
-    transmitter_estimated_battery_life = NA_real_,
-    transmitter_status = NA_character_,
-    transmitter_serial_number = NA_character_,
-    transmitter_deployment_longitude = NA_real_,
-    transmitter_deployment_latitude = NA_real_,
-    transmitter_dual_sensor = NA_real_,
-    Detection_QC = NA_real_,
-    transmitter_id = NA_character_,
-    receiver_name = NA_character_,
-    detection_corrected_datetime = NA_Date_,
-  )
+str(bdat1)
 
-# Correct Step 3: Add any missing columns from 'qc_data' to 'bdat2'
-missing_cols <- setdiff(colnames(qc_data), colnames(bdat2))
-for (col in missing_cols) {
-  bdat2[[col]] <- NA  # Ensure you're adding to bdat2, not ddat
-}
-
-# Correct Step 4: Reorder columns in 'bdat2' to match the order in 'qc_data'
-bdat3 <- bdat2[, colnames(qc_data)]
-
-bdat3$detection_datetime <- as.Date(bdat3$detection_datetime, format="%d/%m/%Y")
-
-bdat3$tag_id <- as.character(bdat3$tag_id)
-
-bdat4 <- bdat3 %>% 
-  mutate(transmitter_deployment_id = as.numeric(transmitter_deployment_id),
-         animal_sex = as.character(animal_sex),
-         receiver_id = as.numeric(receiver_id),
-         receiver_deployment_id = as.numeric(receiver_deployment_id),
-         transmitter_deployment_datetime = as.Date(transmitter_deployment_datetime)
-  )
+# re-order columns to be the same as our final df
+bdat2 <- bdat1[, colnames(adat2)]
 
 #bind rows from bottom to top
-zdat <- bind_rows(adat, bdat4)
+zdat <- bind_rows(adat2, bdat2)
 
-zdat1 <- zdat %>%
-  distinct(detection_datetime, tag_id, station_name, #keep only one per day (per tag id)
-           .keep_all = TRUE)
+zdat1 <- zdat
+
+zdat1$tag_id <- str_extract(zdat$transmitter_id, "\\d{4,5}$") #shorten tag ID strings
+unique(zdat1$tag_id)
+
+zdat2 <- zdat1 %>%
+  distinct(datetime, tag_id, transmitter_id, station_name, latitude, longitude,
+           sex, .keep_all = TRUE) %>% 
+  select(-transmitter_id) # we have tag ids as a shortened version now
 
 # save it ----------------------------------------------------------------------
 
-write_csv(zdat1, file = "Inputs/241116_step1.csv")
+write_csv(zdat2, file = "Inputs/250708_step1.csv")
 
-# bonus -----------------------------------------------------------------------
+# 1,702,983 unique rows per second, tag id and receiver
 
-#messy as hell, but it works (for me at least)
-# we need raw detection numbers for the ms
+# plot it -----------------------------------------------------------------
 
-bdat_clean <- bdat %>%
-  dplyr::select(
-    detection_datetime,
-    latitude = `VR4G Lat.`,
-    longitude = `VR4G Long.`,
-    location = Location,
-    ID,
-    Sex
-  ) %>%
-  mutate(detection_datetime = as.POSIXct(detection_datetime, format = "%d/%m/%Y %H:%M", tz = "UTC")) %>%
-  distinct()
+# just to check there are no outliers
+datxy <- zdat2 %>%
+  group_by(station_name, latitude, longitude) %>%
+  summarise(num_det = n(), .groups = 'drop')
 
-# Clean and standardize ddat
-ddat_clean <- ddat %>%
-  dplyr::select(
-    detection_datetime = DATETIME,
-    latitude = Latitude,
-    longitude = Longitude,
-    location = Location,
-    ID = Transmitter.Name,
-    Sex
-  ) %>%
-  mutate(detection_datetime = as.POSIXct(detection_datetime, format = "%d/%m/%Y %H:%M", tz = "UTC")) %>%
-  distinct()
+IMOSxy_sf <- sf::st_as_sf(datxy, coords = c("longitude",
+                        "latitude"), crs = 4326, agr = "constant")
 
-# Clean and standardize qc_data
-qc_clean <- qc_data %>%
-  dplyr::select(
-    detection_datetime,
-    latitude = receiver_deployment_latitude,
-    longitude = receiver_deployment_longitude,
-    location = station_name,
-    ID = tag_id,
-    Sex = animal_sex
-  ) %>%
-  distinct()
-
-# Combine all datasets
-combined_data <- bind_rows(
-  bdat_clean,
-  ddat_clean,
-  qc_clean,
-  .id = "source"
-) %>%
-  distinct()
-
-# Count total rows
-total_rows <- nrow(combined_data)
-original_rows <- nrow(bdat) + nrow(ddat) + nrow(qc_data)
-unique(combined_data$ID)
+mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "station_name", fbg = FALSE)

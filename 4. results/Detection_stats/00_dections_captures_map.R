@@ -5,39 +5,29 @@
 # libraries ---------------------------------------------------------------
 
 pacman::p_load("tidyverse", "viridis", "ggpubr", "plotly", "sf", "rnaturalearth", "ggspatial",
-               "terra")
+               "terra", "readr")
 
 # Data --------------------------------------------------------------------
 
 rm(list=ls())
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250701_det_enviro_complete.csv")
-aus_shp <- ne_countries(scale = "large", country = "Australia", returnclass = "sf")
+aus_shp <- st_read("Australia_shp/AUS_2021_AUST_GDA94.shp")
 catches  <- read_csv("Inputs/240903_SCP_enviro.csv")
+dat <- read_csv("inputs/250706_step7.csv")
 
-dat <- read_csv("inputs/250705_step3.csv")
 dat1 <- dat %>% 
-  filter(Location == "Ballina") %>%
-  distinct(Location, detection_datetime, tag_id, station_name,
-           receiver_deployment_longitude, receiver_deployment_latitude) %>% 
-  rename(latitude = receiver_deployment_latitude,
-         longitude = receiver_deployment_longitude)
+  filter(location == "Sunshine Coast") %>%
+  distinct(location, date, tag_id, station_name,
+           longitude, latitude, movement_type)
 
 SCP <- catches %>% 
-  filter(Area %in% c("Ballina", "Evans Head"))
+  filter(Area %in% c("Sunshine Coast"))
 
 
 buffer_deg <- 0.3 # how far a box do you want around your data ? 
 dat <- dat %>% 
   filter(presence == 1) #only real data shown
 
-
-wolf <- dat %>% filter(location == "Wolf Rock")
-wolf_catches <- catches %>% filter(Location == "Rainbow Beach")
-flat     <- dat %>% filter(location == "Flat Rock")
-coffs    <- dat %>% filter(location == "Coffs Harbour")
-hawks    <- dat %>% filter(location == "Hawks Nest")
-sydney   <- dat %>% filter(location == "Sydney")
 
 # bounding box for maps ---------------------------------------------------
 
@@ -51,7 +41,7 @@ make_window <- function(df, buffer = 0.3) { #buffer is in degrees = approx. 30km
 
 # make detections an SF object --------------------------------------------
 datxy <- dat1 %>%
-    group_by(Location, latitude, longitude) %>%
+    group_by(location, latitude, longitude) %>%
     summarise(Detections = n(), .groups = 'drop')
 
 datxy_sf <- sf::st_as_sf(datxy, coords = c("longitude", "latitude"), #sf object
@@ -65,7 +55,7 @@ datxy1 <- SCP %>%
     rename(latitude = Latitude, 
            longitude = Longitude)
 
-datxy_sf1 <- sf::st_as_sf(datxy1, coords = c("Longitude", "Latitude"), #sf object
+datxy_sf1 <- sf::st_as_sf(datxy1, coords = c("longitude", "latitude"), #sf object
                          crs = 4326, agr = "constant")
 
 bbox <- make_window(datxy1, buffer = 0.5) # bounding box
@@ -75,12 +65,11 @@ ggplot() +
     geom_sf(data = datxy_sf, aes(size = Detections), alpha = 1) +
     geom_sf(data = datxy_sf1, aes(size = Captures), alpha = 1.0, colour = "firebrick") +
     coord_sf(xlim = bbox$xlim, ylim = bbox$ylim, expand = FALSE) +
-    labs(title = "Ballina") +
+    labs(title = "Sunshine Coast") +
     theme_bw() +
     annotation_scale(location = "br") +
     annotation_north_arrow(style = north_arrow_nautical, location = "tr") +
     theme(plot.title = element_text(hjust = 0.5))
-
 
 
 # git plottin' ------------------------------------------------------------

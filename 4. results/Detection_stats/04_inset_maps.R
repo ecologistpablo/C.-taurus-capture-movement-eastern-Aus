@@ -12,7 +12,8 @@ pacman::p_load("tidyverse", "viridis", "ggpubr", "plotly", "sf", "rnaturalearth"
 rm(list=ls())
 setwd("~/Documents/USC/Honours/R/data")
 dat <- read_csv("Inputs/250701_det_enviro_complete.csv")
-aus_shp <- ne_countries(scale = "large", country = "Australia", returnclass = "sf")
+#aus_shp <- ne_countries(scale = "large", country = "Australia", returnclass = "sf")
+aus_shp <- st_read("Australia_shp/australialandmass.shp")
 topo <- terra::rast("Inputs/5_AusBathyTopo_250m_2024.nc")
 
 
@@ -87,7 +88,7 @@ d <- plot_location_map(hawks,   "D) Hawks Nest", aus_shp, topo = topo, buffer = 
 e <- plot_location_map(sydney,  "E) Sydney", aus_shp, topo = topo, buffer = buffer_deg)
 
 a #did it work ?
-b
+
 
 # save maps individually --------------------------------------------------
 
