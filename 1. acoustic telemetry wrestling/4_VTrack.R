@@ -2,8 +2,6 @@
   #12.06.23
     #Pablo Fuenzalida
 
-rm(list=ls()) 
-
 # explanation -------------------------------------------------------------
 
 # VTrack was written to quantify movement between sites in acoustic telemetry
@@ -11,13 +9,14 @@ rm(list=ls())
 # You need to format a dataframe correctly, using distinct names & data structures
 # Once you pass these data through runresidenceextraction, you can quantify both:
 # residency and non-residency (movement) simultaneously
-# It's incredible, thankyou to R. Dwyer!
+# It's incredible, thankto R. Dwyer!
 #for more info on VTrack, read: https://github.com/RossDwyer/VTrack
 
 # libraries ---------------------------------------------------------------
 
+rm(list=ls()) 
 setwd("~/Documents/USC/Honours/R/data")
-pacman::p_load("tidyverse", "VTrack", "lubridate")
+pacman::p_load("tidyverse", "VTrack", "lubridate", 'tictoc')
 dat <- read.csv("Inputs/250708_step3.csv")
 
 #ReadInputData -----------------------------------------------------------------------
@@ -25,15 +24,13 @@ dat <- read.csv("Inputs/250708_step3.csv")
 dat1 <- dat %>% #clean and format VTrack 
   mutate(transmitter_sensor_raw_value = 0, # required col
     transmitter_sensor_unit = 0) %>% # Extract tag ID from transmitter_id
-    transmute(DATETIME = with_tz(ymd_hms(datetime,
-          tz = "UTC"), tzone = "Etc/GMT-10"),
-    TRANSMITTERID = as.numeric(tag_id),
+    transmute(DATETIME = lubridate::with_tz(lubridate::ymd_hms(datetime, tz = "UTC"), tzone = "Etc/GMT-10"),
+    TRANSMITTERID = as.factor(tag_id),
     SENSOR1 = as.numeric(transmitter_sensor_raw_value),
     UNITS1 = as.numeric(transmitter_sensor_unit),
     RECEIVERID = unlist(data.table::tstrsplit(receiver_name, "-", keep=2)),
     STATIONNAME = as.factor(location)) %>% # location or station name
   dplyr::select(DATETIME,TRANSMITTERID,SENSOR1,UNITS1,RECEIVERID,STATIONNAME) %>% 
-  arrange(TRANSMITTERID,DATETIME) %>%
   data.frame()
 
 str(dat1) # Verify structure
@@ -48,19 +45,23 @@ dat1 %>%
 # VTrack can't handle NAs in these rows, so remove beforehand
 dat2 <- dat1 %>%
     filter(if_all(everything(), ~ !is.na(.)))
-anyNA(dat2) # this has to be false
 
-#head <- dat2[1:1000,]
+anyNA(dat2) # this has to be false
+str(dat2)
 
 #RunResidenceExtraction --------------------------------------------------------------------
 
-TID.Res_all <-  #to understand RunResidenceExtraction, read vignette
-  VTrack::RunResidenceExtraction(sInputFile = head,
-                         sLocation = "STATIONNAME",
-                         iResidenceThreshold = 1,
-                         iTimeThreshold = 60*60*24*15, 
-                         sDistanceMatrix = NULL,
-                         iCores = parallel::detectCores() - 2) # parallel processing
+tic("RunResidenceExtraction")
+
+TID.Res_all <- VTrack::RunResidenceExtraction(
+    sInputFile = dat2, # your dataframe name
+    sLocation = "STATIONNAME", #has to be this format / name for receivers / stations
+    iResidenceThreshold = 1, # how many detections = residence ? 
+    iTimeThreshold = 60 * 60 * 24 * 15, # 15 d threshold on days
+    sDistanceMatrix = NULL, #dist. threshold ? 
+    iCores = 1) # parallel processing
+
+toc() 
 
 # Data exploration ------------------------------------------------------------------
 
