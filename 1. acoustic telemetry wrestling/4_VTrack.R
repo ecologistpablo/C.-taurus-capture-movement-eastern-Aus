@@ -40,14 +40,12 @@ dat1 %>%
   pivot_longer(everything(), names_to = "column", values_to = "na_count") %>%
   arrange(desc(na_count)) # a few rows have NAs
 
-#head <- detections_formatted_vtrack[1:1000000,]
 
 # VTrack can't handle NAs in these rows, so remove beforehand
 dat2 <- dat1 %>%
     filter(if_all(everything(), ~ !is.na(.)))
 
-anyNA(dat2) # this has to be false
-str(dat2)
+
 
 #RunResidenceExtraction --------------------------------------------------------------------
 
