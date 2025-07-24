@@ -9,6 +9,21 @@ rm(list=ls())
 pacman::p_load("tidyverse")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
 IMOS <- read_csv("Inputs/250708_step1.csv")
+dat <- read_csv("Inputs/250722_qc_data.csv")
+
+dat$tag_id <- str_extract(dat$transmitter_id, "\\d{4,5}$") #shorten tag ID strings
+
+dat <- dat %>% 
+  dplyr::select(-transmitter_id) %>% 
+  mutate(tag_id = as.double(tag_id))
+
+IMOS1 <- bind_rows(IMOS,dat)
+
+IMOS2 <- IMOS1 %>% 
+  dplyr::distinct(tag_id, sex, datetime, longitude, latitude, station_name, receiver_name)
+  
+
+IMOS <- IMOS2
 
 # munging -----------------------------------------------------------------
 
@@ -26,7 +41,7 @@ IMOS$sex <- sex_vector[as.character(IMOS$tag_id)]
 unique(IMOS$tag_id[is.na(IMOS$sex)])
 
 ID <- read_csv("Inputs/Tag_ID_sex_CKilpatrick_230605.csv") #3858 obs
-ID1 <- read_csv("Dwyer dat/GNS Transmitter ID data_20221220.csv")
+ID1 <- read_csv("Inputs/GNS Transmitter ID data_20221220.csv")
 ID2 <- read_csv("Inputs/IMOS_Tag_ID_230718.csv") %>% 
   rename(sex = animal_sex)
 #Lets use match() to read ID, and find rows with corresponding Tag_IDs
@@ -59,6 +74,6 @@ IMOS2 %>%
   count(sex) # 28 females, 25 males
 
 # save --------------------------------------------------------------------
-write_csv(IMOS2, "Inputs/250708_step2.csv")
+write_csv(IMOS2, "Inputs/250723_step2.csv")
 
 # 1,696,261

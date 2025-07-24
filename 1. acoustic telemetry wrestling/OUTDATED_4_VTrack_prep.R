@@ -17,7 +17,7 @@
 rm(list=ls()) 
 setwd("~/Documents/USC/Honours/R/data")
 pacman::p_load("tidyverse", "VTrack", "lubridate", 'tictoc')
-dat <- read.csv("Inputs/250708_step3.csv")
+dat <- read.csv("Inputs/250724_step3.csv")
 
 #ReadInputData -----------------------------------------------------------------------
 
@@ -44,45 +44,11 @@ dat1 %>%
 # VTrack can't handle NAs in these rows, so remove beforehand
 dat2 <- dat1 %>%
     filter(if_all(everything(), ~ !is.na(.)))
+anyNA(dat2)
+
+head <- dat2[1:1000000,]
+
+write_csv(dat2, "Inputs/250724_step4.csv")
 
 
 
-#RunResidenceExtraction --------------------------------------------------------------------
-
-tic("RunResidenceExtraction")
-
-TID.Res_all <- VTrack::RunResidenceExtraction(
-    sInputFile = dat2, # your dataframe name
-    sLocation = "STATIONNAME", #has to be this format / name for receivers / stations
-    iResidenceThreshold = 1, # how many detections = residence ? 
-    iTimeThreshold = 60 * 60 * 24 * 15, # 15 d threshold on days
-    sDistanceMatrix = NULL, #dist. threshold ? 
-    iCores = 1) # parallel processing
-
-toc() 
-
-# Data exploration ------------------------------------------------------------------
-
-save(TID.Res_all, file = "Inputs/TID.Res_all_250709_receivers.RData")
-#load("Inputs/TID.Res_all_250623.RData")
-
-#TID.Res_all.Logs <- TID.Res_all$residenceslog  # Explore Residences log
-TID.Res_all.Logs <- TID.Res_all$residences
-
-TID.Res.Movements <- TID.Res_all$nonresidences # Explore Non-Residences/Movements
-TID.Res.Movements <- TID.Res.Movements[ , -c(8, 9)] #remove unnessecary columns
-
-TID.Res.Movements <- TID.Res.Movements %>%
-  filter(STATIONNAME1 != STATIONNAME2) #remove movements that return to the same location
-
-# residence munging -------------------------------------------------------
-
-TID.Res_all.Logs <- TID.Res_all.Logs[, -c(3, 6)]
-
-TID.Res_all.Logs <- TID.Res_all.Logs %>% 
-  distinct(STARTTIME, ENDTIME, TRANSMITTERID, STATIONNAME, .keep_all = TRUE)
-
-# save --------------------------------------------------------------------
-
-write_csv(TID.Res.Movements,file = "Inputs/250709_step4.csv")
-write_csv(TID.Res_all.Logs,file = "Inputs/250709_residency.csv")

@@ -8,7 +8,12 @@ rm(list=ls()) # to clear workspace
 
 pacman::p_load("tidyverse")
 setwd("~/Documents/USC/Honours/R/data")
-IMOS <- read_csv("Inputs/250708_step2.csv")
+IMOS <- read_csv("Inputs/250723_step2.csv") 
+
+IMOS <- IMOS %>% 
+  filter(!format(datetime, "%Y") %in% c("2025"))
+
+summary(IMOS$datetime)
 
 # conceptualisation of script ---------------------------------------------
 
@@ -74,27 +79,25 @@ add_location_group <- function(df, central_station_name, location_name) {
 IMOS <- add_location_group(IMOS,"ST02 WR", # station name
                                   "Wolf Rock") # new Location name
 
-IMOS <- add_location_group(IMOS, "Wobbie Rock",
-                                  "Sunshine Coast")
+IMOS <- add_location_group(IMOS, "Wobbie Rock", # Station name
+                           "Sunshine Coast") # new location name
 
 IMOS <- add_location_group(IMOS,"FtR TC M1 2022/2023 101919", # station name
                                   "Flat Rock") # new Location name
 
-IMOS <- add_location_group(IMOS, "FAD 12",
-                                  "Gold Coast")
+IMOS <- add_location_group(IMOS, "Cherubs Cave", "Moreton Island")
 
-IMOS <- add_location_group(IMOS,"Lennox Point", #station name
-                                  "Ballina") #new location name
-IMOS <- add_location_group(IMOS,
-                                  "CHS 13", # station name
-                                  "Coffs Harbour") # new Location name
+IMOS <- add_location_group(IMOS, "FAD 12", "Gold Coast")
 
-IMOS <- add_location_group(IMOS,
-                                  "MB-5", # station name
-                                  "Hawks Nest") # new Location name
+IMOS <- add_location_group(IMOS,"Lennox Point", "Ballina") 
 
-IMOS <- add_location_group(IMOS,"BL 1", # station name
-                                  "Sydney") # new Location name
+IMOS <- add_location_group(IMOS, "CHS 13", "Coffs Harbour")
+
+IMOS <- add_location_group(IMOS, "Cod Grounds", "Port Macquarie")
+
+IMOS <- add_location_group(IMOS,"MB-5", "Hawks Nest")
+
+IMOS <- add_location_group(IMOS,"BL 1", "Sydney") 
 
 # filtering to degrees for other sites
 IMOS1 <- IMOS %>% #all other receivers shall be named after the degree they are in 
@@ -116,6 +119,8 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F) #colour
 
 # save it ----------------------------------------------------------------------
 
-write_csv(IMOS1, "Inputs/250708_step3.csv")
+write_csv(IMOS1, "Inputs/250724_step3.csv")
+
+table(IMOS1$location)
 
 
