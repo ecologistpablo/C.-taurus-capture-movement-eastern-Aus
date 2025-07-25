@@ -2,12 +2,10 @@
   # pablo fuenzalida
     # calculate distance
 
-rm(list=ls())
-
 library(tidyverse)
-
+rm(list=ls())
 setwd("/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250705_step7.csv") #movements
+dat <- read_csv("Inputs/250725_step5.csv") #movements
 
 # distance metric --------------------------------------------------------------
 
@@ -15,10 +13,10 @@ dat <- read_csv("Inputs/250705_step7.csv") #movements
 # this accounts for earth being a sphere, so it's a little better than direct dist
 calculate_distance <- function(df) {
   df <- df %>%
-    arrange(tag_id, original_id) %>%
-    group_by(tag_id, original_id) %>%
+    arrange(tag_id, movement_id) %>%
+    group_by(tag_id, movement_id) %>%
     mutate(
-      # Calculate the distance between two rows with the same original_id
+      # Calculate the distance between two rows with the same movement_id
       distance = geosphere::distHaversine(
         c(longitude[1], latitude[1]),
         c(lead(longitude)[1], lead(latitude)[1])
@@ -35,10 +33,9 @@ calculate_distance <- function(df) {
 # run the function
 dat1 <- calculate_distance(dat)
 
-
 # save it -----------------------------------------------------------------
 
-write_csv(dat1, file = "Inputs/250705_step8.csv")
+write_csv(dat1, file = "Inputs/250725_step6.csv")
 
 # plot it  ----------------------------------------------------------------
 

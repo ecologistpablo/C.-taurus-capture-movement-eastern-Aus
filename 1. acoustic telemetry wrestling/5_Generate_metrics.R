@@ -2,11 +2,11 @@
   # data preparation 
     # Pablo Fuenzalida
 
-# let's calculate the timeperiod of movements
+# let's calculate the time period of movements
 # as well as direction of movement (north or south)
 
-rm(list=ls()) 
 library(tidyverse)
+rm(list=ls()) 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
 dat <- read_csv("Inputs/250725_step4.csv")
 
@@ -23,9 +23,8 @@ dat1 <- dat %>%
   left_join(dat_wide %>% select(tag_id, movement_id, num_days),
             by = c("tag_id", "movement_id"))
 
-
+rm(dat_wide) # clean up messy 
 # map ---------------------------------------------------------------------
-
 datxy <- dat %>%
   group_by(location, latitude, longitude) %>%
   summarise(num_det = n(), .groups = 'drop')
@@ -34,28 +33,38 @@ IMOSxy_sf <- sf::st_as_sf(datxy, coords = c("longitude",
                         "latitude"), crs = 4326, agr = "constant")
 
 mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = FALSE)
-
-
 # levels ------------------------------------------------------------------
 
-# use map to find out order of locations from north to south
+# Define your location levels (ordered N-S) 
 Location_levels <- c("deg_-24", "deg_-25", "Wide Bay", "deg_-27", "Sunshine Coast", 
                      "Moreton Island","North Stradbroke Island", "Gold Coast","deg_-29","Ballina", 
-                     "deg_-30", "Coffs Harbour", "deg_-31","deg_-32", "Port Macquarie", "deg_-33",
-                     "Hawks Nest", "deg_-34",  "Sydney","deg_-35","deg_-36", "deg_-37")
+                     "deg_-30", "Coffs Harbour", "deg_-31","deg_-32", "Port Macquarie", "Forster",
+                     "Hawks Nest", "Newcastle", "deg_-34", "Sydney","deg_-35","deg_-36", "deg_-37")
 
-dat3 <- dat2 %>%
-  mutate( #create directionality as a row
-    departure_location = factor(departure_location, levels = Location_levels),
-    arrival_location = factor(arrival_location, levels = Location_levels),
-    direction = if_else(as.integer(departure_location) > as.integer(arrival_location),
-                        "North", "South"))
+mov_dir <- dat1 %>% # group and pivot 
+  select(tag_id, movement_id, movement, location) %>%
+  pivot_wider(names_from = movement,
+    values_from = location,
+    names_prefix = "location_") %>% # make some new cols
+  mutate(departure_location = factor(location_departure,
+                                levels = Location_levels, ordered = TRUE),
+    arrival_location   = factor(location_arrival,
+                                levels = Location_levels, ordered = TRUE),
+    direction = case_when(is.na(departure_location) | # is departure infront or behind arrival in the levels
+                            is.na(arrival_location) ~ NA_character_,
+      as.integer(departure_location) > as.integer(arrival_location) ~ "North",
+      as.integer(departure_location) < as.integer(arrival_location) ~ "South",
+      TRUE ~ "None")) %>%
+  select(tag_id, movement_id, direction)
 
-unique(dat3$direction)
+# 2. Join direction back to tidy dat2
+dat2 <- dat1 %>%
+  left_join(mov_dir, by = c("tag_id", "movement_id")) %>%
+  relocate(direction, .after = movement_id) # Move direction next to movement_id
 
-str(dat3)
+unique(dat2$direction)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(dat3,file = "Inputs/250709_step5.csv") 
+write_csv(dat2, file = "Inputs/250725_step6.csv") 
 

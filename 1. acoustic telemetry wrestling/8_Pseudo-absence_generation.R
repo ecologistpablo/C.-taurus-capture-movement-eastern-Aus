@@ -21,15 +21,15 @@
 rm( list=ls()) 
 library(tidyverse) 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250705_step9.csv")
+dat <- read_csv("Inputs/250725_step7.csv")
 
 # Psuedo Presence x 2 ----------------------------------------------------------
 
 generate_pseudo_absences <- function(...) {   # Combine all the arguments into a single-row data frame
   data_row <- tibble(...)
-  year <- lubridate::year(data_row$date) # extract year
-  month <- lubridate::month(data_row$date) # extract month
-    if(year == 2023) {   # Specify the end date based on the year
+  year <- lubridate::year(data_row$datetime) # extract year
+  month <- lubridate::month(data_row$datetime) # extract month
+    if(year == 2025) {   # Specify the end date based on the year
     end_date <- as.Date(paste(year, "-07-31", sep = ""))
   } else {
     end_date <- as.Date(paste(year, "-12-31", sep = ""))
@@ -64,15 +64,15 @@ generate_pseudo_absences <- function(...) {   # Combine all the arguments into a
 
 dat1 <- dat %>%
   pmap_dfr(generate_pseudo_absences) # wait a while, it takes some time
-# do you have dat1 = dat * 3 ?
-summary(dat1$date) #it worked
-table(dat1$presence)
+# is dat1 the same as dat multiplied by 3?
+summary(dat1$datetime) # are they within the same timeframe?
+table(dat1$presence) # is presence the same num as dat obs ?
 
 # prep data ---------------------------------------------------------------
 
 dat2 <- dat1 %>% 
-mutate(month = lubridate::month(date)) %>% 
-  rename(movement = movement_type)
+mutate(month = lubridate::month(datetime)) %>% 
+  select(-date)
 
 # plot it -----------------------------------------------------------------
 
@@ -88,7 +88,7 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(dat2, file = "Inputs/250626_step10.csv")
+write_csv(dat2, file = "Inputs/250725_step8.csv")
 
 # xy coordinates ----------------------------------------------------------
 

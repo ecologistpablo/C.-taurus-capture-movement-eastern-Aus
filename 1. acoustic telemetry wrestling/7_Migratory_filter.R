@@ -19,24 +19,42 @@
 
 # packages ----------------------------------------------------------------
 
-rm(list=ls()) 
 library(tidyverse)
+rm(list=ls()) 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250705_step8.csv")
+dat <- read_csv("Inputs/250725_step6.csv")
+
+# pre-clean ---------------------------------------------------------------
+
+# Build a summary table with arrival/departure locations and dates per movement_id
+move_info <- dat %>%
+  select(tag_id, movement_id, movement, location, datetime) %>%
+  pivot_wider(names_from = movement,
+    values_from = c(location, datetime),
+    names_glue = "{.value}_{movement}") %>%
+  rename(departure_location = location_departure, 
+         arrival_location = location_arrival,
+          departure_date = datetime_departure,
+           arrival_date = datetime_arrival)
+
+# Join back to the original data
+dat <- dat %>%
+  left_join(move_info, by = c("tag_id", "movement_id"))
 
 # begin wrestling --------------------------------------------------------------
 
 # a departure at A, arrival at B, departure at B and arrival at A = 4 movements
 dat1 <- dat %>% 
- arrange(tag_id, date) %>%  # sort data by Tag_ID and detection_datetime
+ arrange(tag_id, datetime) %>%  # sort data by Tag_ID and detection_datetime
   group_by(tag_id) %>%  # group data by Tag_ID
   filter(n() >= 4) %>%  # remove groups with fewer than 4 rows
   dplyr::slice(1:(n() %/% 4 * 4)) %>%  # keep the highest multiple of 4 rows for each group
     #(one Tag_ID can move multiple times)
   ungroup()  # remove grouping
 
-table(dat1$tag_id)
-#nice, we have a df with ONLY multiples of 4 for unique Tag_IDs (ie 2 movements in 4 rows)
+table(dat1$tag_id) # are they all groups of 4 ? If not, there's a problem
+
+#nice, we have a df with ONLY multiples of 4 for unique tag IDs (ie 2 movements in 4 rows)
 
 #new column that numbers rows
 dat1 <- dat1 %>%
@@ -70,7 +88,7 @@ dat3 <- dat2 %>%  # Create a new grouping variable that identifies each set of 4
   group_by(tag_id, group_of_4) %>%
   mutate(any_true = any(keep_row, na.rm = TRUE)) %>%
   ungroup() %>%
-  filter(any_true) %>%   # Filter the dataframe
+  dplyr::filter(any_true) %>%   # Filter the dataframe
   dplyr::select(-group_of_4, -any_true, -keep_row) # rm the helper columns
 
 # Ok, now we have we now an df that is ordered using tag id with movement 2 & 3 in the same place
@@ -111,7 +129,7 @@ spatial_filter_rows <- function(df, spatial_threshold) {
 
 spatial_threshold <- 50 #the km threshold we want to use
 dat5 <- spatial_filter_rows(dat4, spatial_threshold)
-summary(dat5)
+head(dat5)
 
 # inspect -----------------------------------------------------------------
 
@@ -153,4 +171,4 @@ OG1 <- anti_join(OG, dat5, by = columns)
 
 #save it ----------------------------------------------------------------------------
 
-write_csv(OG1, file = "Inputs/250705_step9.csv")
+write_csv(OG1, file = "Inputs/250725_step7.csv")

@@ -2,6 +2,9 @@
   # pablo fuenzalida
     # cleaning scripts and workflow
 
+# UPDATE
+# VTrack removed, coords were brought over in the same functions
+
 rm(list=ls())
 
 library(tidyverse)

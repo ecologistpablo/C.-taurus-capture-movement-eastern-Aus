@@ -33,35 +33,38 @@ str(dat1)
 # inputs ------------------------------------------------------------------
 
 min_detections <- 1 # minimum detections per day to enter residency
-min_res_period <- 2 # minimum duration threshold in days for 'residency' to occur
-max_gap_secs <- 86400  # 1 day gap allowed between detections (in seconds: 86400 seconds in a day)
+min_res_period <- 1 # minimum duration threshold in days for 'residency' to occur
+max_gap_secs <- 1296000  # 1 day gap allowed between detections (in seconds: 86400 seconds in a day)
+
+# 60*60*24*15 15 days in seconds
 
 # residency ---------------------------------------------------------------
 
 tic() # tic toc times functions 
 
-residency_events <- dat1 %>%
+residency <- dat1 %>%
   arrange(tag_id, location, datetime) %>% # location or receiver grouping
   group_by(tag_id, location) %>% # arrange by date, group by ID
   mutate(time_gap = as.numeric(difftime(datetime, # compute time gap between det 1 & 2
                                    lag(datetime, default = first(datetime)), # lag finds the second ping and grabs the time stamp
                                    units = "secs")), # calculate lag in seconds for filtering late
-    new_event = ifelse(is.na(time_gap) | time_gap > max_gap_secs, 1, 0), 
+    new_event = ifelse(is.na(time_gap) | time_gap > max_gap_secs, 1, 0),  
     event_id = cumsum(new_event)) %>% # number residency events 
   group_by(tag_id, location, event_id) %>% # re-group
   summarise(start_datetime = min(datetime), # start date
             end_datetime = max(datetime), # end date
             n_detections = n(), # total number of pings 
-    duration_days = round(as.numeric(difftime(max(datetime), # num of days 
-                          min(datetime), units = "days")), 2), .groups = "drop") %>%
+            duration_days = round(as.numeric(difftime(max(datetime), # num of days 
+                      min(datetime), units = "days")), 2), .groups = "drop",
+           sex = first(sex)) %>%                   
   dplyr::filter(n_detections >= min_detections, duration_days >= min_res_period) %>% # filter residency that is less than min days
   arrange(tag_id, start_datetime) # return a clean df 
 
 toc() # 2.165 seconds to process 2.5 million rows
 # we love vectorised functions 
 
-residency_events
+residency
 
 # save your beautiful work
-write_csv(residency_events, "Inputs/250725_residency.csv")
+write_csv(residency, "Inputs/250725_residency.csv")
 
