@@ -26,8 +26,10 @@ summary(IMOS$datetime)
 
 IMOS$station_name <- ifelse(IMOS$station_name == "Flat Rock","FR",IMOS$station_name)
 IMOS$station_name <- ifelse(IMOS$station_name == "Hawks Nest","Hawks Nest1",IMOS$station_name)
-IMOS$station_name <- ifelse(IMOS$station_name == "Coffs Harbour","CH",IMOS$station_name) #it doesn't work well when they're the same name
-IMOS$station_name <- ifelse(IMOS$station_name == "Ballina","Ballina1",IMOS$station_name) #it doesn't work well when they're the same name
+IMOS$station_name <- ifelse(IMOS$station_name == "Coffs Harbour","CH",IMOS$station_name) 
+IMOS$station_name <- ifelse(IMOS$station_name == "Ballina","Ballina1",IMOS$station_name) 
+IMOS$station_name <- ifelse(IMOS$station_name == "Forster", "Forster1", IMOS$station_name)
+IMOS$station_name <- ifelse(IMOS$station_name == "Newcastle", "Newcastle1", IMOS$station_name)
 
 # the function below doesn't deal well 
 # when you re-name a location to the same name as the station
@@ -77,13 +79,13 @@ add_location_group <- function(df, central_station_name, location_name) {
 # run --------------------------------------------------------------------------
 
 IMOS <- add_location_group(IMOS,"ST02 WR", # station name
-                                  "Wolf Rock") # new Location name
+                                  "Wide Bay") # new Location name
 
 IMOS <- add_location_group(IMOS, "Wobbie Rock", # Station name
                            "Sunshine Coast") # new location name
 
 IMOS <- add_location_group(IMOS,"FtR TC M1 2022/2023 101919", # station name
-                                  "Flat Rock") # new Location name
+                                  "North Stradbroke Island") # new Location name
 
 IMOS <- add_location_group(IMOS, "Cherubs Cave", "Moreton Island")
 
@@ -95,7 +97,11 @@ IMOS <- add_location_group(IMOS, "CHS 13", "Coffs Harbour")
 
 IMOS <- add_location_group(IMOS, "Cod Grounds", "Port Macquarie")
 
+IMOS <- add_location_group(IMOS, "Forster1", "Forster")
+
 IMOS <- add_location_group(IMOS,"MB-5", "Hawks Nest")
+
+IMOS <- add_location_group(IMOS,"BiB 02.1", "Newcastle")
 
 IMOS <- add_location_group(IMOS,"BL 1", "Sydney") 
 
@@ -119,7 +125,7 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F) #colour
 
 # save it ----------------------------------------------------------------------
 
-write_csv(IMOS1, "Inputs/250724_step3.csv")
+write_csv(IMOS1, "Inputs/250725_step3.csv")
 
 table(IMOS1$location)
 
