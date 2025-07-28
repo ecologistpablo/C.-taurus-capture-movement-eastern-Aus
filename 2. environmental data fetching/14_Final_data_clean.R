@@ -11,8 +11,7 @@ library(lunar)
 
 # pts ---------------------------------------------------------------------
 
-setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/250701_cur_det.csv")
+dat <- read_csv("Inputs/250728_cur_det.csv")
 
 # REMORA ------------------------------------------------------------------
 
@@ -65,12 +64,11 @@ str(dat1)
 # final clean -------------------------------------------------------------
 
 dat2 <- dat1 %>% 
-  select(-vcur, -vcur_anomaly, -original_id) %>% 
+  select(-vcur, -vcur_anomaly, -movement_id) %>% 
   mutate(tag_id = as.character(tag_id))
 
 colnames(dat2)
 str(dat2)
-
 
 # plot it -----------------------------------------------------------------
 
@@ -85,5 +83,5 @@ mapview::mapview(datxy_sf, cex = "num_det", zcol = "location", fbg = FALSE)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat2, "Inputs/250701_det_enviro_complete.csv")
+write_csv(dat2, "Inputs/250728_det_enviro_complete.csv")
 

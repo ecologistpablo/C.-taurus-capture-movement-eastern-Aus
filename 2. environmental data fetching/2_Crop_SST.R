@@ -10,16 +10,17 @@ rm(list=ls())
 
 # Packages ----------------------------------------------------------------
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
+pacman::p_load("tidyverse", "ncdf4", 'purrr', 'furrr','future', 'terra', 'sf', 'sp', 'viridis')
 
 # metadata finding --------------------------------------------------------
 
+setwd("/Volumes/LaCie_PF/SST/")
 setwd("E:/Pablo/2023_hons_dat/SST/2012") #where did you download all your net cdfs?
 list.files() #copy and paste a string below
-nc <- nc_open("20121231092000-ABOM-L3S_GHRSST-SSTfnd-AVHRR_D-1d_dn-v02.0-fv02.0.nc") #read it in
+nc <- nc_open("20231231092000-ABOM-L3S_GHRSST-SSTfnd-AVHRR_D-1d_dn-v02.0-fv01.0.nc") #read it in
 
 print(nc) #what variables do we choose need?
-
+plot(nc)
 
 # loop --------------------------------------------------------------------
 
@@ -27,7 +28,7 @@ print(nc) #what variables do we choose need?
 process_year <- function(year) {
   
   # Set working directory to the year's folder
-  setwd(paste0("E:/Pablo/2023_hons_dat/SST/", year))
+  setwd(paste0("/Volumes/LaCie_PF/SST/", year))
   
   plan(multisession, workers = 6) # Use 6 cores
   
@@ -78,7 +79,7 @@ process_year <- function(year) {
 # change 2022 to whichever year you need
 
 # Process each year
-years <- c("2022") #change as needed, processing 1 year at a time is chunky enough as they're 70mb and I only have 8 cores on 16gb of ram 
+years <- c("2024") #change as needed, processing 1 year at a time is chunky enough as they're 70mb and I only have 8 cores on 16gb of ram 
 
 for (year in years) {
   rstack4 <- process_year(year)
@@ -87,8 +88,9 @@ for (year in years) {
 
 
 #check it worked
-plot(rstack4, col = viridis(255)) # of course it did we're wizards
+plot(rstack4[[4,]], col = viridis(255)) # of course it did we're wizards
 
-setwd("~/University/2023/Honours/R/data/IMOS/SST")
-writeRaster(rstack4, "SST_stack_2022.tif")
+setwd("/Volumes/LaCie_PF/SST/2024")
+list.files()
+writeRaster(rstack4, "SST_stack_2024.tif")
 

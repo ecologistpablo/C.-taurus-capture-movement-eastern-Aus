@@ -6,15 +6,15 @@ rm(list=ls())
 
 # Packages ----------------------------------------------------------------
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
+pacman::p_load("tidyverse", "ncdf4", 'purrr', 'furrr','future', 'terra', 'sf', 'sp', 'viridis')
 
 # combine all stacks  -----------------------------------------------------
 
-setwd("~/University/2023/Honours/R/data/IMOS/Currents")
+setwd("/Volumes/LaCie_PF/Currents")
 list.files()
 
 # Generate file names for the years
-file_names <- paste0("Currents_stack_", 2012:2022, ".tif")
+file_names <- paste0("Currents_stack_", 2012:2024, ".tif")
 
 # Coordinate reference systems
 WGS84 <- crs("EPSG:4326")
@@ -62,12 +62,12 @@ rstack1 <- removeDuplicateLayers(rstack)
 print(paste("Original number of layers: ", length(names(rstack))))
 print(paste("Number of layers after removing duplicates: ", length(names(rstack1)))) 
 
-#I had 13 duplicates, this was due to downloading data multiple times for certain layers / days
+#I had a 60 duplicates, this was due to downloading data multiple times for certain layers / days
 
 # save --------------------------------------------------------------------
 
 # Save the combined stack
-writeRaster(rstack1, filename = "230912_cstack_12-22.tif", overwrite = T)
+writeRaster(rstack1, filename = "250728_cstack_12-24.tif", overwrite = T)
 
 
 

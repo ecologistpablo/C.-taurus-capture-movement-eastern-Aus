@@ -15,37 +15,19 @@ rm(list=ls())
 
 # Packages ----------------------------------------------------------------
 
-library(terra)
-library(sf)
-library(sp)
-library(viridis)
-library(lubridate)
-library(tidyr)
+pacman::p_load("terra", "sf", "sp", "viridis", "tidyverse")
 
 # pts ---------------------------------------------------------------------
 
-setwd("~/University/2023/Honours/R/data")
-rcs <- read_csv("Inputs/250626_xy_coordinates.csv") #this should be a csv with your XY coordinates for your receivers
+setwd("~/Documents/USC/Honours/R/data")
+rcs <- read_csv("Inputs/250728_step9_coordinates.csv") #this should be a csv with your XY coordinates for your receivers
 WGS84 <- terra::crs("EPSG:4326")# Coordinate reference systems
 head(rcs) #its all there
+unique(rcs$station_name) # should be the same size as your df
 
 # data prep ---------------------------------------------------------------
 
-# some of our station names are not unique
-# because lots of different people assign names in weird ways
-# so let's make them unique
-rcs1 <- rcs %>% 
-  group_by(station_name) %>%
-  mutate(station_name = if (n_distinct(latitude, longitude) > 1) 
-      paste0(station_name, "_", row_number()) 
-    else 
-      station_name) %>%
-  ungroup()
-
-# if station name is the same, and latitude and longitude are unique
-# make station names different 
-
-pts.UTM <- st_as_sf(rcs1, coords = c("longitude", #convert to an SF object
+pts.UTM <- st_as_sf(rcs, coords = c("longitude", #convert to an SF object
                                     "latitude")) 
 st_crs(pts.UTM) <- crs(WGS84) #remember to assign crs
 crs(pts.UTM) # did it assign correctly?
@@ -54,7 +36,7 @@ head(pts.UTM) # do we have an orderly dataframe?
 # plot --------------------------------------------------------------------
 
 # Calculate the number of detections at each station
-IMOSxy <- rcs1 %>%
+IMOSxy <- rcs %>%
   group_by(station_name, latitude, longitude) %>% #location
   summarise(num_det = n(), .groups = 'drop')
 
@@ -65,7 +47,7 @@ mapview::mapview(IMOSxy_sf, zcol = "station_name", fbg = F) #colour by LOCATION
 
 # rstack ------------------------------------------------------------------
 
-rstack <- rast("IMOS/SST/GHRSST_12-22.tif") #our enviro data
+rstack <- rast("IMOS/SST/GHRSST_12-24.tif") #our enviro data
 
 # plotting ----------------------------------------------------------------
 
@@ -79,7 +61,8 @@ rstack #res at 0.02 by 0.02, 2km x 2km
 rstack10km <- aggregate(rstack, fact = 4.5, #factor of whatever your resolution is in the OG raster / stack
                         fun = mean, na.rm = TRUE) #na.rm = T means it will interpolate into land
 #this is 10km resolution now
-
+plot(rstack10km[[19]], col = viridis(255)) # plot to see how it changed
+# interesting what changing resolution does, hey ?
 # sample ------------------------------------------------------------------
 
 sst.pts10km <- extract(rstack10km, pts.UTM, ID = F) 
@@ -116,7 +99,9 @@ sst.pts10km2 %>%
     num_na = sum(is.na(value_7d)),
     all_na = all(is.na(value_7d)),
     prop_na = mean(is.na(value_7d))) %>%
-   arrange(desc(all_na), desc(prop_na)) %>% print(n = 237)
+   arrange(desc(all_na), desc(prop_na)) %>% print(n = 258)
+
+# 15 / 253, great : ) 
 
 # bi-linear interpolation -------------------------------------------------
 
@@ -132,7 +117,7 @@ bl1 <- bl %>%
                values_to = "value") %>%
   mutate(date = as.Date(date))
 
-bl2 <- bl1 %>%
+bl2 <- bl1 %>% # averaging across weeks
   mutate(week_start = floor_date(date, unit = "week", week_start = 7)) %>%
   group_by(station_name, week_start) %>%
   mutate(bl_value_7d = if (all(is.na(value))) NA_real_ else mean(value, na.rm = TRUE)) %>%
@@ -156,8 +141,7 @@ sst.pts10km3 %>%
             prop_na = mean(is.na(value_7d_filled))) %>%
   arrange(desc(all_na), desc(prop_na)) %>% print(n = 237)
 
-# 6 stations, out of 237 stations, are NA
-# the rest of stations are less than 10% NA
+# 0 stations, out of 258 stations, are completely NA
 
 # clean - up --------------------------------------------------------------
 
@@ -167,13 +151,13 @@ sst.pts10km4 <- sst.pts10km3 %>%
 
 # summary -----------------------------------------------------------------
 
-# so, what we have done here is slightly confusing, but sensible 
-# we have extracted values from 2km resolution, then filled 1 d neighbours, then 5 d means
-# we have then increased coarseness to 10km resolution, filled 1 d neighbours then 5 d means
-# then, we said if there are any values in 10km res dataframe that are NA in the 2km dataframe, fill it
-# we did the same thing with bilinear interpolation, which was conducted solely on the 2km res level
+# so we extracted data at a 10km resolution
+# then averaged it across 7 days
+# then extracted data using bilinear interpolation for receivers w 100% NA
+# averaged it across 7 days also
+# and filled in original df
 
 # save --------------------------------------------------------------------
 
-write_csv(sst.pts10km4, file = "Inputs/250627_SST_vals_12-22.csv")
+write_csv(sst.pts10km4, file = "Inputs/250728_SST_vals_12-24.csv")
 

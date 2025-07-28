@@ -2,19 +2,16 @@
   #we have our cur vals: Both daily and monthly values
     #let's get cur values, and anomalies into our detection dataset
 
-rm(list=ls())
-#setwd("~/University/2023/Honours/R/data/git/NC-wrestling")
-
 # Packages ----------------------------------------------------------------
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
+library(tidyverse)
 
 # pts ---------------------------------------------------------------------
 
 setwd("~/University/2023/Honours/R/data")
-
-m_avg <- read_csv("Inputs/250701_CUR_m_avrg_12-22.csv") #climatological averages
-det <- read_csv("Inputs/250627_SST_det.csv") #xy coords w SST data on it
+rm(list=ls())
+m_avg <- read_csv("Inputs/250728_CUR_m_avrg_12-24.csv") #climatological averages
+det <- read_csv("Inputs/250728_SST_det.csv") #xy coords w SST data on it
 
 m_avg <- janitor::clean_names(m_avg)
 
@@ -35,5 +32,5 @@ colnames(det1)
 
 # save --------------------------------------------------------------------
 
-write_csv(det1, file = "Inputs/250701_cur_det.csv")
+write_csv(det1, file = "Inputs/250728_cur_det.csv")
 

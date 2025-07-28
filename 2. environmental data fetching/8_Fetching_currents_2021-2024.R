@@ -11,14 +11,17 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 #for detailed annotations, see the GHRSST fetching script
 
+
+setwd("/Volumes/LaCie_PF")
+
 # Set up parallel processing
-plan(multisession, workers = 7) # Using 7 cores
+plan(multisession, workers = 6) # Using 7 cores
 
 # Loop through years from 2021 to 2022
-for (year in 2021:2022) {
+for (year in 2023:2024) {
 
     # Set output folder and URL based on the year
-  output_folder <- paste0("E:/Pablo/2023_hons_dat/Current/", year)
+  output_folder <- paste0("Currents/", year)
   yurl <- paste0("https://thredds.aodn.org.au/thredds/catalog/IMOS/OceanCurrent/GSLA/NRT/", year, "/catalog.html")
   
   # Read HTML content
