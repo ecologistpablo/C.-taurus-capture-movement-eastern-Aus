@@ -2,22 +2,19 @@
   #automating the workflow to crop, stack and reproject our data
     #For currents
 
-setwd("~/University/2023/Honours/R/data/git/NC-wrestling")
 
 # Packages ----------------------------------------------------------------
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
+pacman::p_load("tidyverse", "ncdf4", 'purrr', 'furrr','future', 'terra', 'sf', 'sp', 'viridis')
 
 # metadata finding --------------------------------------------------------
-
-setwd("E:/Pablo/2023_hons_dat/Current/2020")
-nc <- nc_open("IMOS_OceanCurrent_HV_20121231T000000Z_GSLA_FV02_DM02.nc")
+rm(list=ls())
+setwd("/Volumes/LaCie_PF/Currents/2024")
+list.files()
+nc <- nc_open("IMOS_OceanCurrent_HV_20231231T000000Z_GSLA_FV02_NRT.nc")
 
 print(nc)
-
 # old fashioned way: 2012 -------------------------------------------------
-
-setwd("E:/Pablo/2023_hons_dat/Current/2012")
 
 plan(multisession, workers = 6) # Use 6 cores
 
@@ -99,7 +96,7 @@ plot(rstack1, col = viridis(255))
 e <- ext(c(150, 155, -36, -24)) #xmin, xmax, ymin, ymax for your studysite
 
 # Crop the stack
-rstack2 <- terra::crop(rstack1, e)
+rstack2 <- terra::crop(rstack1, e) # cropping takes awhile, be patient
 
 plot(rstack2, col = viridis(255))
 
@@ -107,7 +104,7 @@ names(rstack2)
 
 # save progress -----------------------------------------------------------
 
-writeRaster(rstack2, "Current_stack_2012.tif")
+writeRaster(rstack2, "Current_stack_2023.tif")
 
 setwd("~/University/2023/Honours/R/data/IMOS/Currents")
 writeRaster(rstack2, "Currents_stack_2012.tif")
@@ -117,8 +114,7 @@ writeRaster(rstack2, "Currents_stack_2012.tif")
 # Define a function to process a specific year
 process_year <- function(year) {
   
-  # Set working directory to the year's folder
-  setwd(paste0("E:/Pablo/2023_hons_dat/Current/", year))
+  setwd(paste0("/Volumes/LaCie_PF/Currents/", year))  # Set working directory to the year's folder
   
   plan(multisession, workers = 6) # Use 6 cores
   
@@ -172,7 +168,7 @@ process_year <- function(year) {
 }
 
 # Process each year
-years <- c("2022")  # Edit the years as needed
+years <- c("2024")  # Edit the years as needed
 
 for (year in years) {
   rstack3 <- process_year(year)
@@ -183,25 +179,6 @@ for (year in years) {
 #check it worked
 plot(rstack3, col = viridis(255))
 
-setwd("~/University/2023/Honours/R/data/IMOS/Currents")
-
-writeRaster(rstack3, "Currents_stack_2022.tif")
-
-
-# combine all stacks  -----------------------------------------------------
-
-rm(list=ls())
-setwd("~/University/2023/Honours/R/data/IMOS/Currents")
-list.files()
-
-# Generate file names for the years
-file_names <- paste0("Currents_stack_", 2012:2022, ".tif")
-
-# Read in existing files and combine them into one stack
-CUR_stack <- rast(lapply(file_names, function(x) if(file.exists(x)) rast(x)))
-
-# Save the combined stack
-writeRaster(SST_stack, "OceanCurrents_12-22.tif")
-
+writeRaster(rstack3, "Currents_stack_2024.tif")
 
 

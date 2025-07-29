@@ -8,12 +8,13 @@
 
 # Packages ----------------------------------------------------------------
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
+pacman::p_load("purrr", "furrr", "future", "tidyverse",
+               "rvest", "curl") #rvest and curl help us talk to websites
 
 # preamble ----------------------------------------------------------------
 
 # we are going to talk to IMOS' environmental product website
-# to download data for sea surface temperature from everyday inbetween 2012 - 2022
+# to download data for sea surface temperature from everyday inbetween 2012 - 2024
 # purrr, furrr and dplyr can help us with this
 # we do this by specifying output folder, the URL string onto the directory before we enter years
 # https://mrs-data.csiro.au/imos-srs/sst/ghrsst/L3S-1d/dn/
@@ -25,19 +26,20 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 # purrr and furrr our way thru --------------------------------------------
 
+rm(list=ls())
 parallel::detectCores() #how much power do you have? I got 8 so I will use 6
 
 # never use all of your cores, your computer needs at least one to function
+var_to_get <- "\\.nc$"
+setwd("/Volumes/LaCie_PF")
 
 # Set up parallel processing
 plan(multisession, workers = 6) # Using x cores
 
 # Loop through years for your study period
-for (year in 2012:2022) {  #change if you have different study period
-  
+for (year in 2023:2024) {  #change if you have different study period
   # Set output folder and URL based on the year
-  #output_folder <- "C:/Users/pablo/Documents/University/2023/Honours/R/data/IMOS/SST/2014" 
-  output_folder <- paste0("E:/Pablo/2023_hons_dat/", year) #my output folder
+  output_folder <- paste0("SST/", year) #my output folder
   yurl <- paste0("https://mrs-data.csiro.au/imos-srs/sst/ghrsst/L3S-1d/dn/", year, "/") #the beginning string for year url 
   
   # Read HTML content

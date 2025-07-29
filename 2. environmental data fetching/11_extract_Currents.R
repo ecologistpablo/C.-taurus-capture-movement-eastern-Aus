@@ -6,46 +6,34 @@ rm(list=ls())
 
 # Packages ----------------------------------------------------------------
 
-library(terra)
-library(sf)
-library(sp)
-library(viridis)
-library(lubridate)
-library(tidyr)
-library(tidyverse)
+pacman::p_load("ncdf4", 'purrr', 'furrr','future', 'terra', 'sf', 'sp', 'viridis', 'tidyverse')
 
 # pts ---------------------------------------------------------------------
 
-setwd("~/University/2023/Honours/R/data")
+setwd("~/Documents/USC/Honours/R/data")
 
-cstack <- rast("IMOS/Currents/230912_cstack_12-22.tif") #currents stack
-rcs <- read_csv("Inputs/250626_xy_coordinates.csv") #xy points
+cstack <- rast("IMOS/Currents/250728_cstack_12-24.tif") #currents stack
+rcs <- read_csv("Inputs/250728_step9_coordinates.csv") #xy points
 WGS84 <- crs("EPSG:4326")# Coordinate reference systems
 
-rcs1 <- rcs %>% # fixing duplicate station_name rows 
-  group_by(station_name) %>%
-  mutate(station_name = if (n_distinct(latitude, longitude) > 1) 
-    paste0(station_name, "_", row_number()) 
-    else 
-      station_name) %>%
-  ungroup()
+unique(rcs$station_name) # should be numb of observations in your df
 
-unique(rcs1$station_name) # should be 237 or numb of observations
-
-pts.WGS <- st_as_sf(rcs1, coords = c("longitude", "latitude")) #sf object
+pts.WGS <- st_as_sf(rcs, coords = c("longitude", "latitude")) #sf object
 st_crs(pts.WGS) <- crs(WGS84) #remember to assign crs
 pts.WGS
 
 # plotting ----------------------------------------------------------------
 
 plot(cstack[[3]], col = viridis(255))
-pplot(pts.WGS, add = T)
+plot(pts.WGS, add = T)
 
 # extract -----------------------------------------------------------------
 
-cur.pts <- extract(cstack, pts.WGS, ID = F) # ID = FALSE  
+cur.pts <- terra::extract(cstack, pts.WGS, ID = F) # ID = FALSE  
 
 # 7 day averages ----------------------------------------------------------
+
+cur.pts$station_name <- pts.WGS$station_name
 
 # reshape matrix into long format
 cur.pts1 <- cur.pts %>%
@@ -60,7 +48,6 @@ cur.pts2 <- cur.pts1 %>%
   mutate(value_7d = if (all(is.na(value)))
     NA_real_ else mean(value, na.rm = TRUE)) %>%
   ungroup()
-
 
 # NA check ----------------------------------------------------------------
 
@@ -83,7 +70,8 @@ cur.pts2 %>%
 
 # bi-linear interpolation -------------------------------------------------
 
-bl <- extract(cstack, pts.WGS, method = "bilinear", ID = FALSE)
+bl <- terra::extract(cstack, pts.WGS, method = "bilinear", ID = FALSE)
+
 bl$station_name <- pts.WGS$station_name
 
 bl1 <- bl %>%
@@ -106,7 +94,6 @@ cur.pts3 <- cur.pts2 %>%
             by = c("station_name", "date", "var")) %>%
   mutate(value_7d_filled = if_else(is.na(value_7d), bl_value_7d, value_7d))
 
-
 # how many NAs are still around
 cur.pts3 %>%
   group_by(station_name, var) %>%
@@ -116,9 +103,7 @@ cur.pts3 %>%
             prop_na = mean(is.na(value_7d_filled))) %>%
   arrange(desc(all_na), desc(prop_na)) %>% print(n = Inf)
 
-# 18 stations out of 711 are NA
-
-# that's 2.5% NAs
+# are ANY fully na ? 
 # nice
 
 # clean - up --------------------------------------------------------------
@@ -128,6 +113,9 @@ cur.pts4 <- cur.pts3 %>%
   distinct(station_name,var, date, value_7d_filled) %>% 
   pivot_wider(names_from = var, values_from = value_7d_filled)
 
+head(cur.pts4)
+tail(cur.pts4)
+
 # save --------------------------------------------------------------------
 
-write_csv(cur.pts4, file = "Inputs/250627_Currents_vals_12-22.csv")
+write_csv(cur.pts4, file = "Inputs/250728_Currents_vals_12-24.csv")

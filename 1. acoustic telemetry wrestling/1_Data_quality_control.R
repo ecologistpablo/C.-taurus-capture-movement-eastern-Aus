@@ -6,11 +6,11 @@
 # load library & data ----------------------------------------------------------
 
 rm(list=ls())
-pacman::p_load("tidyverse", "parallel", "remora", "lubridate")
+pacman::p_load("parallel", "remora", "lubridate", "tidyverse")
 
 #Quality control ---------------------------------------------------------------
 
-setwd("/Users/owuss/Documents/USC/Honours/R/data/IMOS/IMOS_detections_2024-11-16_09-24-44")
+setwd("/Users/owuss/Documents/USC/Honours/R/data/IMOS/IMOS_detections_2025-07-22_00-45-02")
 files <- list(det = "IMOS_detections.csv",meas = "IMOS_animal_measurements.csv")
 
 #Quality control of REMORA
@@ -35,10 +35,10 @@ qc_data1 <- qc_data %>%
 #convert to date
 qc_data1$detection_datetime <- as.POSIXct(qc_data1$detection_datetime)
 
-qc_data2 <- qc_data1 %>% #filter out 2023 and 2024
-  filter(!format(detection_datetime, "%Y") %in% c("2023", "2024"))
+# qc_data2 <- qc_data1 %>% #filter out 2023 and 2024
+#   filter(!format(detection_datetime, "%Y") %in% c("2023", "2024"))
 
-qc_data3 <- qc_data2 %>% 
+qc_data2 <- qc_data1 %>% 
   distinct(transmitter_id, animal_sex, detection_datetime, 
            receiver_deployment_longitude, receiver_deployment_latitude,
            station_name, receiver_name) %>% 
@@ -47,7 +47,7 @@ qc_data3 <- qc_data2 %>%
          latitude = receiver_deployment_latitude,
          longitude = receiver_deployment_longitude)
 
-colnames(qc_data3)
+colnames(qc_data2)
 
 # save it ----------------------------------------------------------------------
 
@@ -56,7 +56,7 @@ rm(tag_qc)
 rm(WA)
 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-write_csv(qc_data3, file = "Inputs/250708_qc_data.csv")
+write_csv(qc_data2, file = "Inputs/250722_qc_data.csv")
 #qc_data <- read_csv("Inputs/241116_qc_data.csv")
 
 # Dwyer dat ---------------------------------------------------------------

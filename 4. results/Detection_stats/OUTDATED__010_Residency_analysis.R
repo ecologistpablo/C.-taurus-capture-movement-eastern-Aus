@@ -32,7 +32,10 @@ dat2 <- dat1 %>%
 # aggregate across all years to get the average residency per location for each month and sex
 dat3 <- dat2 %>%
   group_by(location, sex, month) %>%
-  summarise(avg_residency = mean(days_present), .groups = 'drop')
+  summarise(avg_residency = mean(days_present),
+    sd_residency = sd(days_present),
+    se_residency = sd(days_present) / sqrt(n()),
+    .groups = 'drop')
 
 # ggplot
 a <- ggplot(dat3, aes(x = month, y = avg_residency, fill = sex)) +

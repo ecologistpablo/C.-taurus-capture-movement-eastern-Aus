@@ -1,6 +1,9 @@
 #23.06.23
   #connecting movement with detections
 
+# UPDATE
+# we removed VTrack and split rows in our own function at the same time
+
 rm(list=ls())
 
 pacman::p_load("tidyverse", "purrr")

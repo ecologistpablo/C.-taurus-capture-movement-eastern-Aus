@@ -7,14 +7,12 @@ rm(list=ls())
 
 # Packages ----------------------------------------------------------------
 
-library(lubridate)
 library(tidyverse)
-# extract, filter, lag, and select are conflicting in dplyr
 
 # pts ---------------------------------------------------------------------
 
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250627_Currents_vals_12-22.csv")
+dat <- read_csv("Inputs/250728_Currents_vals_12-24.csv")
 
 # wrestle monthly averages ------------------------------------------------
 
@@ -48,4 +46,4 @@ head(dat1)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat1, file = "Inputs/250701_CUR_m_avrg_12-22.csv")
+write_csv(dat1, file = "Inputs/250728_CUR_m_avrg_12-24.csv")

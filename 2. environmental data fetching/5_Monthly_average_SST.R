@@ -11,7 +11,7 @@ library(tidyverse)
 # pts ---------------------------------------------------------------------
 
 setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/250627_SST_vals_12-22.csv")
+dat <- read_csv("Inputs/250728_SST_vals_12-24.csv")
 
 # wrestle monthly averages ------------------------------------------------
 
@@ -23,7 +23,6 @@ monthly_avg <- dat %>%
 monthly_climatology <- monthly_avg %>%
   group_by(station_name, month) %>%
   summarise(climatology_SST = mean(mean_SST, na.rm = TRUE), .groups = "drop")
-
 
 # join --------------------------------------------------------------------
 
@@ -37,6 +36,8 @@ dat1 <- dat %>%
   mutate(sst_anomaly = SST - sst_month) %>% 
   select(-month)
 
+summary(dat1$sst_anomaly)
+
 # save --------------------------------------------------------------------
 
-write_csv(dat1, file = "Inputs/250627_SST_m_avrg_12-22.csv")
+write_csv(dat1, file = "Inputs/250728_SST_m_avrg_12-24.csv")

@@ -6,19 +6,18 @@
 # soz flat-earthers, ya wrong
 
 rm(list=ls())
-setwd("~/University/2023/Honours/R/data/git/NC-wrestling")
-    
+
 # Packages ----------------------------------------------------------------
 
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 # combine all stacks  -----------------------------------------------------
 
-setwd("~/University/2023/Honours/R/data/IMOS/SST")
+setwd("/Volumes/LaCie_PF/SST/")
 list.files()
 
 # Generate file names for the years
-file_names <- paste0("SST_stack_", 2012:2022, ".tif")
+file_names <- paste0("SST_stack_", 2012:2024, ".tif")
 
 # Coordinate reference systems
 WGS84 <- crs("EPSG:4326")
@@ -42,7 +41,7 @@ rstack <- do.call(c, rasters_list)
 # Check the CRS of the combined stack
 crs(rstack)
 
-plot(rstack[[19]], col = viridis(255))
+plot(rstack[[1]], col = viridis(255))
 head(names(rstack))
 tail(names(rstack))
 
@@ -75,4 +74,4 @@ print(paste("Number of layers after removing duplicates: ", length(names(rstack1
 # save --------------------------------------------------------------------
 
 # Save the combined stack
-writeRaster(rstack, filename = "GHRSSTp_12-22.tif", overwrite = T)
+writeRaster(rstack, filename = "GHRSST_12-24.tif", overwrite = T)
