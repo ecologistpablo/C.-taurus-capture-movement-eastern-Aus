@@ -21,7 +21,7 @@
 rm( list=ls()) 
 library(tidyverse) 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250725_step7.csv")
+dat <- read_rds("Inputs/250730_step7.rds")
 
 # Psuedo Presence x 2 ----------------------------------------------------------
 
@@ -88,12 +88,4 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F)
 
 #save it -----------------------------------------------------------------------
 
-write_csv(dat2, file = "Inputs/250725_step8.csv")
-
-# xy coordinates ----------------------------------------------------------
-
-xy <- dat2 %>% 
-  dplyr::distinct(latitude, longitude, location, station_name)
-
-write_csv(xy, file = "Inputs/250626_xy_coordinates.csv")
-
+write_rds(dat2, file = "Inputs/250730_step8.rds")

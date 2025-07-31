@@ -5,7 +5,7 @@
 library(tidyverse)
 rm(list=ls())
 setwd("/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250725_step5.csv") #movements
+dat <- read_rds("Inputs/250730_step5.rds")
 
 # distance metric --------------------------------------------------------------
 
@@ -16,7 +16,7 @@ calculate_distance <- function(df) {
     arrange(tag_id, movement_id) %>%
     group_by(tag_id, movement_id) %>%
     mutate(
-      # Calculate the distance between two rows with the same movement_id
+      # Calculate the haversine distance between two rows with the same movement_id
       distance = geosphere::distHaversine(
         c(longitude[1], latitude[1]),
         c(lead(longitude)[1], lead(latitude)[1])
@@ -35,7 +35,7 @@ dat1 <- calculate_distance(dat)
 
 # save it -----------------------------------------------------------------
 
-write_csv(dat1, file = "Inputs/250725_step6.csv")
+write_rds(dat1, file = "Inputs/250730_step6.rds")
 
 # plot it  ----------------------------------------------------------------
 

@@ -22,7 +22,7 @@
 library(tidyverse)
 rm(list=ls()) 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250725_step6.csv")
+dat <- read_rds("Inputs/250730_step6.rds")
 
 # pre-clean ---------------------------------------------------------------
 
@@ -151,7 +151,7 @@ dat5 <- dat5 %>%
 
 #filter foraging movements -----------------------------------------------------
 
-OG <- read_csv("Inputs/250705_step8.csv")
+OG <- read_rds("Inputs/250730_step8.rds")
 
 columns <- c("tag_id","arrival_date", "departure_date", "departure_location",
              "num_days", "arrival_location", 
@@ -171,4 +171,4 @@ OG1 <- anti_join(OG, dat5, by = columns)
 
 #save it ----------------------------------------------------------------------------
 
-write_csv(OG1, file = "Inputs/250725_step7.csv")
+write_rds(OG1, file = "Inputs/250730_step7.rds")

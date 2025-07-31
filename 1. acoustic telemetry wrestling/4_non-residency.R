@@ -14,13 +14,13 @@
 pacman::p_load("tidyverse", 'tictoc')
 rm(list=ls()) 
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read.csv("Inputs/250725_step3.csv")
+dat <- read_rds("Inputs/250730_step3.rds")
 
 dat1 <- dat %>% 
   mutate(datetime = with_tz(ymd_hms(datetime, tz = "UTC"), tzone = "Etc/GMT-10"),
          tag_id = as.character(tag_id)) %>% 
   select(-receiver_name) %>% 
-  filter(if_all(everything(), ~ !is.na(.))) # remove NAs
+  filter(if_all(everything(), ~ !is.na(.))) # remove NAs and their entire row
 anyNA(dat1) # needs to be false
 str(dat1)
 # tag id = character
@@ -84,8 +84,19 @@ dat2 <- bind_rows(departures, arrivals) %>% # departure and arrival dataframes s
   arrange(tag_id, movement_id, movement, datetime)
 
 str(dat2)
+table(dat2$location)
 # dat2 should be double the obs of movebase
 # since all we did was split rows of a movement into two: arrivals and depatures
 
+datxy <- dat2 %>%
+  group_by(location, latitude, longitude) %>%
+  summarise(num_det = n(), .groups = 'drop')
+
+IMOSxy_sf <- sf::st_as_sf(datxy, coords = c("longitude",
+                        "latitude"), crs = 4326, agr = "constant")
+
+mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = FALSE)
+
+
 # save our beautiful work
-write_csv(dat2, "Inputs/250725_step4.csv")
+write_rds(dat2, "Inputs/250730_step4.rds")

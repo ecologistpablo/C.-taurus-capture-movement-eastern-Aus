@@ -11,10 +11,12 @@ pacman::p_load("tidyverse", "viridis", "ggpubr", "plotly", "sf", "rnaturalearth"
 
 rm(list=ls())
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250701_det_enviro_complete.csv")
+catches  <- read_rds("Inputs/250730_SCP_complete.rds") #SCP data
+dat <- read_csv("inputs/250728_step9.csv") # detection data
 #aus_shp <- ne_countries(scale = "large", country = "Australia", returnclass = "sf")
-aus_shp <- st_read("Australia_shp/australialandmass.shp")
-topo <- terra::rast("Inputs/5_AusBathyTopo_250m_2024.nc")
+#aus_shp <- st_read("Australia_shp/australialandmass.shp")
+aus_shp <- st_read("Australia_shp/AUS_2021_AUST_GDA94.shp") # try both
+topo <- terra::rast("Inputs/5_AusBathyTopo_250m_2024.nc") # topography
 
 
 buffer_deg <- 0.3 # how far a box do you want around your data ? 
@@ -25,7 +27,9 @@ terra::plot(topo, main = "Topography / Bathymetry")
 topo[topo > 0] <- NA # remove terrestrial topography
 
 wolf     <- dat %>% filter(location == "Wolf Rock")
+sunshine <- dat %>% filter(location == "Sunshine Coast")
 flat     <- dat %>% filter(location == "Flat Rock")
+gold <- dat %>% filter(location == "Gold Coast")
 coffs    <- dat %>% filter(location == "Coffs Harbour")
 hawks    <- dat %>% filter(location == "Hawks Nest")
 sydney   <- dat %>% filter(location == "Sydney")
@@ -45,7 +49,7 @@ plot_location_map <- function(df, location_name, aus_shp, topo, buffer = 0.3,
   # Summarise detections
   datxy <- df %>%
     group_by(location, latitude, longitude, station_name) %>%
-    summarise(Detections = n(), .groups = 'drop')
+    summarise(detections = n(), .groups = 'drop')
   
   datxy_sf <- sf::st_as_sf(datxy, coords = c("longitude", "latitude"), #sf object
                            crs = 4326, agr = "constant")
@@ -69,7 +73,7 @@ plot_location_map <- function(df, location_name, aus_shp, topo, buffer = 0.3,
     geom_raster(data = topo_df, aes(x = x, y = y, fill = bathymetry)) +
     scale_fill_viridis_c(option = "B", na.value = NA, name = "Depth (m)") +
     geom_sf(data = aus_crop, fill = "grey", colour = "black") +
-    geom_sf(data = datxy_sf, aes(size = Detections), alpha = 0.5) +
+    geom_sf(data = datxy_sf, aes(size = detections), alpha = 0.5) +
     coord_sf(xlim = bbox$xlim, ylim = bbox$ylim, expand = FALSE) +
     labs(title = title) +
     theme_bw() +
@@ -82,6 +86,7 @@ plot_location_map <- function(df, location_name, aus_shp, topo, buffer = 0.3,
 # git plottin' ------------------------------------------------------------
 
 a <- plot_location_map(wolf, "A) Wolf Rock", aus_shp, topo = topo, buffer = buffer_deg)
+b <- plot_location_map(sunshine, "B) Sunshine Coast", aus_shp, topo = topo, buffer = buffer_deg)
 b <- plot_location_map(flat,    "B) Nt. Stradbroke Island", aus_shp, topo = topo, buffer = buffer_deg)
 c <- plot_location_map(coffs,   "C) Coffs Harbour", aus_shp, topo = topo, buffer = buffer_deg)
 d <- plot_location_map(hawks,   "D) Hawks Nest", aus_shp, topo = topo, buffer = buffer_deg)

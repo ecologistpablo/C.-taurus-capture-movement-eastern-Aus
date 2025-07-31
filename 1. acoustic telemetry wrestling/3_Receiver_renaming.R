@@ -30,6 +30,9 @@ IMOS$station_name <- ifelse(IMOS$station_name == "Coffs Harbour","CH",IMOS$stati
 IMOS$station_name <- ifelse(IMOS$station_name == "Ballina","Ballina1",IMOS$station_name) 
 IMOS$station_name <- ifelse(IMOS$station_name == "Forster", "Forster1", IMOS$station_name)
 IMOS$station_name <- ifelse(IMOS$station_name == "Newcastle", "Newcastle1", IMOS$station_name)
+IMOS$station_name <- ifelse(IMOS$station_name == "Yamba", "Yamba1", IMOS$station_name)
+IMOS$station_name <- ifelse(IMOS$station_name == "Merimbula", "Merimbula1", IMOS$station_name)
+IMOS$station_name <- ifelse(IMOS$station_name == "Evans Head", "Evans Head1", IMOS$station_name)
 
 # the function below doesn't deal well 
 # when you re-name a location to the same name as the station
@@ -92,7 +95,8 @@ IMOS <- add_location_group(IMOS, "Cherubs Cave", "Moreton Island")
 IMOS <- add_location_group(IMOS, "FAD 12", "Gold Coast")
 
 IMOS <- add_location_group(IMOS,"Lennox Point", "Ballina") 
-
+IMOS <- add_location_group(IMOS,"Evans Head1", "Evans Head") 
+IMOS <- add_location_group(IMOS,"Yamba1", "Yamba") 
 IMOS <- add_location_group(IMOS, "CHS 13", "Coffs Harbour")
 
 IMOS <- add_location_group(IMOS, "Cod Grounds", "Port Macquarie")
@@ -103,7 +107,12 @@ IMOS <- add_location_group(IMOS,"MB-5", "Hawks Nest")
 
 IMOS <- add_location_group(IMOS,"BiB 02.1", "Newcastle")
 
+IMOS <- add_location_group(IMOS,"Avoca", "Central Coast")
+
 IMOS <- add_location_group(IMOS,"BL 1", "Sydney") 
+
+IMOS <- add_location_group(IMOS, "Wollongong OAR", "Illawarra")
+IMOS <- add_location_group(IMOS,"Merimbula1", "Merimbula") 
 
 # filtering to degrees for other sites
 IMOS1 <- IMOS %>% #all other receivers shall be named after the degree they are in 
@@ -125,7 +134,7 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F) #colour
 
 # save it ----------------------------------------------------------------------
 
-write_csv(IMOS1, "Inputs/250725_step3.csv")
+write_rds(IMOS1, "Inputs/250730_step3.rds")
 
 table(IMOS1$location)
 

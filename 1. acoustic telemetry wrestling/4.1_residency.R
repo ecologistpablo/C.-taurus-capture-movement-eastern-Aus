@@ -14,7 +14,7 @@
 pacman::p_load("tidyverse", 'tictoc')
 rm(list=ls()) 
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read.csv("Inputs/250725_step3.csv")
+dat <- read_rds("Inputs/250730_step3.rds")
 
 dat1 <- dat %>% 
 mutate(datetime = with_tz(ymd_hms(datetime, tz = "UTC"), tzone = "Etc/GMT-10"),
@@ -33,7 +33,7 @@ str(dat1)
 # inputs ------------------------------------------------------------------
 
 min_detections <- 1 # minimum detections per day to enter residency
-min_res_period <- 1 # minimum duration threshold in days for 'residency' to occur
+min_res_period <- 2 # minimum duration threshold in days for 'residency' to occur
 max_gap_secs <- 1296000  # 1 day gap allowed between detections (in seconds: 86400 seconds in a day)
 
 # 60*60*24*15 15 days in seconds
@@ -66,5 +66,5 @@ toc() # 2.165 seconds to process 2.5 million rows
 residency
 
 # save your beautiful work
-write_csv(residency, "Inputs/250725_residency.csv")
+write_rds(residency, "Inputs/250730_residency.rds")
 
