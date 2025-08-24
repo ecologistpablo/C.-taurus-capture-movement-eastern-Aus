@@ -112,7 +112,7 @@ mnull <- gamm4(Presence ~ 1 + s(Tag_ID, bs = "re"),
                family = binomial)
 
 #is edf = 1 in all models?
-summary(m1$gam)
+summary(m15$gam)
 
 
 #all models linear, move to GLMMs
@@ -214,7 +214,7 @@ summary(m15)
 # Model contains splines or polynomial terms. Consider using terms="var_cont [all]" to get smooth plots.
 
 
-GSLA <- ggpredict(m15, c("anomaly_GSLA[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
+GSLA <- ggeffects::ggpredict(m15, c("anomaly_GSLA[all]")) %>% plot() #var_contin (what you want), #varbinom (2nd var)
 GSLA
 
 #clean up x - y labels and breaks

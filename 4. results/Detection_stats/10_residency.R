@@ -14,10 +14,11 @@
 pacman::p_load("tidyverse", "ggpubr")
 rm(list=ls()) 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250725_residency.csv") #residence events
+dat <- read_rds("Inputs/250730_residency.rds") #residence events
 
 location_levels <- c("Wide Bay", "Sunshine Coast", "North Stradbroke Island",
-                     "Gold Coast", "Ballina", "Coffs Harbour", "Hawks Nest", "Sydney")
+                     "Gold Coast", "Ballina", "Evans Head", "Coffs Harbour",
+                     "Pot Macquarie", "Hawks Nest", "Sydney", "Illawarra")
 
 dat1 <- dat %>%
   filter(location %in% location_levels) %>%
@@ -102,6 +103,6 @@ b <- ggplot(unique_tags_monthly, aes(x = month, y = unique_tags, fill = sex)) +
 z <- ggarrange(a,b, common.legend = T, legend = "right")
 z
 
-ggsave(path = "outputs/Graphs/Final/detections", "250725_residency.pdf",
+ggsave(path = "outputs/Graphs/Final/detections", "250807_residency.pdf",
        plot = z, width = 7, height = 9) #in inches because gg weird
 

@@ -7,6 +7,18 @@ pacman::p_load("tidyverse")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
 dat <- read_rds("Inputs/250730_step8.rds")
 
+dat <- dat %>% 
+  filter(presence == 1)
+
+datxy <- dat %>%
+  group_by(location, latitude, longitude) %>%
+  summarise(num_det = n(), .groups = 'drop')
+
+IMOSxy_sf <- sf::st_as_sf(datxy, coords = c("longitude",
+                        "latitude"), crs = 4326, agr = "constant")
+
+mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = FALSE)
+
 # gloves on? let's wrestle ------------------------------------------------
 
 dat1 <- dat %>%

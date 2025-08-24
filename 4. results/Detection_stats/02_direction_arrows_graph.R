@@ -1,17 +1,15 @@
 #2023_07_21
   #north - south analysis
 
-pacman::p_load("tidyverse", "viridis", "ggpubr", "plotly", "sf", "rnaturalearth", "ggspatial",
-               "terra")
+pacman::p_load("tidyverse", "ggpubr")
+rm(list=ls()) 
+setwd("/Users/owuss/Documents/USC/Honours/R/data")
+dat <- read_rds("Inputs/250730_step9.rds") %>%  #residence events
+  filter(presence == 1)
 
-# Data --------------------------------------------------------------------
-
-rm(list=ls())
-setwd("~/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250701_det_enviro_complete.csv")
-
-dat <- dat %>% 
-  filter(presence == 1) #only real data shown
+location_levels <- c("Wide Bay", "Sunshine Coast", "North Stradbroke Island",
+                     "Gold Coast", "Ballina", "Evans Head", "Coffs Harbour",
+                      "Pot Macquarie", "Hawks Nest", "Sydney", "Illawarra")
 
 #dat munging -------------------------------------------------------------------
 
@@ -27,8 +25,8 @@ sum <- dat %>%
 dat1 <- left_join(dat, sum, by = c("location"))
 
 dat2 <- dat1 %>% 
-  filter(location %in% c("Wolf Rock", "Flat Rock", "Coffs Harbour", "Hawks Nest", "Sydney")) %>% 
-  mutate(location = fct_relevel(location, "Wolf Rock", "Flat Rock", "Coffs Harbour", "Hawks Nest", "Sydney"))
+  filter(location %in% location_levels) %>%
+  mutate(location = factor(location, levels = location_levels))
 
 #a better histogram ------------------------------------------------------------
 
@@ -50,7 +48,7 @@ ggplot(dat3, aes(x = month, y = 0, colour = sex, yend = frequency)) +
 # Display the plot
 x
 
-ggsave(path = "Outputs/Graphs/Polishing/Det", "231220_dist_movement_boxplots.png",
-       plot = z1, width = 15, height = 7) #in inches because gg weird
+ggsave(path = "Outputs/Graphs/Final/detections", "250807_movement_arrows.pdf",
+       plot = x, width = 8, height = 14) #in inches because gg weird
 
 #  
