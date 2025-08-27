@@ -13,7 +13,7 @@ pacman::p_load("ncdf4", 'purrr', 'furrr','future', 'terra', 'sf', 'sp', 'viridis
 setwd("~/Documents/USC/Honours/R/data")
 
 cstack <- rast("IMOS/Currents/250728_cstack_12-24.tif") #currents stack
-rcs <- read_csv("Inputs/250728_step9_coordinates.csv") #xy points
+rcs <- read_rds("Inputs/250827_step9_coordinates.rds") #xy points
 WGS84 <- crs("EPSG:4326")# Coordinate reference systems
 
 unique(rcs$station_name) # should be numb of observations in your df
@@ -118,4 +118,4 @@ tail(cur.pts4)
 
 # save --------------------------------------------------------------------
 
-write_csv(cur.pts4, file = "Inputs/250728_Currents_vals_12-24.csv")
+write_rds(cur.pts4, file = "Inputs/250827_Currents_vals_12-24.rds")

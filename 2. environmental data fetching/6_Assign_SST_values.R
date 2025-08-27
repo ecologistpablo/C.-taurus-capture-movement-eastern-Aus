@@ -7,8 +7,8 @@ rm(list=ls())
 library(tidyverse)
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
 
-m_avg <- read_csv("Inputs/250728_SST_m_avrg_12-24.csv")  #Climatological averages for month
-det <- read_csv("Inputs/250728_step9.csv") #dataframe you use to model
+m_avg <- read_rds("Inputs/250827_SST_m_avrg_12-24.rds")  #Climatological averages for month
+det <- read_rds("Inputs/250827_step9.rds") #dataframe you use to model
 
 summary(det)
 summary(m_avg)
@@ -32,7 +32,7 @@ det1 <- det %>%
     by = c("station_name", "date")) %>% 
   rename(sst = SST)
 
-head(det1$sst)
+str(det1$sst)
 
 # where do the NAs go ? ---------------------------------------------------
 
@@ -53,4 +53,4 @@ NAsst <- det1 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(det1, file = "Inputs/250728_SST_det.csv")
+write_rds(det1, file = "Inputs/250827_SST_det.rds")

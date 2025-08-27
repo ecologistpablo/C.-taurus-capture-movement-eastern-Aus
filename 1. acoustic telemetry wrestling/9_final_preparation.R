@@ -5,19 +5,8 @@
 rm(list=ls()) 
 pacman::p_load("tidyverse")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/250730_step8.rds")
+dat <- read_rds("Inputs/250827_step8.rds")
 
-dat <- dat %>% 
-  filter(presence == 1)
-
-datxy <- dat %>%
-  group_by(location, latitude, longitude) %>%
-  summarise(num_det = n(), .groups = 'drop')
-
-IMOSxy_sf <- sf::st_as_sf(datxy, coords = c("longitude",
-                        "latitude"), crs = 4326, agr = "constant")
-
-mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = FALSE)
 
 # gloves on? let's wrestle ------------------------------------------------
 
@@ -59,15 +48,16 @@ IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("longitude", "latitude"),
 mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F)
 
 # nice, gaaaarrrrryyy
+table(dat2$location)
 
 #save it ----------------------------------------------------------------------------
 
-write_rds(dat2, file = "Inputs/250730_step9.rds")
+write_rds(dat2, file = "Inputs/250827_step9.rds")
 
 # xy coords ---------------------------------------------------------------
 
 xy <- dat2 %>% 
   distinct(latitude, longitude, station_name)
 
-write_rds(xy, file = "Inputs/250730_step9_coordinates.rds")
+write_rds(xy, file = "Inputs/250827_step9_coordinates.rds")
 

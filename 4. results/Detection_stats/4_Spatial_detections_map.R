@@ -2,35 +2,37 @@
 
 rm(list=ls())
 #bring and clean data environment
-setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/250212_det_enviro_complete.csv")
-IMOS <- read_csv("Inputs/241116_step2.csv")
+setwd("~/Documents/USC/Honours/R/data")
+pacman::p_load(tidyverse, ggspatial, tidyterra, terra, sf, sp)
+dat <- read_csv("Inputs/250728_det_enviro_complete.csv")
+Aus <- st_read("Australia_shp/AUS_2021_AUST_GDA94.shp") # try both
+IMOS <- read_csv("Inputs/250723_step2.csv") 
+
+IMOS <- IMOS %>% 
+  distinct(station_name, .keep_all = T)
 
 dat <- dat[dat$presence != 0, ]
 
-# Aus shpfle --------------------------------------------------------------
-
-Aus <- st_read("Australia_shp/Australia.shp") #Read in our data
-
-Au <- Aus %>% 
-  filter(ADMIN_NAME %in% c("Queensland", "New South Wales", "Victoria"))
-plot(Au)
-
+aus
 
 # latitudional bands ------------------------------------------------------
 
-key_locations <- dat %>%
-  filter(location %in% c("Wolf Rock", "Flat Rock", "Coffs Harbour", "Hawks Nest", "Sydney")) %>%
-  distinct(location, latitude, longitude)  # Ensure unique lat/lon pairs
+# 1) One row per station with its coords and location label
+stations <- IMOS %>%
+  distinct(station_name, latitude, longitude)
 
-key_locations
+# 2) Pick the "central" receiver in each location
+#    (closest to the location's median latitude — adjust if you prefer mean/other rule)
+central_recv <- stations %>%
+  group_by(station_name) %>%
+  slice_min(abs(latitude - median(latitude)), n = 1, with_ties = FALSE) %>%
+  ungroup()
 
-# Create a dataframe for rectangular bands, extending 5 km north and south
-bands <- key_locations %>%
-  mutate(ymin = latitude - 0.045,  # 5km south
-         ymax = latitude + 0.045,  # 5km north
-         xmin = 149,  # Use the map's x-axis limits
-         xmax = 155)  # Adjust if necessary
+# 3) Build one north–south band per location using only those central receivers
+bands <- central_recv %>%
+  mutate(ymin = latitude - 0.2478,
+    ymax = latitude + 0.2478,
+    xmin = 149, xmax = 155)
 
 # munging -----------------------------------------------------------------
 
@@ -40,34 +42,30 @@ dat1 <- dat %>%
   ungroup()
   
 dat1 <- dat1 %>% 
-  mutate(Location = ifelse(str_starts(Location, "deg_"), "other", Location))
+  mutate(location = ifelse(str_starts(location, "deg_"), "other", location))
 
 dat2 <- dat1 %>% 
-  mutate(location = fct_relevel(location,"Wolf Rock", "Flat Rock", "Coffs Harbour", 
-                            "Hawks Nest", "Sydney")) %>% 
-  filter(location  %in% c("Wolf Rock", "Flat Rock", "Coffs Harbour", 
-                         "Hawks Nest", "Sydney"))
+  mutate(location = fct_relevel(location,"Wide Bay", "Sunshine Coast", "North Stradbroke Island",
+                                "Gold Coast", "Ballina",
+                                "Coffs Harbour", "Hawks Nest", "Sydney", "Illawarra"))
 
 # shp map -----------------------------------------------------------------
 
-
-colour_palette <- c("blue3", "red3", "gold2", "plum", "green3" )
-
-m <-
-ggplot() +
+m <- 
+  ggplot() +
   geom_rect(data = bands, aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), 
-            fill = "grey0", alpha = 0.3) + 
-  geom_sf(data = Au) +  # Shapefile layer
-  geom_point(data = IMOS, aes(x = receiver_deployment_longitude, y = receiver_deployment_latitude), colour = "black", size = 1) +  # Points layer from dato in grey
+            fill = "grey90", alpha = 0.3) + 
+  geom_sf(data = Aus) +  # Shapefile layer
+  geom_point(data = IMOS, aes(x = longitude, y = latitude), colour = "black", size = 0.5) +  # Points layer from dato in grey
   geom_point(data = dat2, aes(x = longitude, y = latitude, colour = location, size = num_det)) +  # Points layer
-  labs(x = "Longitude", y = "Latitude") +
+  scale_size_continuous(range = c(1, 4)) +
   theme_minimal() +
-  scale_colour_manual(values = colour_palette) +   
   coord_sf(xlim = c(149, 154), ylim = c(-37, -23.5)) +  # Zoom into specific lat-lon box
   annotation_scale(location = "bl") +
-  annotation_north_arrow(style = north_arrow_nautical, location = "tl")
+  annotation_north_arrow(style = north_arrow_nautical, location = "tl") + 
+  scale_colour_scico_d(palette = "imola", direction = -1)
 
 plot(m)
 
-ggsave(path = "Outputs/Graphs/Final/detection", "250226_det_spatial_map.pdf",
+ggsave(path = "Outputs/Graphs/Final/detections", "250827_det_spatial_map.pdf",
        plot = m, width = 6, height = 8) #in inches because gg weird

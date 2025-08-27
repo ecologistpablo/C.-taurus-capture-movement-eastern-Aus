@@ -14,15 +14,17 @@
 pacman::p_load("tidyverse", 'tictoc')
 rm(list=ls()) 
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/250730_step3.rds")
+dat <- read_rds("Inputs/250827_step3.rds")
 
 dat1 <- dat %>% 
 mutate(datetime = with_tz(ymd_hms(datetime, tz = "UTC"), tzone = "Etc/GMT-10"),
        tag_id = as.character(tag_id)) %>% 
   select(-receiver_name) %>% 
   filter(if_all(everything(), ~ !is.na(.))) # remove NAs
-anyNA(dat1)
-str(dat1)
+
+anyNA(dat1) # you can't have NAs in a dataset
+str(dat1) # structure of columns should be the same as below:
+
 # tag id = character
 # datetime = POSIXct
 # location = character
@@ -32,11 +34,11 @@ str(dat1)
 
 # inputs ------------------------------------------------------------------
 
-min_detections <- 1 # minimum detections per day to enter residency
+min_detections <- 2 # minimum detections per day to enter residency
 min_res_period <- 2 # minimum duration threshold in days for 'residency' to occur
-max_gap_secs <- 1296000  # 1 day gap allowed between detections (in seconds: 86400 seconds in a day)
+max_gap_secs <- 86400  # 1 day gap allowed between detections (in seconds: 86400 seconds in a day)
 
-# 60*60*24*15 15 days in seconds
+60*60*24*1 #15 days in seconds
 
 # residency ---------------------------------------------------------------
 
@@ -65,6 +67,7 @@ toc() # 2.165 seconds to process 2.5 million rows
 
 residency
 table(residency$location)
+
 # save your beautiful work
-write_rds(residency, "Inputs/250730_residency.rds")
+write_rds(residency, "Inputs/250827_residency.rds")
 

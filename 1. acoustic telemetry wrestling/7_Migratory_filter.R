@@ -22,7 +22,7 @@
 library(tidyverse)
 rm(list=ls()) 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/250730_step6.rds")
+dat <- read_rds("Inputs/250827_step6.rds")
 
 # pre-clean ---------------------------------------------------------------
 

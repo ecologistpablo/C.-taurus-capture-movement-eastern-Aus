@@ -105,7 +105,7 @@ IMOS <- add_location_group(IMOS, "Forster1", "Forster")
 
 IMOS <- add_location_group(IMOS,"MB-5", "Hawks Nest")
 
-IMOS <- add_location_group(IMOS,"BiB 02.1", "Newcastle")
+IMOS <- add_location_group(IMOS,"BiB 02.1", "Hawks Nest")
 
 IMOS <- add_location_group(IMOS,"Avoca", "Central Coast")
 
@@ -134,7 +134,7 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F) #colour
 
 # save it ----------------------------------------------------------------------
 
-write_rds(IMOS1, "Inputs/250730_step3.rds")
+write_rds(IMOS1, "Inputs/250827_step3.rds")
 
 table(IMOS1$location)
 

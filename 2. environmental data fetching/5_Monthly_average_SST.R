@@ -7,11 +7,8 @@ rm(list=ls())
 # Packages ----------------------------------------------------------------
 
 library(tidyverse)
-
-# pts ---------------------------------------------------------------------
-
-setwd("~/University/2023/Honours/R/data")
-dat <- read_csv("Inputs/250728_SST_vals_12-24.csv")
+setwd("~/Documents/USC/Honours/R/data")
+dat <- read_rds("Inputs/250827_SST_vals_12-24.rds")
 
 # wrestle monthly averages ------------------------------------------------
 
@@ -40,4 +37,4 @@ summary(dat1$sst_anomaly)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat1, file = "Inputs/250728_SST_m_avrg_12-24.csv")
+write_rds(dat1, file = "Inputs/250827_SST_m_avrg_12-24.rds")

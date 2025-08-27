@@ -3,15 +3,12 @@
     #lets clean our df up and add a few more environmental variables
   
 rm(list=ls())
-
-# Packages ----------------------------------------------------------------
-
 library(tidyverse)
 library(lunar)
 
 # pts ---------------------------------------------------------------------
 
-dat <- read_csv("Inputs/250728_cur_det.csv")
+dat <- read_rds("Inputs/250827_cur_det.rds")
 
 # REMORA ------------------------------------------------------------------
 
@@ -64,7 +61,7 @@ str(dat1)
 # final clean -------------------------------------------------------------
 
 dat2 <- dat1 %>% 
-  select(-vcur, -vcur_anomaly, -movement_id) %>% 
+  select(-movement_id) %>% 
   mutate(tag_id = as.character(tag_id))
 
 colnames(dat2)
@@ -83,5 +80,5 @@ mapview::mapview(datxy_sf, cex = "num_det", zcol = "location", fbg = FALSE)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat2, "Inputs/250728_det_enviro_complete.csv")
+write_csv(dat2, "Inputs/250827_det_enviro_complete.csv")
 

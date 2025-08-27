@@ -20,7 +20,7 @@ pacman::p_load("terra", "sf", "sp", "viridis", "tidyverse")
 # pts ---------------------------------------------------------------------
 
 setwd("~/Documents/USC/Honours/R/data")
-rcs <- read_csv("Inputs/250728_step9_coordinates.csv") #this should be a csv with your XY coordinates for your receivers
+rcs <- read_rds("Inputs/250827_step9_coordinates.rds") #this should be a csv with your XY coordinates for your receivers
 WGS84 <- terra::crs("EPSG:4326")# Coordinate reference systems
 head(rcs) #its all there
 unique(rcs$station_name) # should be the same size as your df
@@ -101,7 +101,7 @@ sst.pts10km2 %>%
     prop_na = mean(is.na(value_7d))) %>%
    arrange(desc(all_na), desc(prop_na)) %>% print(n = 258)
 
-# 15 / 253, great : ) 
+# 28 / 300, great : ) 
 
 # bi-linear interpolation -------------------------------------------------
 
@@ -141,7 +141,9 @@ sst.pts10km3 %>%
             prop_na = mean(is.na(value_7d_filled))) %>%
   arrange(desc(all_na), desc(prop_na)) %>% print(n = 237)
 
-# 0 stations, out of 258 stations, are completely NA
+# 2 stations, out of 300 stations, are completely NA
+
+# it's just Merimbula 
 
 # clean - up --------------------------------------------------------------
 
@@ -159,5 +161,5 @@ sst.pts10km4 <- sst.pts10km3 %>%
 
 # save --------------------------------------------------------------------
 
-write_csv(sst.pts10km4, file = "Inputs/250728_SST_vals_12-24.csv")
+write_rds(sst.pts10km4, file = "Inputs/250827_SST_vals_12-24.rds")
 

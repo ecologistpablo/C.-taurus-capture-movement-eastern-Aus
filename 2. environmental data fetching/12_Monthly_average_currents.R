@@ -8,11 +8,8 @@ rm(list=ls())
 # Packages ----------------------------------------------------------------
 
 library(tidyverse)
-
-# pts ---------------------------------------------------------------------
-
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250728_Currents_vals_12-24.csv")
+dat <- read_rds("Inputs/250827_Currents_vals_12-24.rds")
 
 # wrestle monthly averages ------------------------------------------------
 
@@ -46,4 +43,4 @@ head(dat1)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat1, file = "Inputs/250728_CUR_m_avrg_12-24.csv")
+write_rds(dat1, file = "Inputs/250827_CUR_m_avrg_12-24.rds")

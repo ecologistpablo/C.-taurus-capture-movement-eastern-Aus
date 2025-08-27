@@ -8,7 +8,7 @@
 library(tidyverse)
 rm(list=ls()) 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/250730_step4.rds")
+dat <- read_rds("Inputs/250827_step4.rds")
 
 # metrics -----------------------------------------------------------------
 
@@ -16,7 +16,7 @@ dat_wide <- dat %>%
   select(tag_id, movement_id, datetime, movement) %>%
   pivot_wider(names_from = movement, values_from = datetime) %>% # pivot wider reshapes data: for each tag_id and movement_id, get the "departure" datetime and the "arrival" datetime in the same row
   # This gives columns: tag_id, movement_id, arrival, departure
-  mutate(num_days = as.numeric(difftime(arrival, departure, units = "days")))
+  mutate(num_days = round(as.numeric(difftime(arrival, departure, units = "days")), 2))
 
 dat1 <- dat %>% # Now, join num_days back to the original dat
   left_join(dat_wide %>% select(tag_id, movement_id, num_days),
@@ -62,5 +62,5 @@ anyNA(dat2$direction) # this should be false
 
 #save it -----------------------------------------------------------------------
 
-write_rds(dat2, file = "Inputs/250730_step5.rds") 
+write_rds(dat2, file = "Inputs/250827_step5.rds") 
 

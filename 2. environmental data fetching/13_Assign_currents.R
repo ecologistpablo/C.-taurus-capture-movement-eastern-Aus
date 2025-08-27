@@ -8,16 +8,14 @@ library(tidyverse)
 
 # pts ---------------------------------------------------------------------
 
-setwd("~/University/2023/Honours/R/data")
+setwd("/Users/owuss/Documents/USC/Honours/R/data")
 rm(list=ls())
-m_avg <- read_csv("Inputs/250728_CUR_m_avrg_12-24.csv") #climatological averages
-det <- read_csv("Inputs/250728_SST_det.csv") #xy coords w SST data on it
+m_avg <- read_rds("Inputs/250827_CUR_m_avrg_12-24.rds") #climatological averages
+det <- read_rds("Inputs/250827_SST_det.rds") #xy coords w SST data on it
 
 m_avg <- janitor::clean_names(m_avg)
-
 colnames(m_avg)
 colnames(det)
-
 
 # calculate anomalies and add enviro data to det --------------------------
 
@@ -32,5 +30,5 @@ colnames(det1)
 
 # save --------------------------------------------------------------------
 
-write_csv(det1, file = "Inputs/250728_cur_det.csv")
+write_rds(det1, file = "Inputs/250827_cur_det.rds")
 

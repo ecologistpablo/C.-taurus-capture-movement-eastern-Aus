@@ -19,9 +19,9 @@
 # packages ----------------------------------------------------------------
 
 rm( list=ls()) 
-library(tidyverse) 
+pacman::p_load(tidyverse, furrr, purrr, future)
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/250730_step7.rds")
+dat <- read_rds("Inputs/250827_step6.rds")
 
 # Psuedo Presence x 2 ----------------------------------------------------------
 
@@ -88,4 +88,4 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F)
 
 #save it -----------------------------------------------------------------------
 
-write_rds(dat2, file = "Inputs/250730_step8.rds")
+write_rds(dat2, file = "Inputs/250827_step8.rds")
