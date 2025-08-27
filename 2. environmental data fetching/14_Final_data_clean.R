@@ -62,7 +62,12 @@ str(dat1)
 
 dat2 <- dat1 %>% 
   select(-movement_id) %>% 
-  mutate(tag_id = as.character(tag_id))
+  mutate(tag_id = as.character(tag_id)) %>% 
+  mutate(location = factor(location, levels = c("Wide Bay", "Sunshine Coast", "Moreton Island",
+                                                "North Stradbroke Island", "Gold Coast", 
+                                                "Ballina", "Evans Head", "Yamba",  "Coffs Harbour",
+                                                "Port Macquarie", "Forster", "Hawks Nest", "Central Coast",
+                                                "Sydney", "Illawarra", "Merimbula"))) 
 
 colnames(dat2)
 str(dat2)
@@ -80,5 +85,5 @@ mapview::mapview(datxy_sf, cex = "num_det", zcol = "location", fbg = FALSE)
 
 # save --------------------------------------------------------------------
 
-write_csv(dat2, "Inputs/250827_det_enviro_complete.csv")
+write_rds(dat2, "Inputs/250827_det_enviro_complete.rds")
 

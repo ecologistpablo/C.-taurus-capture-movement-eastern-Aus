@@ -77,14 +77,14 @@ mutate(month = lubridate::month(datetime)) %>%
 # plot it -----------------------------------------------------------------
 
 # Calculate the number of detections at each station
-IMOSxy <- dat2 %>%
+datxy <- dat2 %>%
   group_by(location, latitude, longitude) %>%
   summarise(num_det = n(), .groups = 'drop')
 
-IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("longitude", "latitude"),
+datxy_sf <- sf::st_as_sf(datxy, coords = c("longitude", "latitude"),
                           crs= 4326, agr = "constant")
 
-mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F)
+mapview::mapview(datxy_sf, cex = "num_det", zcol = "location", fbg = F)
 
 #save it -----------------------------------------------------------------------
 

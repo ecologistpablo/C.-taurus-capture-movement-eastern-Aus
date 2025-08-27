@@ -4,7 +4,7 @@ rm(list=ls())
 #bring and clean data environment
 setwd("~/Documents/USC/Honours/R/data")
 pacman::p_load(tidyverse, ggspatial, tidyterra, terra, sf, sp)
-dat <- read_csv("Inputs/250728_det_enviro_complete.csv")
+dat <- read_rds("Inputs/250827_det_enviro_complete.rds")
 Aus <- st_read("Australia_shp/AUS_2021_AUST_GDA94.shp") # try both
 IMOS <- read_csv("Inputs/250723_step2.csv") 
 
@@ -38,7 +38,7 @@ bands <- central_recv %>%
 
 dat1 <- dat %>% 
   group_by(location, longitude, latitude) %>% 
-  summarise(num_det = n(), .groups = 'drop') %>% 
+  summarise(num_det = n()) %>% 
   ungroup()
   
 dat1 <- dat1 %>% 
@@ -57,7 +57,7 @@ m <-
             fill = "grey90", alpha = 0.3) + 
   geom_sf(data = Aus) +  # Shapefile layer
   geom_point(data = IMOS, aes(x = longitude, y = latitude), colour = "black", size = 0.5) +  # Points layer from dato in grey
-  geom_point(data = dat2, aes(x = longitude, y = latitude, colour = location, size = num_det)) +  # Points layer
+  geom_point(data = dat1, aes(x = longitude, y = latitude, colour = location, size = num_det)) +  # Points layer
   scale_size_continuous(range = c(1, 4)) +
   theme_minimal() +
   coord_sf(xlim = c(149, 154), ylim = c(-37, -23.5)) +  # Zoom into specific lat-lon box

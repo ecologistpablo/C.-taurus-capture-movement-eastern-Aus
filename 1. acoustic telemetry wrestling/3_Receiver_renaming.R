@@ -22,6 +22,14 @@ summary(IMOS$datetime)
 # lets group our aggregations, curtains and bays into one location
 # this will allow us to detect movement between locations that hold large amounts of data
 
+# china repairing ---------------------------------------------------------
+
+IMOS <- IMOS %>%
+  mutate(latitude = replace(latitude, 
+                            station_name == 'China Wall', -27.10886),
+         longitude = replace(longitude, 
+                             station_name == 'China Wall', 153.50100))
+
 # begin with an interactive plot, where are our data? ---------------------
 
 IMOS$station_name <- ifelse(IMOS$station_name == "Flat Rock","FR",IMOS$station_name)
