@@ -99,4 +99,4 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = FALSE)
 
 
 # save our beautiful work
-write_rds(dat2, "Inputs/250827_step4.rds")
+c
