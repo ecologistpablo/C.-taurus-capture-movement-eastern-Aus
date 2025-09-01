@@ -7,7 +7,7 @@ pacman::p_load("tidyverse")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
 dat <- read_rds("Inputs/250827_step8.rds")
 
-
+dat %>% distinct(tag_id, sex) %>% count(sex)
 # gloves on? let's wrestle ------------------------------------------------
 
 dat1 <- dat %>%

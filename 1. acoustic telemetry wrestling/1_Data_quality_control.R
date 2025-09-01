@@ -6,22 +6,23 @@
 # load library & data ----------------------------------------------------------
 
 rm(list=ls())
-pacman::p_load("parallel", "remora", "lubridate", "tidyverse")
+pacman::p_load("parallel", "remora", "lubridate", "tidyverse", "rsp")
 
 #Quality control ---------------------------------------------------------------
 
-setwd("/Users/owuss/Documents/USC/Honours/R/data/IMOS/IMOS_detections_2025-07-22_00-45-02")
+setwd("/Users/owuss/Documents/USC/Honours/R/data/IMOS/IMOS_detections_2025-09-01_13-19-40")
+list.files()
 files <- list(det = "IMOS_detections.csv",meas = "IMOS_animal_measurements.csv")
 
 #Quality control of REMORA
 tag_qc <- remora::runQC(files, 
-                .parallel = detectCores() - 2,  #leave me 2 cores
+                .parallel = detectCores() - 1,  #leave me 2 cores
                 .progress = TRUE)  #show me progress
 
 #unnest
-qc_data <- tag_qc %>%
-  unnest(cols = QC) %>%
-  ungroup()
+
+qc_data <- grabQC(tag_qc, what = "dQC",
+                  flag = c("valid", "likely valid")) # only grab likely detections
 
 # remove Western Australia detections, as we focus on eastern Aus
 WA <- c("SL9", "SL18", "SL19", "SL2", "SL22", "PRT24", "PRT27", "PRT28",
@@ -39,11 +40,10 @@ qc_data1$detection_datetime <- as.POSIXct(qc_data1$detection_datetime)
 #   filter(!format(detection_datetime, "%Y") %in% c("2023", "2024"))
 
 qc_data2 <- qc_data1 %>% 
-  distinct(transmitter_id, animal_sex, detection_datetime, 
+  distinct(transmitter_id, detection_datetime, 
            receiver_deployment_longitude, receiver_deployment_latitude,
            station_name, receiver_name) %>% 
-  rename(sex = animal_sex,
-         datetime = detection_datetime,
+  rename(datetime = detection_datetime,
          latitude = receiver_deployment_latitude,
          longitude = receiver_deployment_longitude)
 
@@ -56,8 +56,7 @@ rm(tag_qc)
 rm(WA)
 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-write_csv(qc_data2, file = "Inputs/250722_qc_data.csv")
-#qc_data <- read_csv("Inputs/241116_qc_data.csv")
+write_rds(qc_data2, file = "Inputs/250901_qc_data.rds")
 
 # Dwyer dat ---------------------------------------------------------------
 
@@ -158,17 +157,55 @@ str(zdat2)
 # save it ----------------------------------------------------------------------
 
 write_csv(zdat2, file = "Inputs/250708_step1.csv")
+# 01 September, adding in SEACAMs data from last few years:
+IMOS <- read_csv("Inputs/250708_step1.csv")
 
-# 1,702,983 unique rows per second, tag id and receiver
+list.files("IMOS")
 
-# plot it -----------------------------------------------------------------
 
-# just to check there are no outliers
-datxy <- zdat2 %>%
-  group_by(station_name, latitude, longitude) %>%
-  summarise(num_det = n(), .groups = 'drop')
+# Y Niella dat ------------------------------------------------------------
 
-IMOSxy_sf <- sf::st_as_sf(datxy, coords = c("longitude",
-                        "latitude"), crs = 4326, agr = "constant")
+dat <- read_csv("IMOS/250901_YNiella_SEACAMS_dat.csv")
 
-mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "station_name", fbg = FALSE)
+dat$tag_id <- str_extract(dat$transmitter_id, "\\d{4,5}$") #shorten tag ID strings
+
+
+dat1 <- dat %>% 
+  rename(datetime = detection_datetime,
+         latitude = receiver_deployment_latitude,
+         longitude = receiver_deployment_longitude,
+         sex = animal_sex) %>% 
+  select(sex, datetime, longitude, latitude, station_name, receiver_name, tag_id) %>% 
+  mutate(tag_id = as.double(tag_id))
+
+
+IMOS1 <- bind_rows(IMOS, dat1)
+
+IMOS2 <- IMOS1 %>% 
+  distinct(datetime, tag_id, longitude, latitude, station_name, receiver_name, sex) # no double-ups
+
+
+write_rds(IMOS2, file = "Inputs/250901_step1.rds")
+
+# removing duplicates -----------------------------------------------------
+
+qc_data <- read_rds("Inputs/250901_qc_data.rds") # combo dat of old qc, ddat, pb dat, and YN dat
+IMOS <- read_rds("Inputs/250901_step1.1.rds") # qc dat from 51 09 01 
+
+qc_data$tag_id <- str_extract(qc_data$transmitter_id, "\\d{4,5}$") #shorten tag ID strings
+
+qc_data$tag_id <- as.double(qc_data$tag_id)
+
+qc_data1 <- bind_rows(IMOS,qc_data)
+
+# two decimal places
+qc_data2 <- qc_data1 %>% 
+mutate(latitude  = round(latitude, 2),
+       longitude = round(longitude, 2))
+
+qc_data3 <- qc_data2 %>% 
+  distinct(tag_id, datetime, latitude, longitude, receiver_name, station_name)
+
+
+write_rds(qc_data3, file = "Inputs/250901_step1.2.rds")
+

@@ -8,7 +8,7 @@
 rm(list=ls())
 pacman::p_load("tidyverse")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-IMOS <- read_csv("Inputs/250708_step1.csv")
+IMOS <- read_rds("Inputs/250901_step1.2.rds")
 dat <- read_csv("Inputs/250722_qc_data.csv")
 
 dat$tag_id <- str_extract(dat$transmitter_id, "\\d{4,5}$") #shorten tag ID strings
@@ -73,7 +73,12 @@ IMOS2 %>%
   distinct(tag_id, .keep_all = T) %>% 
   count(sex) # 28 females, 25 males
 
-# save --------------------------------------------------------------------
-write_csv(IMOS2, "Inputs/250723_step2.csv")
 
-# 1,696,261
+IMOS3 <- IMOS2 %>% 
+  filter(!format(datetime, "%Y") %in% c("2025")) %>% 
+  distinct(datetime, tag_id, longitude, latitude, station_name, receiver_name, sex)
+
+# save --------------------------------------------------------------------
+
+write_rds(IMOS3, "Inputs/250901_step2.rds")
+
