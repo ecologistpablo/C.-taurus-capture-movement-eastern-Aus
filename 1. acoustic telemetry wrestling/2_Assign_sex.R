@@ -78,7 +78,16 @@ IMOS3 <- IMOS2 %>%
   filter(!format(datetime, "%Y") %in% c("2025")) %>% 
   distinct(datetime, tag_id, longitude, latitude, station_name, receiver_name, sex)
 
+datxy <- IMOS3 %>%
+  group_by(station_name, latitude, longitude) %>%
+  summarise(num_det = n(), .groups = 'drop')
+
+IMOSxy_sf <- sf::st_as_sf(datxy, coords = c("longitude",
+                        "latitude"), crs = 4326, agr = "constant")
+
+mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "station_name", fbg = FALSE)
+
 # save --------------------------------------------------------------------
 
-write_rds(IMOS3, "Inputs/250901_step2.rds")
+write_rds(IMOS3, "Inputs/250902_step2.rds")
 

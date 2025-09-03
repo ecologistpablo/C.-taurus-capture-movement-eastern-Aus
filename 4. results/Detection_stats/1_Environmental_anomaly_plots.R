@@ -8,14 +8,22 @@ setwd("~/Documents/USC/Honours/R/data")
 dat <- read_csv("Inputs/250827_det_enviro_complete.csv")
 
 # munging -----------------------------------------------------------------
+location_levels <- c("Wide Bay", "Sunshine Coast", "North Stradbroke Island",
+                     "Gold Coast", "Ballina", "Evans Head", "Coffs Harbour",
+                     "Port Macquarie", "Hawks Nest", "Sydney", "Illawarra")
+
+library(forcats)
 
 dat1 <- dat %>%
   filter(presence == "1",
-  location %in% c("Wolf Rock", "Flat Rock",
-                         "Coffs Harbour", "Hawks Nest", "Sydney")) %>%
-  mutate(location = factor(location, levels = c("Wolf Rock",
-                        "Flat Rock", "Coffs Harbour",
-                        "Hawks Nest", "Sydney"))) %>% 
+         location %in% location_levels) %>%
+  mutate(location = factor(location, levels = location_levels),
+         sex = fct_recode(sex,
+                     "Female" = "F",
+                     "Male"   = "M") )
+
+  
+str(dat1)
   select(-station_name)
 
 
@@ -30,20 +38,20 @@ sst <-
   geom_boxplot(width = 0.15, position = position_dodge(0.7), color = "black",
                alpha = 1.0, size = 0.7) +
   scale_fill_viridis_d(direction = -1) +
-  xlab("Location") +
-  ylab("Sea Surface Temperature (°C)") +
+  theme_bw()+ 
+    labs(x = NULL, y = "Sea Surface Temperature (C°)")+
   theme(legend.position = "right",
         axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
         axis.text.y = element_text(size = 10),
         axis.title = element_text(size = 10),
         strip.text = element_text(size = 12) ) +
-  facet_wrap(~sex)
+  facet_wrap(~sex, ncol = 1)
 
 sst
 
 #save
-ggsave(path = "Outputs/Graphs/final/SST", "250701_raw_sst.pdf",
-       plot = sst, width = 10, height = 7) #in inches because gg weird
+ggsave(path = "Outputs/Graphs/final/SST", "250903_raw_sst.pdf",
+       plot = sst, width = 12, height = 10) #in inches because gg weird
 
 # Plot
 sstanom <- 

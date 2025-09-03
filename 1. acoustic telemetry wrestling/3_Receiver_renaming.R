@@ -8,7 +8,7 @@ rm(list=ls()) # to clear workspace
 
 pacman::p_load("tidyverse")
 setwd("~/Documents/USC/Honours/R/data")
-IMOS <- read_rds("Inputs/250901_step2.rds") 
+IMOS <- read_rds("Inputs/250902_step2.rds") 
 
 summary(IMOS$datetime)
 
@@ -21,7 +21,7 @@ summary(IMOS$datetime)
 
 # china repairing ---------------------------------------------------------
 
-IMOS1 <- IMOS %>%
+IMOS <- IMOS %>%
   mutate(latitude = replace(latitude, 
                             station_name == 'China Wall', -27.0871),
          longitude = replace(longitude, 
@@ -134,6 +134,8 @@ IMOSxy <- IMOS1 %>%
   group_by(location, latitude, longitude) %>% #location
   summarise(num_det = n(), .groups = 'drop')
 
+
+
 IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("longitude", "latitude"),
                           crs= 4326, agr = "constant")
 
@@ -141,7 +143,7 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F) #colour
 
 # save it ----------------------------------------------------------------------
 
-write_rds(IMOS1, "Inputs/250901_step3.rds")
+write_rds(IMOS1, "Inputs/250902_step3.rds")
 
 table(IMOS1$location)
 unique(IMOS1$station_name)

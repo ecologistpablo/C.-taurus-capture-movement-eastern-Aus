@@ -14,7 +14,14 @@
 pacman::p_load("tidyverse", 'tictoc')
 rm(list=ls()) 
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/250827_step3.rds")
+dat <- read_rds("Inputs/250902_step3.rds")
+unique(dat$location)
+
+CH <- dat %>% 
+  filter(location == "Coffs Harbour") %>% 
+  mutate(date = date(datetime),
+         month = month(date)) %>% 
+  filter(month %in% c(3, 4, 5))
 
 dat1 <- dat %>% 
 mutate(datetime = with_tz(ymd_hms(datetime, tz = "UTC"), tzone = "Etc/GMT-10"),
@@ -32,15 +39,14 @@ str(dat1) # structure of columns should be the same as below:
 # lat / lon = numeric
 # sex = chr
 
-# inputs ------------------------------------------------------------------
+# outdated ----------------------------------------------------------------
 
+
+#oudated 
 min_detections <- 2 # minimum detections per day to enter residency
 min_res_period <- 2 # minimum duration threshold in days for 'residency' to occur
-max_gap_secs <- 86400  # 1 day gap allowed between detections (in seconds: 86400 seconds in a day)
-
+max_gap_secs <- 86400  
 60*60*24*1 #15 days in seconds
-
-# residency ---------------------------------------------------------------
 
 tic() # tic toc times functions 
 
@@ -68,6 +74,43 @@ toc() # 2.165 seconds to process 2.5 million rows
 residency
 table(residency$location)
 
+# updated -----------------------------------------------------------------
+
+min_detections_per_day <- 1   # minimum detections required on each day
+min_res_days           <- 2   # minimum length of residency in days (calendar, inclusive)
+max_gap_secs           <- 60*60*24*2  # 10 days in seconds  (update comment if you want 15)
+
+# residency ------------------------------------------------------------
+tic()
+residency <- dat1 %>%
+  arrange(tag_id, location, datetime) %>% 
+  group_by(tag_id, location) %>%
+  mutate(time_gap = as.numeric(difftime(datetime, lag(datetime), units = "secs")),
+    new_event = ifelse(is.na(time_gap) | time_gap > max_gap_secs, 1L, 0L),
+    event_id = cumsum(replace_na(new_event, 1L))) %>%
+  ungroup() %>%
+  group_by(tag_id, location, event_id) %>%
+  # compute daily stats within each event
+  mutate(day = as_date(datetime)) %>%
+  summarise(start_datetime = min(datetime),
+    end_datetime = max(datetime),
+    start_day = min(day),
+    end_day = max(day),
+    n_days_incl = as.integer(end_day - start_day) + 1L,   # inclusive day span
+    n_detections = n(),
+    # per-day detection counts
+    days_meeting_threshold = sum( tapply(rep(1, n()), day, length) >= min_detections_per_day),
+    sex = first(sex),
+    .groups = "drop_last") %>%
+  # keep events that last long enough AND meet the per-day threshold on every day
+  filter(n_days_incl >= min_res_days,
+    days_meeting_threshold == n_days_incl) %>%
+  ungroup() %>%
+  arrange(tag_id, start_datetime)
+toc()
+
+unique(residency$location)
+
 # save your beautiful work
-write_rds(residency, "Inputs/250827_residency.rds")
+write_rds(residency, "Inputs/250902_residency.rds")
 

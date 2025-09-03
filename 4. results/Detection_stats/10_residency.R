@@ -14,11 +14,11 @@
 pacman::p_load("tidyverse", "ggpubr")
 rm(list=ls()) 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/250730_residency.rds") #residence events
-
+dat <- read_rds("Inputs/250902_residency.rds") #residence events
+unique(dat$location)
 location_levels <- c("Wide Bay", "Sunshine Coast", "North Stradbroke Island",
                      "Gold Coast", "Ballina", "Evans Head", "Coffs Harbour",
-                     "Pot Macquarie", "Hawks Nest", "Sydney", "Illawarra")
+                     "Port Macquarie", "Hawks Nest", "Sydney", "Illawarra")
 
 dat1 <- dat %>%
   filter(location %in% location_levels) %>%
@@ -40,7 +40,7 @@ dat_days <- dat1 %>%
   mutate(year = year(date),
     month = month(date, label = TRUE))
 
-# 2. For each tag/location/month, count days present
+# 2. For each tag/location/month/year, count days present
 monthly_days <- dat_days %>%
   group_by(tag_id, sex, location, month, year) %>%
   summarise(n_days_present = n_distinct(date), .groups = "drop")
@@ -81,6 +81,7 @@ a <- ggplot(mean_residency, aes(x = month, y = mean_days_present,
                       ymax = mean_days_present + sd_days_present),
                  position = position_dodge(width = 0.5)) +
   facet_wrap(~location, ncol = 1) +
+  scale_y_continuous(limits = c(0, 31), expand = expansion(mult = c(0, 0.05))) +
   scale_colour_manual(values = c("F" = "firebrick4", "M" = "deepskyblue4")) +
   labs( x = "Month", y = "Mean Days Present per Sex (± SD)") +
   theme_bw() +
@@ -103,6 +104,6 @@ b <- ggplot(unique_tags_monthly, aes(x = month, y = unique_tags, fill = sex)) +
 z <- ggarrange(a,b, common.legend = T, legend = "right")
 z
 
-ggsave(path = "outputs/Graphs/Final/detections", "250807_residency.pdf",
-       plot = z, width = 7, height = 9) #in inches because gg weird
+ggsave(path = "outputs/Graphs/Final/detections", "250902_residency.pdf",
+       plot = z, width = 7, height = 10) #in inches because gg weird
 
