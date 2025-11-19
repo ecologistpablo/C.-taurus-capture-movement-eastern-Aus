@@ -37,18 +37,20 @@ dat2 <- dat1 %>%
 mutate(frequency = ifelse(direction == "South", -frequency, frequency))#southward movements go south
 
 x <- 
-ggplot(dat2, aes(x = month, y = 0, colour = sex, yend = frequency)) +
+ggplot(dat2, aes(x = month, y = 0, colour = direction, yend = frequency)) +
   geom_segment(size = 0.5, arrow = arrow(length = unit(0.2, "cm"), type = "closed")) +
   scale_x_continuous(breaks = 1:12, labels = month.abb, name = "Month") +
-  scale_colour_manual(values = c("indianred4", "cyan4"), name = "Sex",
-                      labels = c("Female", "Male")) +
+  geom_hline(yintercept = 0, colour = "black", linetype = "dotted", alpha = 0.5) +
+  scale_colour_manual(values = c("indianred4", "cyan4"), name = "Direction",
+                      labels = c("North", "South")) +
   labs(x = "Month", y = "Number of movements") +
   theme_bw() +
-  facet_wrap(~location, ncol = 1)
+  facet_grid(location~sex)+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 # Display the plot
 x
 
-zggsave(path = "outputs/Graphs/Final/detections", "250827_movement_arrows.pdf",
+ggsave(path = "outputs/Graphs/Final/detections", "250919a_movement_arrows.pdf",
        plot = x, width = 8, height = 14) #in inches because gg weird
 
   

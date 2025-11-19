@@ -50,7 +50,7 @@ m <-
   geom_rect(data = bands, aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), 
             fill = "grey60", alpha = 0.3) + 
   geom_sf(data = Aus) +  # Shapefile layer
-  geom_point(data = IMOS, aes(x = longitude, y = latitude), colour = "red", alpha = 0.5, size = 0.5) +  # Points layer from dato in grey
+  geom_point(data = IMOS, aes(x = longitude, y = latitude), colour = "black", alpha = 0.5, size = 0.5) +  # Points layer from dato in grey
   geom_point(data = dat1, aes(x = longitude, y = latitude, colour = location, size = num_det)) +  # Points layer
   scale_size_continuous(range = c(1, 4)) +
   labs(x = NULL, y = NULL)+
@@ -62,5 +62,5 @@ m <-
 
 plot(m)
 
-ggsave(path = "Outputs/Graphs/Final/detections", "250828_det_spatial_map.tiff",
+ggsave(path = "Outputs/Graphs/Final/detections", "250919_det_spatial_map.tiff",
        plot = m, width = 6, height = 8) #in inches because gg weird

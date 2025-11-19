@@ -61,3 +61,10 @@ xy <- dat2 %>%
 
 write_rds(xy, file = "Inputs/250827_step9_coordinates.rds")
 
+
+
+dat2 %>% 
+  filter(presence == 1) %>% 
+  group_by(location, sex) %>% 
+  summarise(n = n()) %>% 
+  print(n = 40)

@@ -20,6 +20,11 @@ location_levels <- c("Wide Bay", "Sunshine Coast", "North Stradbroke Island",
                      "Gold Coast", "Ballina", "Evans Head", "Coffs Harbour",
                      "Port Macquarie", "Hawks Nest", "Sydney", "Illawarra")
 
+
+dat1 <- dat %>% 
+  filter(location %in% c("North Stradbroke Island")) %>%
+  distinct(tag_id)
+
 dat1 <- dat %>%
   filter(location %in% location_levels) %>%
   mutate(location = factor(location, levels = location_levels))

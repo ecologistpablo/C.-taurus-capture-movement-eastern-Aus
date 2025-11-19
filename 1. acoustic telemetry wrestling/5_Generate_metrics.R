@@ -10,6 +10,11 @@ rm(list=ls())
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
 dat <- read_rds("Inputs/250827_step4.rds")
 
+dat1 <- dat %>% 
+  distinct(tag_id, .keep_all = T) 
+
+table(dat1$sex)
+
 # metrics -----------------------------------------------------------------
 
 dat_wide <- dat %>%

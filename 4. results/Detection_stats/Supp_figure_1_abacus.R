@@ -46,6 +46,7 @@ a <-
   scale_x_date(date_breaks = "1 year", date_labels = "%Y", limits = as.Date(c("2012-01-01", "2024-12-31")))  
 a
 
+ggplotly(a)
 
 #save
 ggsave(path = "outputs/Graphs/Final/detections", "240903_area_detections_abacus.pdf",
