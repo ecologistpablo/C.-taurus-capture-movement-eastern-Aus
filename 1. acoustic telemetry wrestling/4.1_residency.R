@@ -14,7 +14,7 @@
 pacman::p_load("tidyverse", 'tictoc')
 rm(list=ls()) 
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/250902_step3.rds")
+dat <- read_rds("Inputs/251201_step3.rds")
 unique(dat$location)
 
 CH <- dat %>% 
@@ -111,6 +111,8 @@ toc()
 
 unique(residency$location)
 
+residency
+table(residency$location)
 # save your beautiful work
-write_rds(residency, "Inputs/250902_residency.rds")
+write_rds(residency, "Inputs/251201_residency.rds")
 

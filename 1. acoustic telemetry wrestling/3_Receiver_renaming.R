@@ -119,6 +119,8 @@ IMOS <- add_location_group(IMOS,"Avoca", "Central Coast")
 IMOS <- add_location_group(IMOS,"BL 1", "Sydney") 
 
 IMOS <- add_location_group(IMOS, "Wollongong OAR", "Illawarra")
+
+IMOS <- add_location_group(IMOS,"N1", "Naroomba") 
 IMOS <- add_location_group(IMOS,"Merimbula1", "Merimbula") 
 
 # filtering to degrees for other sites
@@ -143,7 +145,7 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F) #colour
 
 # save it ----------------------------------------------------------------------
 
-write_rds(IMOS1, "Inputs/250902_step3.rds")
+write_rds(IMOS1, "Inputs/251201_step3.rds")
 
 table(IMOS1$location)
 unique(IMOS1$station_name)

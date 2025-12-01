@@ -14,11 +14,11 @@
 pacman::p_load("tidyverse", "ggpubr")
 rm(list=ls()) 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/250902_residency.rds") #residence events
+dat <- read_rds("Inputs/251201_residency.rds") #residence events
 unique(dat$location)
 location_levels <- c("Wide Bay", "Sunshine Coast", "North Stradbroke Island",
                      "Gold Coast", "Ballina", "Evans Head", "Coffs Harbour",
-                     "Port Macquarie", "Hawks Nest", "Sydney", "Illawarra")
+                     "Port Macquarie", "Hawks Nest", "Sydney", "Illawarra", "Naroomba")
 
 
 dat1 <- dat %>% 

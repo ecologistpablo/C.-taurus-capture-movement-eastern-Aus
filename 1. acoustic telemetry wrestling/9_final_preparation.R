@@ -5,7 +5,7 @@
 rm(list=ls()) 
 pacman::p_load("tidyverse")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/250827_step8.rds")
+dat <- read_rds("Inputs/251201_step8.rds")
 
 dat %>% distinct(tag_id, sex) %>% count(sex)
 # gloves on? let's wrestle ------------------------------------------------
@@ -52,7 +52,7 @@ table(dat2$location)
 
 #save it ----------------------------------------------------------------------------
 
-write_rds(dat2, file = "Inputs/250827_step9.rds")
+write_rds(dat2, file = "Inputs/251201_step9.rds")
 
 # xy coords ---------------------------------------------------------------
 

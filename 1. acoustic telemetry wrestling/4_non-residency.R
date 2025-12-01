@@ -14,7 +14,7 @@
 pacman::p_load("tidyverse", 'tictoc')
 rm(list=ls()) 
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/250827_step3.rds")
+dat <- read_rds("Inputs/251201_step3.rds")
 
 dat1 <- dat %>% 
   mutate(datetime = with_tz(ymd_hms(datetime, tz = "UTC"), tzone = "Etc/GMT-10"),
@@ -99,4 +99,9 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = FALSE)
 
 
 # save our beautiful work
+write_rds(dat2, file = "Inputs/251201_step4.rds") 
+
+
+
+
 c
