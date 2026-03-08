@@ -15,7 +15,7 @@ nc <- nc_open("IMOS_OceanCurrent_HV_20231231T000000Z_GSLA_FV02_NRT.nc")
 
 print(nc)
 # old fashioned way: 2012 -------------------------------------------------
-
+ 
 plan(multisession, workers = 6) # Use 6 cores
 
 # List all the .nc files in the directory
@@ -56,8 +56,10 @@ plot(rstack1, col = viridis(255))
 head(names(rstack1))
 
 # Extract the date part (YYYYMMDD) from each .nc file name
-date_str <- substr(file_list, 24, 31) #if you're download different data, count where the filename is that you want
-
+date_str <- substr(file_list, 23, 31) #if you're download different data, count where the filename is that you want
+# in this case, the date is in the format YYYYMMDD and starts at character 23 and ends at character 31 in the file name
+# you can edit this and play with it, check using head afterwards
+# it's not so computationally expensive so I encourage trial and error with this step
 head(date_str) #check
 
 # Check if the lengths match
@@ -98,16 +100,17 @@ e <- ext(c(150, 155, -36, -24)) #xmin, xmax, ymin, ymax for your studysite
 # Crop the stack
 rstack2 <- terra::crop(rstack1, e) # cropping takes awhile, be patient
 
-plot(rstack2, col = viridis(255))
+plot(rstack2[[21]], col = viridis(255))
 
 names(rstack2)
 
 # save progress -----------------------------------------------------------
 
-writeRaster(rstack2, "Current_stack_2023.tif")
-
+writeRaster(rstack2, "Current_stack_2025.tif")
+setwd("~/Documents/USC/Honours/R/data/IMOS/Currents")
 setwd("~/University/2023/Honours/R/data/IMOS/Currents")
-writeRaster(rstack2, "Currents_stack_2012.tif")
+
+loadrast
 
 # looped ------------------------------------------------------------------
 
@@ -156,7 +159,7 @@ process_year <- function(year) {
   names(rstack1) <- new_names
   
   # Crop the stack
-  e <- ext(c(150, 155, -36, -24)) #xmin, xmax, ymin, ymax
+  e <- ext(c(150, 155, -37, -22)) #xmin, xmax, ymin, ymax
   rstack2 <- terra::crop(rstack1, e)
   
   # Save the processed stack as a TIFF file
@@ -182,3 +185,13 @@ plot(rstack3, col = viridis(255))
 writeRaster(rstack3, "Currents_stack_2024.tif")
 
 
+# combine stack and 2025 --------------------------------------------------
+
+stack <- rast("250728_cstack_12-24.tif")
+head(stack)
+
+str(stack)
+combo_stack <- c(stack, rstack2)
+
+
+writeRaster(combo_stack, "260308_cstack_12-25.tif", overwrite = T)

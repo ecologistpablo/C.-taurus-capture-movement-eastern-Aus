@@ -31,15 +31,18 @@ parallel::detectCores() #how much power do you have? I got 8 so I will use 6
 
 # never use all of your cores, your computer needs at least one to function
 var_to_get <- "\\.nc$"
-setwd("/Volumes/LaCie_PF")
+setwd("/Volumes/LaCie_PF/IMOS/SST")
+setwd("~/Documents/USC/Honours/R/data/IMOS") #my working directory, change to yours")
 
 # Set up parallel processing
 plan(multisession, workers = 6) # Using x cores
 
 # Loop through years for your study period
-for (year in 2023:2024) {  #change if you have different study period
+for (year in 2012:2025) {  #change if you have different study period 
+  #(year in 2023:2024) if you have multiple
   # Set output folder and URL based on the year
   output_folder <- paste0("SST/", year) #my output folder
+  if (!dir.exists(output_folder)) dir.create(output_folder, recursive = TRUE) # if the folder doesn't exist, make it
   yurl <- paste0("https://mrs-data.csiro.au/imos-srs/sst/ghrsst/L3S-1d/dn/", year, "/") #the beginning string for year url 
   
   # Read HTML content
@@ -60,10 +63,12 @@ for (year in 2023:2024) {  #change if you have different study period
   existing_files <- dir(output_folder, pattern = var_to_get)
   files <- files[!(files %in% existing_files)]
   
+  abs_output_folder <- normalizePath(output_folder, mustWork = TRUE)
+  
   # Download files using parallel processing
   future_walk(files, function(filename) {
     url <- paste0(yurl, filename)
-    destination <- file.path(output_folder, filename)
+    destination <- file.path(abs_output_folder, filename)
     
     message("Attempting to download from: ", url) #because we are civilised return msgs
     message("Destination: ", destination)

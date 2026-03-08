@@ -14,12 +14,13 @@ pacman::p_load("tidyverse", "ncdf4", 'purrr', 'furrr','future', 'terra', 'sf', '
 
 # metadata finding --------------------------------------------------------
 
-setwd("/Volumes/LaCie_PF/SST/")
+setwd("/Volumes/LaCie_PF/IMOS/SST")
 setwd("E:/Pablo/2023_hons_dat/SST/2012") #where did you download all your net cdfs?
+setwd("~/Documents/USC/Honours/R/data/IMOS/SST/2025") #my working directory, change to yours"/")
 list.files() #copy and paste a string below
-nc <- nc_open("20231231092000-ABOM-L3S_GHRSST-SSTfnd-AVHRR_D-1d_dn-v02.0-fv01.0.nc") #read it in
+nc <- nc_open("20250606092000-ABOM-L3S_GHRSST-SSTfnd-AVHRR_D-1d_dn-v02.0-fv01.0.nc") #read it in
 
-print(nc) #what variables do we choose need?
+nc
 plot(nc)
 
 # loop --------------------------------------------------------------------
@@ -28,7 +29,7 @@ plot(nc)
 process_year <- function(year) {
   
   # Set working directory to the year's folder
-  setwd(paste0("/Volumes/LaCie_PF/SST/", year))
+  #setwd(paste0("/Volumes/LaCie_PF/SST/", year))
   
   plan(multisession, workers = 6) # Use 6 cores
   
@@ -58,7 +59,7 @@ process_year <- function(year) {
   }
   
   # Crop the stack
-  e <- ext(c(150, 155, -36, -24)) #xmin, xmax, ymin, ymax
+  e <- ext(c(150, 155, -37, -22)) #xmin, xmax, ymin, ymax
   rstack2 <- terra::crop(rstack1, e)
   
   # Convert from Kelvin to Celsius
@@ -76,21 +77,21 @@ process_year <- function(year) {
 
 # process years independently ---------------------------------------------
 
-# change 2022 to whichever year you need
+# change  to whichever year you need
 
 # Process each year
-years <- c("2024") #change as needed, processing 1 year at a time is chunky enough as they're 70mb and I only have 8 cores on 16gb of ram 
+years <- c("2025") #change as needed, processing 1 year at a time is chunky enough as they're 70mb and I only have 8 cores on 16gb of ram 
 
 for (year in years) {
-  rstack4 <- process_year(year)
+  rstack <- process_year(year)
   # You can save the processed_stack if needed for each year
 }
 
 
 #check it worked
-plot(rstack4[[4,]], col = viridis(255)) # of course it did we're wizards
+plot(rstack[[4,]], col = viridis(255)) # of course it did we're wizards
 
-setwd("/Volumes/LaCie_PF/SST/2024")
-list.files()
-writeRaster(rstack4, "SST_stack_2024.tif")
-
+# it should have already saved : ) 
+# as of 2026 March the 7th, at 7pm, we only have SST data up to 2025 June the 6th....
+# hopefully this will change in the near-future
+# if it doesn't we shall roll with this. 

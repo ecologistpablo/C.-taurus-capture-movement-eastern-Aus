@@ -5,7 +5,7 @@
 
 # Packages ----------------------------------------------------------------
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
+pacman::p_load("purrr", "furrr", "future", "tidyverse", "rvest", "curl") #rvest and curl help us talk to websites
 
 # for loop de loop --------------------------------------------------------
 
@@ -13,15 +13,17 @@ source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 
 setwd("/Volumes/LaCie_PF")
+setwd("~/Documents/USC/Honours/R/data/IMOS/Currents/2025")
+
 
 # Set up parallel processing
 plan(multisession, workers = 6) # Using 7 cores
 
 # Loop through years from 2021 to 2022
-for (year in 2023:2024) {
-
+for (year in 2021:2022) {
+#(year in year in 2023:2024) for multiple years
     # Set output folder and URL based on the year
-  output_folder <- paste0("Currents/", year)
+  #output_folder <- paste0("Currents/", year)
   yurl <- paste0("https://thredds.aodn.org.au/thredds/catalog/IMOS/OceanCurrent/GSLA/NRT/", year, "/catalog.html")
   
   # Read HTML content
@@ -42,10 +44,13 @@ for (year in 2023:2024) {
   existing_files <- dir(output_folder)
   files <- files[!(files %in% existing_files)]
   
+  abs_output_folder <- normalizePath(output_folder, mustWork = TRUE) # future walk has been updated
+  # this will make sure that if you have already downloaded some files, it won't try to download them again, which can save you a lot of time and prevent errors
+  
   # Download files using parallel processing
   future_walk(files, function(filename) {
     url <- paste0("https://thredds.aodn.org.au/thredds/fileServer/IMOS/OceanCurrent/GSLA/NRT/", year, "/", filename)
-    destination <- file.path(output_folder, filename)  
+    destination <- file.path(abs_output_folder, filename)  
     
     message("Attempting to download from: ", url)
     message("Destination: ", destination)

@@ -57,17 +57,18 @@ removeDuplicateLayers <- function(raster_stack) {
 }
 
 # Apply the function
-rstack1 <- removeDuplicateLayers(rstack)
+combo_stack1 <- removeDuplicateLayers(combo_stack)
 
-print(paste("Original number of layers: ", length(names(rstack))))
-print(paste("Number of layers after removing duplicates: ", length(names(rstack1)))) 
+print(paste("Original number of layers: ", length(names(combo_stack))))
+print(paste("Number of layers after removing duplicates: ", length(names(combo_stack1)))) 
 
 #I had a 60 duplicates, this was due to downloading data multiple times for certain layers / days
 
 # save --------------------------------------------------------------------
 
 # Save the combined stack
-writeRaster(rstack1, filename = "250728_cstack_12-24.tif", overwrite = T)
+writeRaster(rstack1, filename = "260308_cstack_12-25.tif", 
+            overwrite = T) # overwrite if there's already a file there
 
 
 

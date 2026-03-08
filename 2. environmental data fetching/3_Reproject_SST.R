@@ -12,12 +12,14 @@ rm(list=ls())
 source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
 
 # combine all stacks  -----------------------------------------------------
+setwd("~/Documents/USC/Honours/R/data/IMOS/SST") #my working directory, change to yours"/")
 
 setwd("/Volumes/LaCie_PF/SST/")
 list.files()
 
 # Generate file names for the years
-file_names <- paste0("SST_stack_", 2012:2024, ".tif")
+file_names <- paste0("SST_stack_", 2012:2025, ".tif")
+file_names <- paste0("GHRSST_12-24.tif", "SST_stack_2025.tif") # doing it manually
 
 # Coordinate reference systems
 WGS84 <- crs("EPSG:4326")
@@ -75,3 +77,39 @@ print(paste("Number of layers after removing duplicates: ", length(names(rstack1
 
 # Save the combined stack
 writeRaster(rstack, filename = "GHRSST_12-24.tif", overwrite = T)
+
+
+# 2025 data add -----------------------------------------------------------
+
+setwd("~/Documents/USC/Honours/R/data/IMOS/SST/update") #my working directory, change to yours"/")
+list.files()
+# Generate file names for the years
+
+# Load the two stacks directly
+rstack_existing <- rast("GHRSST_12-24.tif")
+crs(rstack_existing) <- WGS84
+
+r_2025 <- rast("SST_stack_2025.tif")
+crs(r_2025) <- WGS84
+
+# Reproject 2025 to match existing stack
+r_2025_reproj <- project(r_2025, rstack_existing)
+
+# Combine
+rstack_new <- c(rstack_existing, r_2025_reproj)
+print(paste("Total layers:", nlyr(rstack_new)))
+
+# Remove duplicates
+removeDuplicateLayers <- function(raster_stack) {
+  layer_names <- names(raster_stack)
+  unique_names <- unique(layer_names)
+  unique_layer_indices <- match(unique_names, layer_names)
+  return(raster_stack[[unique_layer_indices]])
+}
+
+rstack_final <- removeDuplicateLayers(rstack_new)
+print(paste("After removing duplicates:", nlyr(rstack_final)))
+
+# Save
+writeRaster(rstack_final, filename = "GHRSST_12-25.tif", overwrite = TRUE)
+# nice
