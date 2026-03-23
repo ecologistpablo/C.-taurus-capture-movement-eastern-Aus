@@ -8,7 +8,7 @@ rm(list=ls()) # to clear workspace
 
 pacman::p_load("tidyverse")
 setwd("~/Documents/USC/Honours/R/data")
-IMOS <- read_rds("Inputs/250902_step2.rds") 
+IMOS <- read_rds("Inputs/260323_step2.rds") 
 
 summary(IMOS$datetime)
 
@@ -27,7 +27,9 @@ IMOS <- IMOS %>%
          longitude = replace(longitude, 
                              station_name == 'China Wall', 153.482533),
          latitude = replace(latitude,
-                            station_name == "Wolf Rock 2", -25.85530))
+                            station_name == "Wolf Rock 2", -25.85530),
+         longitude = replace(longitude,
+                             station_name == "Stanwell Park", 150.99530))
 
 # begin with an interactive plot, where are our data? ---------------------
 
@@ -40,6 +42,7 @@ IMOS$station_name <- ifelse(IMOS$station_name == "Newcastle", "Newcastle1", IMOS
 IMOS$station_name <- ifelse(IMOS$station_name == "Yamba", "Yamba1", IMOS$station_name)
 IMOS$station_name <- ifelse(IMOS$station_name == "Merimbula", "Merimbula1", IMOS$station_name)
 IMOS$station_name <- ifelse(IMOS$station_name == "Evans Head", "Evans Head1", IMOS$station_name)
+IMOS$station_name <- ifelse(IMOS$station_name == "Port Macquarie", "Port Macquarie1", IMOS$station_name)
 
 # the function below doesn't deal well 
 # when you re-name a location to the same name as the station
@@ -88,16 +91,16 @@ add_location_group <- function(df, central_station_name, location_name) {
 
 # run --------------------------------------------------------------------------
 
-IMOS <- add_location_group(IMOS,"ST02 WR", # station name
+IMOS <- add_location_group(IMOS,"Wolf Rock-ST13", # station name
                                   "Wide Bay") # new Location name
 
-IMOS <- add_location_group(IMOS, "Wobbie Rock", # Station name
+IMOS <- add_location_group(IMOS, "Wobbie Rock Tunnels", # Station name
                            "Sunshine Coast") # new location name
 
-IMOS <- add_location_group(IMOS,"FtR TC M1 2022/2023 101919", # station name
+IMOS <- add_location_group(IMOS,"Flat Rock Shark Ally M4", # station name
                                   "North Stradbroke Island") # new Location name
 
-IMOS <- add_location_group(IMOS, "Cherubs Cave", "Moreton Island")
+IMOS <- add_location_group(IMOS, "China Wall", "Moreton Island")
 
 IMOS <- add_location_group(IMOS, "FAD 12", "Gold Coast")
 
@@ -107,10 +110,13 @@ IMOS <- add_location_group(IMOS,"Yamba1", "Yamba")
 IMOS <- add_location_group(IMOS, "CHS 13", "Coffs Harbour")
 
 IMOS <- add_location_group(IMOS, "Cod Grounds", "Port Macquarie")
+IMOS <- add_location_group(IMOS, "Port Macquarie1", "Port Macquarie")
 
 IMOS <- add_location_group(IMOS, "Forster1", "Forster")
 
 IMOS <- add_location_group(IMOS,"MB-5", "Hawks Nest")
+IMOS <- add_location_group(IMOS,"MB-4", "Hawks Nest")
+
 
 IMOS <- add_location_group(IMOS,"BiB 02.1", "Hawks Nest")
 
@@ -136,8 +142,6 @@ IMOSxy <- IMOS1 %>%
   group_by(location, latitude, longitude) %>% #location
   summarise(num_det = n(), .groups = 'drop')
 
-
-
 IMOSxy_sf <- sf::st_as_sf(IMOSxy, coords = c("longitude", "latitude"),
                           crs= 4326, agr = "constant")
 
@@ -145,7 +149,7 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F) #colour
 
 # save it ----------------------------------------------------------------------
 
-write_rds(IMOS1, "Inputs/251201_step3.rds")
+write_rds(IMOS1, "Inputs/260323_step3.rds")
 
 table(IMOS1$location)
 unique(IMOS1$station_name)

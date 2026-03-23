@@ -5,7 +5,7 @@
 rm(list=ls()) 
 pacman::p_load("tidyverse")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/251201_step8.rds")
+dat <- read_rds("Inputs/260323_step8.rds")
 
 dat %>% distinct(tag_id, sex) %>% count(sex)
 # gloves on? let's wrestle ------------------------------------------------
@@ -32,8 +32,8 @@ dat2 <- dat1 %>%
     TRUE ~ station_name)) %>%
   ungroup()
 
-unique(dat2$station_name) #did it work?
-unique(dat1$station_name) # are they different sizes?
+unique(dat1$station_name) #did it work?
+unique(dat2$station_name) # are they different sizes?
 
 # plot it -----------------------------------------------------------------
 
@@ -52,14 +52,14 @@ table(dat2$location)
 
 #save it ----------------------------------------------------------------------------
 
-write_rds(dat2, file = "Inputs/251201_step9.rds")
+write_rds(dat2, file = "Inputs/260323_step9.rds")
 
 # xy coords ---------------------------------------------------------------
 
 xy <- dat2 %>% 
   distinct(latitude, longitude, station_name)
 
-write_rds(xy, file = "Inputs/250827_step9_coordinates.rds")
+write_rds(xy, file = "Inputs/260323_step9_coordinates.rds")
 
 
 

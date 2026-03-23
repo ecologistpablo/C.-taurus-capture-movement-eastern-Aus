@@ -14,18 +14,10 @@
 pacman::p_load("tidyverse", 'tictoc')
 rm(list=ls()) 
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/251201_step3.rds")
+dat <- read_rds("Inputs/260323_step3.rds")
 unique(dat$location)
 
-CH <- dat %>% 
-  filter(location == "Coffs Harbour") %>% 
-  mutate(date = date(datetime),
-         month = month(date)) %>% 
-  filter(month %in% c(3, 4, 5))
-
 dat1 <- dat %>% 
-mutate(datetime = with_tz(ymd_hms(datetime, tz = "UTC"), tzone = "Etc/GMT-10"),
-       tag_id = as.character(tag_id)) %>% 
   select(-receiver_name) %>% 
   filter(if_all(everything(), ~ !is.na(.))) # remove NAs
 
@@ -41,12 +33,11 @@ str(dat1) # structure of columns should be the same as below:
 
 # outdated ----------------------------------------------------------------
 
-
 #oudated 
 min_detections <- 2 # minimum detections per day to enter residency
 min_res_period <- 2 # minimum duration threshold in days for 'residency' to occur
 max_gap_secs <- 86400  
-60*60*24*1 #15 days in seconds
+60*60*24*1 #1 day in seconds
 
 tic() # tic toc times functions 
 
@@ -76,9 +67,9 @@ table(residency$location)
 
 # updated -----------------------------------------------------------------
 
-min_detections_per_day <- 1   # minimum detections required on each day
+min_detections_per_day <- 2   # minimum detections required on each day
 min_res_days           <- 2   # minimum length of residency in days (calendar, inclusive)
-max_gap_secs           <- 60*60*24*2  # 10 days in seconds  (update comment if you want 15)
+max_gap_secs           <- 60*60*24  # 1 day in seconds
 
 # residency ------------------------------------------------------------
 tic()
@@ -106,7 +97,8 @@ residency <- dat1 %>%
   filter(n_days_incl >= min_res_days,
     days_meeting_threshold == n_days_incl) %>%
   ungroup() %>%
-  arrange(tag_id, start_datetime)
+  arrange(tag_id, start_datetime) %>% 
+  select(-c(n_days_incl))
 toc()
 
 unique(residency$location)
@@ -114,5 +106,4 @@ unique(residency$location)
 residency
 table(residency$location)
 # save your beautiful work
-write_rds(residency, "Inputs/251201_residency.rds")
-
+write_rds(residency, "Inputs/260323_residency.rds")

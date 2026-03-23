@@ -8,12 +8,12 @@
 library(tidyverse)
 rm(list=ls()) 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/251201_step4.rds")
+dat <- read_rds("Inputs/260323_step4.rds")
 
 dat1 <- dat %>% 
-  distinct(tag_id, .keep_all = T) 
+  distinct(tag_id, .keep_all = T)
 
-table(dat1$sex)
+ table(dat1$sex)
 
 # metrics -----------------------------------------------------------------
 
@@ -67,5 +67,5 @@ anyNA(dat2$direction) # this should be false
 
 #save it -----------------------------------------------------------------------
 
-write_rds(dat2, file = "Inputs/251201_step5.rds") 
+write_rds(dat2, file = "Inputs/260323_step5.rds") 
 

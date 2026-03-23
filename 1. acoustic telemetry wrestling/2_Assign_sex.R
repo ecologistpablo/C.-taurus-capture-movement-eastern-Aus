@@ -8,14 +8,14 @@
 rm(list=ls())
 pacman::p_load("tidyverse")
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-IMOS <- read_rds("Inputs/250901_step1.2.rds")
+IMOS <- read_rds("Inputs/260323_step1.rds")
 dat <- read_csv("Inputs/250722_qc_data.csv")
 
 dat$tag_id <- str_extract(dat$transmitter_id, "\\d{4,5}$") #shorten tag ID strings
 
 dat <- dat %>% 
   dplyr::select(-transmitter_id) %>% 
-  mutate(tag_id = as.double(tag_id))
+  mutate(tag_id = as.character(tag_id))
 
 IMOS1 <- bind_rows(IMOS,dat)
 
@@ -75,7 +75,7 @@ IMOS2 %>%
 
 
 IMOS3 <- IMOS2 %>% 
-  filter(!format(datetime, "%Y") %in% c("2025")) %>% 
+  #filter(!format(datetime, "%Y") %in% c("2025")) %>% 
   distinct(datetime, tag_id, longitude, latitude, station_name, receiver_name, sex)
 
 datxy <- IMOS3 %>%
@@ -89,5 +89,7 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "station_name", fbg = FALSE)
 
 # save --------------------------------------------------------------------
 
-write_rds(IMOS3, "Inputs/250902_step2.rds")
+write_rds(IMOS3, "Inputs/260323_step2.rds")
+# 2,430,933 detections that are unique from all sources
+# 2,747,631 as of March 2026
 

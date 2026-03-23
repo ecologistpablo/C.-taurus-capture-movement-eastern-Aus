@@ -14,13 +14,12 @@
 pacman::p_load("tidyverse", 'tictoc')
 rm(list=ls()) 
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/251201_step3.rds")
+dat <- read_rds("Inputs/260323_step3.rds")
 
 dat1 <- dat %>% 
-  mutate(datetime = with_tz(ymd_hms(datetime, tz = "UTC"), tzone = "Etc/GMT-10"),
-         tag_id = as.character(tag_id)) %>% 
   select(-receiver_name) %>% 
   filter(if_all(everything(), ~ !is.na(.))) # remove NAs and their entire row
+
 anyNA(dat1) # needs to be false
 str(dat1)
 # tag id = character
@@ -47,7 +46,7 @@ move_base <- dat1 %>%
   mutate(movement_id = row_number()) %>% # movement_id to connect an arrival / departure movement as one in future 
   ungroup() 
 
-toc() # 1.978 seconds for 2.5 million rows, we love vectorised function
+toc() # 1.978 seconds for 2.5 million rows, we love vectorised functions
 
 # lead created data for detecion 2, and replicated all variables
 # we now use this dataframe to create arrival and departure data
@@ -99,9 +98,12 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = FALSE)
 
 
 # save our beautiful work
-write_rds(dat2, file = "Inputs/251201_step4.rds") 
+write_rds(dat2, file = "Inputs/260323_step4.rds") 
+
+
+dat2 %>% 
+  group_by(sex) %>% 
+  summarise(n = n_distinct(tag_id))
 
 
 
-
-c

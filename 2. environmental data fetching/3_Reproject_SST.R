@@ -9,20 +9,20 @@ rm(list=ls())
 
 # Packages ----------------------------------------------------------------
 
-source("~/University/2023/Honours/R/data/git/GNS-Movement/000_helpers.R")
+pacman::p_load('tidyverse', 'purrr', 'furrr', 'terra', 'viridis')
 
 # combine all stacks  -----------------------------------------------------
 setwd("~/Documents/USC/Honours/R/data/IMOS/SST") #my working directory, change to yours"/")
+setwd("/Volumes/LaCie_PF/IMOS/SST")
 
-setwd("/Volumes/LaCie_PF/SST/")
 list.files()
 
 # Generate file names for the years
 file_names <- paste0("SST_stack_", 2012:2025, ".tif")
-file_names <- paste0("GHRSST_12-24.tif", "SST_stack_2025.tif") # doing it manually
+#file_names <- paste0("GHRSST_12-24.tif", "SST_stack_2025.tif") # doing it manually
 
 # Coordinate reference systems
-WGS84 <- crs("EPSG:4326")
+WGS84 <- terra::crs("EPSG:4326")
 
 # Initialize an empty list to store the rasters
 rasters_list <- list()
@@ -76,7 +76,7 @@ print(paste("Number of layers after removing duplicates: ", length(names(rstack1
 # save --------------------------------------------------------------------
 
 # Save the combined stack
-writeRaster(rstack, filename = "GHRSST_12-24.tif", overwrite = T)
+writeRaster(rstack, filename = "GHRSST_12-25.tif", overwrite = T)
 
 
 # 2025 data add -----------------------------------------------------------

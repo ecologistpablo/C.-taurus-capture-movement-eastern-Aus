@@ -5,7 +5,7 @@
 library(tidyverse)
 rm(list=ls())
 setwd("/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/251201_step5.rds")
+dat <- read_rds("Inputs/260323_step5.rds")
 
 # distance metric --------------------------------------------------------------
 
@@ -32,10 +32,11 @@ calculate_distance <- function(df) {
 
 # run the function
 dat1 <- calculate_distance(dat)
+anyNA(dat1)
 
 # save it -----------------------------------------------------------------
 
-write_rds(dat1, file = "Inputs/251201_step6.rds")
+write_rds(dat1, file = "Inputs/260323_step6.rds")
 
 # plot it  ----------------------------------------------------------------
 

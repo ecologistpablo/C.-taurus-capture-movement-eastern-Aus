@@ -4,6 +4,8 @@
 
 rm(list=ls())
 
+setwd("~/Documents/GitHub/C.-taurus-capture-movement-eastern-Aus/")
+
 # Packages ----------------------------------------------------------------
 
 pacman::p_load("tidyverse", "ncdf4", 'purrr', 'furrr','future', 'terra', 'sf', 'sp', 'viridis')

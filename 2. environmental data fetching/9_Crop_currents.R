@@ -9,11 +9,11 @@ pacman::p_load("tidyverse", "ncdf4", 'purrr', 'furrr','future', 'terra', 'sf', '
 
 # metadata finding --------------------------------------------------------
 rm(list=ls())
-setwd("/Volumes/LaCie_PF/Currents/2024")
+setwd("/Volumes/LaCie_PF/IMOS/Currents/2025")
 list.files()
-nc <- nc_open("IMOS_OceanCurrent_HV_20231231T000000Z_GSLA_FV02_NRT.nc")
-
-print(nc)
+# nc <- nc_open("IMOS_OceanCurrent_HV_20241231T000000Z_GSLA_FV02_NRT.nc")
+# nc <- rast("Current_stack_2024.tif")
+# plot(nc)
 # old fashioned way: 2012 -------------------------------------------------
  
 plan(multisession, workers = 6) # Use 6 cores
@@ -21,8 +21,13 @@ plan(multisession, workers = 6) # Use 6 cores
 # List all the .nc files in the directory
 file_list <- list.files(pattern = "\\.nc$", full.names = TRUE)
 
-# Read each NetCDF file as a SpatRaster
-r_list <- lapply(file_list, rast)
+r_list_raw <- lapply(file_list, function(f) {
+  tryCatch(rast(f), error = function(e) { message("Skipping: ", basename(f)); NULL })
+})
+
+good_idx <- !sapply(r_list_raw, is.null)  # TRUE for every file that loaded
+r_list <- Filter(Negate(is.null), r_list_raw)  # clean list for stacking
+good_files <- file_list[good_idx]  # only files that actually loaded
 
 #stack them
 rstack <- rast(c(r_list))
@@ -47,7 +52,7 @@ rstack1 <- subset_selected_layers(rstack)
 
 names(rstack1)
 
-plot(rstack1, col = viridis(255))
+#plot(rstack1, col = viridis(255))
 
 #nice
 
@@ -56,13 +61,14 @@ plot(rstack1, col = viridis(255))
 head(names(rstack1))
 
 # Extract the date part (YYYYMMDD) from each .nc file name
-date_str <- substr(file_list, 23, 31) #if you're download different data, count where the filename is that you want
+date_str   <- substr(basename(good_files), 21, 29)  # dates from good files only
+# if you're download different data, count where the filename is that you want
 # in this case, the date is in the format YYYYMMDD and starts at character 23 and ends at character 31 in the file name
 # you can edit this and play with it, check using head afterwards
 # it's not so computationally expensive so I encourage trial and error with this step
 head(date_str) #check
 
-# Check if the lengths match
+# # Check if the lengths match
 if ((length(date_str) * 3) != nlyr(rstack1)) {
   stop("The number of dates does not match the number of layers in the SpatRaster.")
 }
@@ -79,9 +85,9 @@ for (i in seq_along(date_str)) {
   idx_VCUR_MEAN <- (i - 1) * 3 + 3
   
   # Rename the layers
-  new_names[idx_GSLA] <- paste0("GSLA_", date_str[i]) #so it will come out as GSLA_20120101 for 01 Jan 2012
-  new_names[idx_UCUR_MEAN] <- paste0("UCUR_", date_str[i])
-  new_names[idx_VCUR_MEAN] <- paste0("VCUR_", date_str[i])
+  new_names[idx_GSLA] <- paste0("GSLA", date_str[i]) #so it will come out as GSLA_20120101 for 01 Jan 2012
+  new_names[idx_UCUR_MEAN] <- paste0("UCUR", date_str[i])
+  new_names[idx_VCUR_MEAN] <- paste0("VCUR", date_str[i])
 }
 
 # Apply the new names to the SpatRaster
@@ -90,108 +96,41 @@ names(rstack1) <- new_names
 # Check the first few names to make sure they were renamed correctly
 head(names(rstack1))
 
-plot(rstack1, col = viridis(255))
+#plot(rstack1, col = viridis(255))
 
 # crop --------------------------------------------------------------------
 
 # Define the extent
-e <- ext(c(150, 155, -36, -24)) #xmin, xmax, ymin, ymax for your studysite
+e <- ext(c(149, 155, -37, -22)) #xmin, xmax, ymin, ymax for your studysite
 
 # Crop the stack
 rstack2 <- terra::crop(rstack1, e) # cropping takes awhile, be patient
 
-plot(rstack2[[21]], col = viridis(255))
+plot(rstack2, col = viridis(255))
 
 names(rstack2)
 
 # save progress -----------------------------------------------------------
-
+setwd("/Volumes/LaCie_PF/IMOS/Currents")
 writeRaster(rstack2, "Current_stack_2025.tif")
-setwd("~/Documents/USC/Honours/R/data/IMOS/Currents")
-setwd("~/University/2023/Honours/R/data/IMOS/Currents")
-
-loadrast
-
-# looped ------------------------------------------------------------------
-
-# Define a function to process a specific year
-process_year <- function(year) {
-  
-  setwd(paste0("/Volumes/LaCie_PF/Currents/", year))  # Set working directory to the year's folder
-  
-  plan(multisession, workers = 6) # Use 6 cores
-  
-  # List all the .nc files in the directory
-  file_list <- list.files(pattern = "\\.nc$", full.names = TRUE)
-  
-  # Read each NetCDF file as a SpatRaster
-  r_list <- lapply(file_list, rast)
-  
-  # Stack the rasters
-  rstack <- rast(c(r_list))
-  
-  # Subset and keep only layers named UCUR_TIME, VCUR_TIME, and GSLA_TIME
-  rstack1 <- subset(rstack, grep("^(UCUR_TIME|VCUR_TIME|GSLA_TIME)", names(rstack)))
-  
-  # Extract the date part (YYYYMMDD) from each .nc file name
-  date_str <- substr(file_list, 24, 31)
-  
-  # Check if the lengths match
-  if ((length(date_str) * 3) != nlyr(rstack1)) {
-    stop("The number of dates does not match the number of layers in the SpatRaster.")
-  }
-  
-  # Initialize an empty vector to hold the new names
-  new_names <- vector("character", length = nlyr(rstack1))
-  
-  # Loop through each date to rename the corresponding layers
-  for (i in seq_along(date_str)) {
-    idx_GSLA <- (i - 1) * 3 + 1
-    idx_UCUR_MEAN <- (i - 1) * 3 + 2
-    idx_VCUR_MEAN <- (i - 1) * 3 + 3
-    
-    new_names[idx_GSLA] <- paste0("GSLA_", date_str[i])
-    new_names[idx_UCUR_MEAN] <- paste0("UCUR_", date_str[i])
-    new_names[idx_VCUR_MEAN] <- paste0("VCUR_", date_str[i])
-  }
-  
-  # Rename the layers
-  names(rstack1) <- new_names
-  
-  # Crop the stack
-  e <- ext(c(150, 155, -37, -22)) #xmin, xmax, ymin, ymax
-  rstack2 <- terra::crop(rstack1, e)
-  
-  # Save the processed stack as a TIFF file
-  tif_file <- paste0("Current_stack_", year, ".tif")
-  writeRaster(rstack2, tif_file)
-  
-  # Return the processed stack
-  return(rstack2)
-}
-
-# Process each year
-years <- c("2024")  # Edit the years as needed
-
-for (year in years) {
-  rstack3 <- process_year(year)
-  # You can save the processed_stack if needed for each year
-}
 
 
-#check it worked
-plot(rstack3, col = viridis(255))
+# combine stack -----------------------------------------------------------
+rm(list=ls())
+list.files()
 
-writeRaster(rstack3, "Currents_stack_2024.tif")
+# List all the .nc files in the directory
+file_list <- list.files(pattern = "\\.tif$", full.names = TRUE)
+combo_rstack <- rast(c(file_list))
+head(names(combo_rstack))
+tail(names(combo_rstack))
 
+plot(combo_rstack[[10000:10010,]])
 
-# combine stack and 2025 --------------------------------------------------
+WGS84 <- crs("EPSG:4326")
 
-stack <- rast("250728_cstack_12-24.tif")
-head(stack)
+crs(combo_rstack) <- WGS84 # Assign CRS
+crs(combo_rstack)
 
-str(stack)
-combo_stack <- c(stack, rstack2)
+wrteRaster(combo_rstack, "Current_stack_2012-2025.tif")
 
-
-writeRaster(combo_stack, "260308_cstack_12-25.tif", overwrite = T)
