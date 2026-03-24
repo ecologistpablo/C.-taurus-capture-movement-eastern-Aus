@@ -20,7 +20,7 @@ pacman::p_load("terra", "sf", "sp", "viridis", "tidyverse")
 # pts ---------------------------------------------------------------------
 
 setwd("~/Documents/USC/Honours/R/data")
-rcs <- read_rds("Inputs/250827_step9_coordinates.rds") #this should be a csv with your XY coordinates for your receivers
+rcs <- read_rds("Inputs/260323_step9_coordinates.rds") #this should be a csv with your XY coordinates for your receivers
 WGS84 <- terra::crs("EPSG:4326")# Coordinate reference systems
 head(rcs) #its all there
 unique(rcs$station_name) # should be the same size as your df
@@ -47,12 +47,12 @@ mapview::mapview(IMOSxy_sf, zcol = "station_name", fbg = F) #colour by LOCATION
 
 # rstack ------------------------------------------------------------------
 
-rstack <- rast("IMOS/SST/GHRSST_12-24.tif") #our enviro data
+rstack <- rast("IMOS/GHRSST_12-25.tif") #our enviro data
 
 # plotting ----------------------------------------------------------------
 
 plot(rstack[[19]], col = viridis(255)) #did it work as we hoped for?
-plot(pts.UTM, add = T) #our do our points plot ontop of our enviro data? 
+plot(pts.UTM, add = T, col = "black") #our do our points plot ontop of our enviro data? 
 
 # increase coarseness -----------------------------------------------------
 
@@ -101,7 +101,7 @@ sst.pts10km2 %>%
     prop_na = mean(is.na(value_7d))) %>%
    arrange(desc(all_na), desc(prop_na)) %>% print(n = 258)
 
-# 28 / 300, great : ) 
+# 8.3% - that's pretty gooood
 
 # bi-linear interpolation -------------------------------------------------
 
@@ -141,9 +141,6 @@ sst.pts10km3 %>%
             prop_na = mean(is.na(value_7d_filled))) %>%
   arrange(desc(all_na), desc(prop_na)) %>% print(n = 237)
 
-# 2 stations, out of 300 stations, are completely NA
-
-# it's just Merimbula 
 
 # clean - up --------------------------------------------------------------
 
@@ -161,5 +158,5 @@ sst.pts10km4 <- sst.pts10km3 %>%
 
 # save --------------------------------------------------------------------
 
-write_rds(sst.pts10km4, file = "Inputs/250827_SST_vals_12-24.rds")
+write_rds(sst.pts10km4, file = "Inputs/260324_SST_vals_12-25.rds")
 

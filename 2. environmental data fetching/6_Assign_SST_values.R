@@ -7,8 +7,8 @@ rm(list=ls())
 library(tidyverse)
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
 
-m_avg <- read_rds("Inputs/250827_SST_m_avrg_12-24.rds")  #Climatological averages for month
-det <- read_rds("Inputs/250827_step9.rds") #dataframe you use to model
+m_avg <- read_rds("Inputs/260324_SST_m_avrg_12-25.rds")  #Climatological averages for month
+det <- read_rds("Inputs/260323_step9.rds") #dataframe you use to model
 
 summary(det)
 summary(m_avg)
@@ -33,8 +33,9 @@ det1 <- det %>%
   rename(sst = SST)
 
 str(det1$sst)
+summary(det1$sst)
 
-# where do the NAs go ? ---------------------------------------------------
+# where dsst# where do thsst# where do the NAs go ? ---------------------------------------------------
 
 # Create a new data frame with rows where SST is NA
 NAsst <- det1 %>% 
@@ -53,4 +54,4 @@ NAsst <- det1 %>%
 
 # save --------------------------------------------------------------------
 
-write_rds(det1, file = "Inputs/250827_SST_det.rds")
+write_rds(det1, file = "Inputs/260324_SST_det.rds")

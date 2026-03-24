@@ -58,7 +58,7 @@ process_year <- function(year) {
   }
   
   # Crop the stack
-  e <- ext(c(150, 155, -37, -22)) #xmin, xmax, ymin, ymax
+  e <- ext(c(149, 155, -37, -22)) #xmin, xmax, ymin, ymax
   rstack2 <- terra::crop(rstack1, e)
   
   # Convert from Kelvin to Celsius
@@ -126,7 +126,7 @@ process_year <- function(year) {
     stop(paste("Name mismatch:", length(new_names), "names vs", nlyr(rstack1), "layers."))
   }
   
-  e       <- ext(c(150, 155, -37, -22))
+  e       <- ext(c(149, 154, -37, -22))
   rstack2 <- terra::crop(rstack1, e)
   
   # CPU-bound conversion - parallelism helps here
@@ -138,10 +138,32 @@ process_year <- function(year) {
   return(rstack3)
 }
 
-years <- 2018:2025
+years <- 2017:2025
 tic()
 for (year in years) {
   rstack2 <- process_year(year)
 }
 toc()
-plot(rstack[[19]], col = viridis(255))
+
+plot(rstack2[[19]], col = viridis(255))
+
+
+# combine -----------------------------------------------------------------
+
+setwd("/Volumes/LaCie_PF/IMOS/SST")
+list.files() #check we have all our tifs in the folder
+year_stack <- list.files(pattern = "\\.tif$", full.names = TRUE)
+year_stack
+sst_combo <- c(rast(year_stack))
+head(names(sst_combo))
+tail(names(sst_combo))
+
+# CRS ---------------------------------------------------------------------
+
+WGS84 <- crs("EPSG:4326")
+
+crs(sst_combo) <- WGS84
+crs(sst_combo)
+
+writeRaster(sst_combo, "260324_GHRSST_12-25.tif", overwrite = TRUE)
+plot(sst_combo[[19,]], col = viridis(255))

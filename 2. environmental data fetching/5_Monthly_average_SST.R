@@ -8,7 +8,7 @@ rm(list=ls())
 
 library(tidyverse)
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/250827_SST_vals_12-24.rds")
+dat <- read_rds("Inputs/260324_SST_vals_12-25.rds")
 
 # wrestle monthly averages ------------------------------------------------
 
@@ -37,4 +37,4 @@ summary(dat1$sst_anomaly)
 
 # save --------------------------------------------------------------------
 
-write_rds(dat1, file = "Inputs/250827_SST_m_avrg_12-24.rds")
+write_rds(dat1, file = "Inputs/260324_SST_m_avrg_12-25.rds")
