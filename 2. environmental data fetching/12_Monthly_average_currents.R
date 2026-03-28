@@ -1,15 +1,14 @@
-#86 September 2023
+#8 September 2023
   #we have our cur vals
     #lets generate monthly averages
 
 rm(list=ls())
-#setwd("~/University/2023/Honours/R/data/git/NC-wrestling")
 
 # Packages ----------------------------------------------------------------
 
 library(tidyverse)
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/250827_Currents_vals_12-24.rds")
+dat <- read_rds("Inputs/260329_Currents_vals_12-25.rds")
 
 # wrestle monthly averages ------------------------------------------------
 
@@ -43,4 +42,4 @@ head(dat1)
 
 # save --------------------------------------------------------------------
 
-write_rds(dat1, file = "Inputs/250827_CUR_m_avrg_12-24.rds")
+write_rds(dat1, file = "Inputs/260329_CUR_m_avrg_12-25.rds")

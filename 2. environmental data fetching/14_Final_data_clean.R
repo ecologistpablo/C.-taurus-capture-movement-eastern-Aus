@@ -8,7 +8,7 @@ library(lunar)
 
 # pts ---------------------------------------------------------------------
 
-dat <- read_rds("Inputs/250827_cur_det.rds")
+dat <- read_rds("Inputs/260329_cur_det.rds")
 
 # REMORA ------------------------------------------------------------------
 
@@ -38,7 +38,7 @@ dat <- read_rds("Inputs/250827_cur_det.rds")
 
 dat1 <- dat
 
-dat1$lunar.illumination <- lunar.illumination(dat1$date, shift = 10) #10 hrs shifted from UTM
+dat1$lunar.illumination <- lunar::lunar.illumination(dat1$date, shift = 10) #10 hrs shifted from UTM
 
 # if you want to work with circular data, you can use lunar phase
 # it outputs data in radians, and you can convert it to degrees
@@ -67,7 +67,8 @@ dat2 <- dat1 %>%
                                                 "North Stradbroke Island", "Gold Coast", 
                                                 "Ballina", "Evans Head", "Yamba",  "Coffs Harbour",
                                                 "Port Macquarie", "Forster", "Hawks Nest", "Central Coast",
-                                                "Sydney", "Illawarra", "Merimbula"))) 
+                                                "Sydney", "Illawarra", "Naroomba", "Merimbula"))) %>% 
+  filter(!presence == 0) # we no longer model absence, so we can remove these rows, and the variable
 
 colnames(dat2)
 str(dat2)
@@ -75,15 +76,15 @@ str(dat2)
 # plot it -----------------------------------------------------------------
 
 datxy <- dat2 %>%
-  group_by(location, latitude, longitude) %>%
+  group_by(station_name, latitude, longitude) %>%
   summarise(num_det = n(), .groups = 'drop')
 
 datxy_sf <- sf::st_as_sf(datxy, coords = c("longitude", "latitude"),
                         crs = 4326, agr = "constant")
 
-mapview::mapview(datxy_sf, cex = "num_det", zcol = "location", fbg = FALSE)
+mapview::mapview(datxy_sf, cex = "num_det", zcol = "station_name", fbg = FALSE)
 
 # save --------------------------------------------------------------------
 
-write_rds(dat2, "Inputs/250827_det_enviro_complete.rds")
+write_rds(dat2, "Inputs/260329_det_enviro_complete.rds")
 

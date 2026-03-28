@@ -9,7 +9,7 @@ pacman::p_load("tidyverse", "ncdf4", 'purrr', 'furrr','future', 'terra', 'sf', '
 
 # metadata finding --------------------------------------------------------
 rm(list=ls())
-setwd("/Volumes/LaCie_PF/IMOS/Currents/2025")
+setwd("/Volumes/LaCie_PF/IMOS/Currents/2012")
 list.files()
 # nc <- nc_open("IMOS_OceanCurrent_HV_20241231T000000Z_GSLA_FV02_NRT.nc")
 # nc <- rast("Current_stack_2024.tif")
@@ -112,8 +112,9 @@ names(rstack2)
 
 # save progress -----------------------------------------------------------
 setwd("/Volumes/LaCie_PF/IMOS/Currents")
-writeRaster(rstack2, "Current_stack_2025.tif")
+writeRaster(rstack2, "Current_stack_2012.tif")
 
+rasta <- rast("Current_stack_2012.tif")
 
 # combine stack -----------------------------------------------------------
 rm(list=ls())
@@ -126,6 +127,10 @@ head(names(combo_rstack))
 tail(names(combo_rstack))
 
 plot(combo_rstack[[10000:10010,]])
+
+
+# reproject ---------------------------------------------------------------
+
 
 WGS84 <- crs("EPSG:4326")
 
