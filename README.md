@@ -1,4 +1,5 @@
-![GNS Carharias taurus G Smith flat](https://github.com/ecologistpablo/C.-taurus-capture-movement-eastern-Aus/assets/115206655/dd1bb381-6b1f-454a-bb86-10191fefd877)
+<img width="7121" height="2034" alt="gns_g_smith_icon" src="https://github.com/user-attachments/assets/d20f1571-4082-474b-9af0-f1521a61861f" />
+
 # Grey nurse shark (_Carcharias taurus_) capture and movement in eastern Australia
 This repository was created by Pablo Fuenzalida, as a part of an honours thesis completed in 2024. All code was written by me (unless otherwise stated) with the heavy assistance from my _fantastic_ supervisory team: Dr. Ross Dwyer, Associate Professor Kylie Scales and Professor David Schoeman. 
 
