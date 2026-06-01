@@ -4,17 +4,19 @@
 pacman::p_load("tidyverse", "ggpubr")
 rm(list=ls()) 
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/251201_step9.rds") %>%  #residence events
+dat <- read_rds("Inputs/260323_step9.rds") %>%  #residence events
    filter(presence == 1)
 
 dat1 <- dat %>%
-  filter(!location %in% c("Moreton Island", "Yamba", "Forster", "Central Coast", "Merimbula"),
-         !str_starts(location, "deg_")) %>%   # drop these sites)
   mutate(location = fct_relevel(location,
                                 "Wide Bay", "Sunshine Coast", "North Stradbroke Island",
-                                "Gold Coast", "Ballina", "Evans Head", "Coffs Harbour",
+                                "Gold Coast", "Ballina", "Evans Head", "Yamba", "Coffs Harbour",
                                 "Port Macquarie", "Hawks Nest", 
-                                "Sydney", "Illawarra", "Naroomba")) 
+                                "Sydney", "Illawarra")) %>% 
+  filter(location %in% c("Wide Bay", "Sunshine Coast", "North Stradbroke Island",
+                     "Gold Coast", "Ballina", "Evans Head", "Yamba", "Coffs Harbour",
+                     "Port Macquarie", "Hawks Nest", 
+                     "Sydney", "Illawarra"))
 
 #dat munging -------------------------------------------------------------------
 
@@ -50,7 +52,7 @@ ggplot(dat2, aes(x = month, y = 0, colour = direction, yend = frequency)) +
 # Display the plot
 x
 
-ggsave(path = "outputs/Graphs/Final/detections", "251201_movement_arrows.png",
+ggsave(path = "outputs/Graphs/Final/detections", "260423_movement_arrows.pdf",
        plot = x, width = 8, height = 14) #in inches because gg weird
 
   

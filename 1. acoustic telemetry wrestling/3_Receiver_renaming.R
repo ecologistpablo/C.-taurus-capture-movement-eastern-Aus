@@ -29,7 +29,9 @@ IMOS <- IMOS %>%
          latitude = replace(latitude,
                             station_name == "Wolf Rock 2", -25.85530),
          longitude = replace(longitude,
-                             station_name == "Stanwell Park", 150.99530))
+                             station_name == "Stanwell Park", 150.99530),
+         latitude = replace(latitude,
+                            station_name == "Wolf Rock 2", -25.8600))
 
 # begin with an interactive plot, where are our data? ---------------------
 
@@ -149,7 +151,7 @@ mapview::mapview(IMOSxy_sf, cex = "num_det", zcol = "location", fbg = F) #colour
 
 # save it ----------------------------------------------------------------------
 
-write_rds(IMOS1, "Inputs/260323_step3.rds")
+write_rds(IMOS1, "Inputs/260406_step3.rds")
 
 table(IMOS1$location)
 unique(IMOS1$station_name)

@@ -68,8 +68,8 @@ dat2 <- dat1 %>%
                                                 "Ballina", "Evans Head", "Yamba",  "Coffs Harbour",
                                                 "Port Macquarie", "Forster", "Hawks Nest", "Central Coast",
                                                 "Sydney", "Illawarra", "Naroomba", "Merimbula"))) %>% 
-  filter(!presence == 0) # we no longer model absence, so we can remove these rows, and the variable
-
+  filter(!presence == 0) %>%  # we no longer model absence, so we can remove these rows, and the variable
+  select(-presence)
 colnames(dat2)
 str(dat2)
 

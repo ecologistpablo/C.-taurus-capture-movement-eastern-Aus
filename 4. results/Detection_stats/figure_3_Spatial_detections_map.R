@@ -4,16 +4,20 @@ rm(list=ls())
 #bring and clean data environment
 setwd("~/Documents/USC/Honours/R/data")
 pacman::p_load(tidyverse, ggspatial, tidyterra, terra, sf, sp)
-dat <- read_rds("Inputs/250827_det_enviro_complete.rds")
-Aus <- st_read("Australia_shp/AUS_2021_AUST_GDA94.shp") # try both
-IMOS <- read_csv("Inputs/250723_step2.csv") 
+dat <- read_rds("Inputs/260329_det_enviro_complete.rds")
+#Aus <- st_read("Australia_shp/AUS_2021_AUST_GDA94.shp") # the best resolution, but wont load in PDF or illustrator... too bigg....
+Aus <- ne_countries(scale = "large", country = "Australia", returnclass = "sf")
+states <- ne_states(country = "Australia", returnclass = "sf")
+IMOS <- read_rds("Inputs/260406_step3.rds") 
 
-IMOS <- IMOS %>% 
+
+IMOS1 <- IMOS %>% 
   distinct(station_name, .keep_all = T)
 
 dat <- dat %>% 
   filter(presence != 0, 
-         !location %in% c("Moreton Island", "Yamba", "Forster",'Central Coast', 'Merimbula'))
+         !location %in% c("Moreton Island", 'Central Coast',
+                          'Merimbula', "Naroomba"))
 unique(dat$location)
 
 
@@ -50,17 +54,18 @@ m <-
   geom_rect(data = bands, aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), 
             fill = "grey60", alpha = 0.3) + 
   geom_sf(data = Aus) +  # Shapefile layer
-  geom_point(data = IMOS, aes(x = longitude, y = latitude), colour = "black", alpha = 0.5, size = 0.5) +  # Points layer from dato in grey
+  geom_sf(data = states, fill = NA, colour = "grey50", linewidth = 0.3)+ # states
+  geom_point(data = IMOS1, aes(x = longitude, y = latitude), colour = "red", alpha = 0.5, size = 0.5) +  # Points layer from dato in grey
   geom_point(data = dat1, aes(x = longitude, y = latitude, colour = location, size = num_det)) +  # Points layer
   scale_size_continuous(range = c(1, 4)) +
   labs(x = NULL, y = NULL)+
   theme_minimal() +
   coord_sf(xlim = c(149, 154), ylim = c(-37, -23.5)) +  # Zoom into specific lat-lon box
   annotation_scale(location = "bl") +
-  annotation_north_arrow(style = north_arrow_nautical, location = "tl") #+ 
-  #scale_colour_viridis_d(option = "D", direction = -1) 
+  annotation_north_arrow(style = north_arrow_nautical, location = "tl") + 
+  scale_colour_viridis_d(option = "D", direction = -1) 
 
 plot(m)
 
-ggsave(path = "Outputs/Graphs/Final/detections", "250919_det_spatial_map.tiff",
+ggsave(path = "Outputs/Graphs/Final/detections", "260406_det_spatial_map.pdf",
        plot = m, width = 6, height = 8) #in inches because gg weird

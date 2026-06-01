@@ -5,26 +5,29 @@
 
 rm(list=ls())
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read_csv("Inputs/250827_det_enviro_complete.csv")
+dat <- read_rds("Inputs/260329_det_enviro_complete.rds")
 
 # munging -----------------------------------------------------------------
 location_levels <- c("Wide Bay", "Sunshine Coast", "North Stradbroke Island",
                      "Gold Coast", "Ballina", "Evans Head", "Coffs Harbour",
                      "Port Macquarie", "Hawks Nest", "Sydney", "Illawarra")
 
+lvls <- c("Illawarra", "Sydney", "Hawks Nest", "Port Macquarie", "Coffs Harbour",
+         "Evans Head", "Ballina", "Gold Coast", "North Stradbroke Island",
+         "Sunshine Coast", "Wide Bay")
+
+
 library(forcats)
 
 dat1 <- dat %>%
-  filter(presence == "1",
-         location %in% location_levels) %>%
+  filter(location %in% location_levels) %>%
   mutate(location = factor(location, levels = location_levels),
          sex = fct_recode(sex,
                      "Female" = "F",
-                     "Male"   = "M") )
+                     "Male"   = "M"))
 
   
 str(dat1)
-  select(-station_name)
 
 
 # sst ---------------------------------------------------------------------
@@ -41,16 +44,13 @@ sst <-
   theme_bw()+ 
     labs(x = NULL, y = "Sea Surface Temperature (C°)")+
   theme(legend.position = "right",
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
-        axis.text.y = element_text(size = 10),
-        axis.title = element_text(size = 10),
-        strip.text = element_text(size = 12) ) +
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 10)) +
   facet_wrap(~sex, ncol = 1)
 
 sst
 
 #save
-ggsave(path = "Outputs/Graphs/final/SST", "250903_raw_sst.pdf",
+ggsave(path = "Outputs/Graphs/final/SST", "260406_raw_sst.png",
        plot = sst, width = 12, height = 10) #in inches because gg weird
 
 # Plot
@@ -62,6 +62,7 @@ sstanom <-
                alpha = 1.0, size = 0.7) +
   scale_fill_viridis_d(direction = -1) +
   xlab("Location") +
+  theme_bw()+
   ylab("Sea Surface Temperature (°C) Anomaly ") +
   theme(legend.position = "right",
     axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
@@ -97,7 +98,8 @@ a3 <-
         axis.title = element_text(size = 10),
         legend.text = element_text(size = 10),
         legend.title = element_text(size = 10),
-        strip.text = element_text(size = 12) )
+        strip.text = element_text(size = 12))+
+  coord_flip()
 
 a3
 
@@ -134,7 +136,7 @@ ggsave(path = "Outputs/Graphs/Final", "240125_dist_direction_combo.pdf",plot = f
 # Plot
 gsla <-
   dat1 %>%
-  ggplot(aes(x = location, y = anomaly_GSLA, #gsla, ucur, vcur, rs_current_velocity
+  ggplot(aes(x = location, y = gsla_anomaly, #gsla, ucur, vcur, rs_current_velocity
              fill = location)) +
   geom_violin(width = 1, position = position_dodge(0.7), alpha = 0.1) +
   geom_boxplot(width = 0.15, position = position_dodge(0.7), color = "black",
@@ -162,7 +164,7 @@ ggsave(path = "Outputs/Graphs/Final/Currents", "250225_GSLAA_facet.pdf",
 # Plot
 VCUR <-
   dat1 %>%
-  ggplot(aes(x = location, y = anomaly_VCUR, #gsla, ucur, vcur, rs_current_velocity
+  ggplot(aes(x = location, y = vcur_anomaly, #gsla, ucur, vcur, rs_current_velocity
              fill = location)) +
   geom_violin(width = 1, position = position_dodge(0.7), alpha = 0.1) +
   geom_boxplot(width = 0.15, position = position_dodge(0.7), color = "black",
@@ -192,27 +194,26 @@ ggsave(path = "Outputs/Graphs/Final/Currents",
 cp <- colorRampPalette(c("black", "beige"))(n = 1) #colour palette that matches the lunar cycle
 str(dat1$lunar.illumination)
 summary(dat1$lunar.illumination)
-lunar <- 
-  ggplot(data = dat1, aes(x = location, y = lunar.illumination,
-  fill = location)) +
-  geom_jitter(alpha = 0.7, width = 0.3) +
-  geom_violin(width = 1, alpha = 0.3, scale = "width") +
+
+facet_labels <- data.frame(
+  label = c("A)", "B)")
+)
+
+#lunar <- 
+  ggplot(data = dat1, aes(x = location, y = lunar.illumination, fill = location)) +
+  geom_point(alpha = 0.7) +
+  theme_bw()+
+  geom_violin(width = 0.8, alpha = 0.3, scale = "width") +
   scale_fill_viridis_d(direction = -1) +
-  labs(x = "Location", y = "Lunar Illumination") +
-  theme(legend.position = "right",
-          axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
-          axis.title.y = element_text(size = 10),
-          axis.title.x = element_text(size = 10),
-          legend.text = element_text(size = 10),
-          legend.title = element_text(size = 10),
-          strip.text = element_text(size = 12)  
-    ) +
-    facet_grid(movement~sex)
+  labs(x = NULL, y = NULL, fill = "Focal Areas") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  facet_grid(~ sex) 
+  
 
 lunar
 
 #save
-ggsave(path = "Outputs/Graphs/Final/Lunar", "250225_lunar_facetgrid.pdf",
-       plot = lunar, width = 12, height = 7) #in inches because gg weird
+ggsave(path = "outputs/Graphs/Final/detections", "260421_lunar_facets.pdf",
+       plot = lunar, width = 8, height = 8) #in inches because gg weird
 
 
