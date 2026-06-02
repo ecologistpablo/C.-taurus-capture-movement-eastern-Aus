@@ -15,15 +15,12 @@
 #'      The per-day floor also applies to day one, so an event needs at least that many
 #'      detections to ever be 'real'.
 #'
-#' Non-residences are returned in a long arrival/departure shape: each movement becomes
-#' two rows (one departure, one arrival) sharing a movement_id, with a haversine distance
-#' (km) attached so you have how far each movement was. sex is carried through to all outputs.
+#' Non-residences are returned one row per movement, with departure info (the location left
+#' behind) and arrival info (the location moved to) side by side, plus a haversine distance
+#' (km) so you have how far each movement was. sex is carried through to all outputs.
 #'
 #' For background on the residency concept, see:
 #' https://link.springer.com/article/10.1186/s40462-022-00364-z
-#' 
-#' written by Pablo Fuenzalida and various AI LLMs on June 2025, and merged on June 2026
-#' to become this function
 #'
 #' @param dat  a tidy detection data frame containing (at least) the columns
 #'             tag_id, datetime, receiver_name, station_name, location, latitude, longitude, sex.
@@ -42,7 +39,7 @@
 #' @return a list with three data frames:
 #'   \code{residences} (residence event table; includes both duration_secs and duration_days),
 #'   \code{residenceslog} (detection-level log), and
-#'   \code{nonresidences} (long arrival/departure movement table with haversine distance in km).
+#'   \code{nonresidences} (one row per movement, with departure + arrival info and haversine distance in km).
 #'
 #' @importFrom dplyr arrange group_by mutate ungroup summarise filter lead lag transmute bind_rows n row_number first last if_else if_all everything select
 #' @importFrom lubridate as_date
@@ -163,10 +160,11 @@ RunResidenceExtraction <- function(dat,
       next_longitude = dplyr::lead(longitude)) %>%               # arrival lon
     dplyr::filter(!is.na(next_loc),                              # drop final event (no move after)
                   loc != next_loc) %>%                           # a movement = a change in location
-    dplyr::mutate(movement_id = dplyr::row_number()) %>%         # id links a departure to its arrival
-    dplyr::ungroup()
+    dplyr::ungroup() %>%                                         # drop the per-tag grouping...
+    dplyr::arrange(tag_id, start_datetime) %>%                   # ...then order across all tags
+    dplyr::mutate(movement_id = dplyr::row_number())             # GLOBAL id (unique across all tags)
   
-  # haversine distance (km) for each movement, applied to both rows of the movement.
+  # haversine distance (km) for each movement.
   # accounts for the earth being a sphere, so a little better than a direct distance
   move_base <- move_base %>%
     dplyr::mutate(
@@ -175,34 +173,47 @@ RunResidenceExtraction <- function(dat,
         cbind(next_longitude, next_latitude)    # arrival point (lon, lat)
       ) / 1000, 2))                             # metres -> km, 2 dp
   
-  # departure rows: detection 1 of each movement (the location left behind)
-  departures <- move_base %>%
-    dplyr::transmute(tag_id,                                     # tag id
-                     datetime     = end_datetime,                # time the tag departed
-                     loc,                                        # location departed from
-                     station_name,                               # station departed from
-                     latitude, longitude,                        # departure coordinates
-                     sex,                                        # carry sex through
-                     movement     = "departure",                 # row type
-                     movement_id,                                # links to the matching arrival
-                     distance)                                   # haversine distance of the move (km)
+  # build one shared block of movement info: every column for BOTH the departure end and
+  # the arrival end of the move. both output rows (departure + arrival) will carry all of it.
+  move_info <- move_base %>%
+    dplyr::transmute(
+      tag_id,                                                   # tag id
+      sex,                                                      # carry sex through
+      movement_id,                                              # GLOBAL movement id
+      # --- departure end (the location left behind) ---
+      departure_datetime  = end_datetime,                       # time the tag departed
+      departure_loc       = loc,                                # location departed from
+      departure_station   = station_name,                       # station departed from
+      departure_latitude  = latitude,                           # departure coordinates
+      departure_longitude = longitude,
+      # --- arrival end (the location moved to) ---
+      arrival_datetime    = next_time,                          # time the tag arrived
+      arrival_loc         = next_loc,                           # location arrived at
+      arrival_station     = next_station,                       # station arrived at
+      arrival_latitude    = next_latitude,                      # arrival coordinates
+      arrival_longitude   = next_longitude,
+      # --- the movement itself ---
+      duration_secs       = as.numeric(difftime(next_time, end_datetime, units = "secs")), # travel time
+      distance)                                                 # haversine distance of the move (km)
   
-  # arrival rows: detection 2 of each movement (the location moved to)
-  arrivals <- move_base %>%
-    dplyr::transmute(tag_id,                                     # tag id
-                     datetime     = next_time,                   # time the tag arrived
-                     loc          = next_loc,                    # location arrived at
-                     station_name = next_station,                # station arrived at
-                     latitude     = next_latitude,               # arrival coordinates
-                     longitude    = next_longitude,
-                     sex,                                        # carry sex through
-                     movement     = "arrival",                   # row type
-                     movement_id,                                # links to the matching departure
-                     distance)                                   # same distance on both rows
+  # long format: each movement becomes two rows sharing a movement_id, tagged by 'movement'.
+  # both rows carry the full departure + arrival info above; only the row type differs.
+  departures <- move_info %>%
+    dplyr::mutate(movement = "departure",                       # this row marks leaving a location
+                  datetime = departure_datetime)                # convenience: the time of THIS row
+  arrivals   <- move_info %>%
+    dplyr::mutate(movement = "arrival",                         # this row marks reaching a location
+                  datetime = arrival_datetime)                  # convenience: the time of THIS row
   
-  # combine into the long arrival/departure database (double the rows of move_base)
+  # stack the two halves and order so paired rows sit together (departure then arrival per movement)
   nonresidences <- dplyr::bind_rows(departures, arrivals) %>%
-    dplyr::arrange(tag_id, movement_id, movement, datetime)
+    dplyr::arrange(movement_id, movement) %>%                   # group the two rows of each movement
+    dplyr::select(tag_id, sex, movement_id, movement, datetime, # tidy column order
+                  departure_datetime, departure_loc, departure_station,
+                  departure_latitude, departure_longitude,
+                  arrival_datetime, arrival_loc, arrival_station,
+                  arrival_latitude, arrival_longitude,
+                  duration_secs, distance)
   
   # --- residences log ------------------------------------------------------------
   
@@ -232,10 +243,12 @@ RunResidenceExtraction <- function(dat,
   # restore the user-facing location column name (e.g. location / station_name / receiver_name)
   names(residences)[names(residences) == "loc"]       <- location_col
   names(residenceslog)[names(residenceslog) == "loc"] <- location_col
-  names(nonresidences)[names(nonresidences) == "loc"] <- location_col
+  # non-residences carry the level twice (departed from / arrived at), so prefix each
+  names(nonresidences)[names(nonresidences) == "departure_loc"] <- paste0("departure_", location_col)
+  names(nonresidences)[names(nonresidences) == "arrival_loc"]   <- paste0("arrival_", location_col)
   
   # return the three data frames as a list
-  list(residences    = as.data.frame(residences),               # residence event table
-       residenceslog = as.data.frame(residenceslog),             # detection-level log
-       nonresidences = as.data.frame(nonresidences))             # long arrival/departure + distance
+  list(residences    = as.data.frame(residences),# residence event table
+       residenceslog = as.data.frame(residenceslog),# detection-level log
+       nonresidences = as.data.frame(nonresidences))# long arrival/departure + distance
 }
