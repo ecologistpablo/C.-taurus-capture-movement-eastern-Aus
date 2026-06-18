@@ -16,18 +16,20 @@ rm(list=ls())
 setwd("/Users/owuss/Documents/USC/Honours/R/data")
 dat <- read_rds("Inputs/260323_residency.rds") #residence events
 unique(dat$location)
+
+
 location_levels <- c("Wide Bay", "Sunshine Coast", "North Stradbroke Island",
-                     "Gold Coast", "Ballina", "Evans Head", "Coffs Harbour",
-                     "Port Macquarie", "Hawks Nest", "Sydney", "Illawarra")
-
-
-dat1 <- dat %>% 
-  filter(location %in% c("North Stradbroke Island")) %>%
-  distinct(tag_id)
+                     "Gold Coast", "Ballina", "Evans Head", "Yamba",
+                     "Coffs Harbour", "Port Macquarie","Forster",  "Hawks Nest",
+                     "Sydney", "Illawarra")
 
 dat1 <- dat %>%
   filter(location %in% location_levels) %>%
-  mutate(location = factor(location, levels = location_levels))
+  mutate(location = factor(location, levels = location_levels),
+         location = recode(location, "Hawks Nest"= "Hunter"))
+
+
+
 unique(dat1$location)
 
 str(dat1)
@@ -107,8 +109,19 @@ b <- ggplot(unique_tags_monthly, aes(x = month, y = unique_tags, fill = sex)) +
     panel.grid.major.y = element_blank())
 
 z <- ggarrange(a,b, common.legend = T, legend = "right")
+               
 z
 
-ggsave(path = "outputs/Graphs/Final/detections", "260406_residency.png",
+ggsave(path = "outputs/Graphs/Final/detections", "260605_residency.pdf",
        plot = z, width = 7, height = 10) #in inches because gg weird
 
+
+# residency stats ---------------------------------------------------------
+
+res_stats <- mean_residency %>%
+  group_by(location, sex) %>% 
+  summarise(mean_days = round(mean(mean_days_present), 1),
+    sd_days = round(sd(mean_days_present),1),
+    .groups = "drop")
+
+res_stats

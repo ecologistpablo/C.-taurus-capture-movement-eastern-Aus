@@ -4,7 +4,8 @@ rm(list=ls())
 #bring and clean data environment
 setwd("~/Documents/USC/Honours/R/data")
 pacman::p_load(tidyverse, ggspatial, tidyterra, terra, sf, sp)
-dat <- read_rds("Inputs/260329_det_enviro_complete.rds")
+dat <- read_rds("Inputs/260329_det_enviro_complete.rds") %>% 
+  filter(presence == 1)
 #Aus <- st_read("Australia_shp/AUS_2021_AUST_GDA94.shp") # the best resolution, but wont load in PDF or illustrator... too bigg....
 Aus <- ne_countries(scale = "large", country = "Australia", returnclass = "sf")
 states <- ne_states(country = "Australia", returnclass = "sf")
@@ -67,5 +68,5 @@ m <-
 
 plot(m)
 
-ggsave(path = "Outputs/Graphs/Final/detections", "260406_det_spatial_map.pdf",
+ggsave(path = "Outputs/Graphs/Final/detections", "260605_det_spatial_map.pdf",
        plot = m, width = 6, height = 8) #in inches because gg weird

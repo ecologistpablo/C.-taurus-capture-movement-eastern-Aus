@@ -5,117 +5,74 @@
 # libraries ---------------------------------------------------------------
 
 pacman::p_load("tidyverse", "viridis", "ggpubr", "plotly", "lubridate", "stringr", "flextable",
-               "officer")
+               "officer", "forcats")
 
 # Data --------------------------------------------------------------------
 
 rm(list=ls())
 setwd("~/Documents/USC/Honours/R/data")
-dat <- read_rds("Inputs/250827_step9.rds") 
+dat <- read_rds("Inputs/260323_step3.rds")
 
-# ---- 1) Filter / clean ------------------------------------------------------
+# munging -----------------------------------------------------------------
+location_levels <- c("Wide Bay", "Sunshine Coast", "North Stradbroke Island",
+                     "Gold Coast", "Ballina", "Evans Head", "Yamba",
+                     "Coffs Harbour",
+                     "Port Macquarie", "Forster",
+                     "Hawks Nest", "Central Coast", "Sydney", "Illawarra", "Merimbula")
 
-dat_clean <- dat %>%
-  filter(presence != 0,
-         !location %in% c("Moreton Island", "Yamba", "Forster", "Central Coast", "Merimbula")) %>%
-  mutate(
-    sex  = recode(sex, "M" = "Male", "F" = "Female"),
-    date = as.Date(datetime),
-    location = fct_relevel(location,
-                                  "Wide Bay", "Sunshine Coast", "North Stradbroke Island",
-                                  "Gold Coast", "Ballina", "Evans Head", "Coffs Harbour",
-                                  "Port Macquarie", "Hawks Nest", 
-                                  "Sydney", "Illawarra")) 
+lvls <- c("Illawarra", "Sydney", "Hawks Nest", "Port Macquarie", "Coffs Harbour",
+          "Evans Head", "Ballina", "Gold Coast", "North Stradbroke Island",
+          "Sunshine Coast", "Wide Bay")
+
+
+dat1 <- dat %>%
+  filter(location %in% location_levels) %>%
+  mutate(location = factor(location, levels = location_levels),
+         sex = fct_recode(sex,
+                          "Female" = "F",
+                          "Male"   = "M"))
 
 # ---- 2) Pair arrival/departure by tag_id + movement_id ----------------------
 # One row per movement (a "stay" at a site). We take arrival/departure times,
 # the site (prefer the arrival's site; fall back to departure if needed),
 # and a single distance value for that movement.
-stays <- dat_clean %>%
-  arrange(tag_id, movement_id, datetime) %>%
-  group_by(tag_id, movement_id) %>%
-  summarise(
-    sex        = first(sex),
-    # site from arrival if present, otherwise from the other row
-    location_a = location[movement == "arrival"] |> first(default = NA_character_),
-    location_d = location[movement == "departure"] |> first(default = NA_character_),
-    location   = coalesce(location_a, location_d),
-    arrival_dt = datetime[movement == "arrival"]   |> first(default = NA_POSIXct_),
-    depart_dt  = datetime[movement == "departure"] |> first(default = NA_POSIXct_),
-    distance   = distance |> discard(is.na) |> first(default = NA_real_),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    duration_days = as.numeric(difftime(depart_dt, arrival_dt, units = "days")),
-    # keep rows that have at least a site and an arrival; departure may be missing
-    keep = !is.na(location) & !is.na(arrival_dt)
-  ) %>%
-  filter(keep) %>%
-  select(-keep, -location_a, -location_d)
 
-# ---- 3) Summary table by location × sex -------------------------------------
-fmt_range <- function(x, digits = 2) {
-  x <- x[!is.na(x)]
-  if (!length(x)) NA_character_ 
-  else sprintf("%s to %s", round(min(x), digits), round(max(x), digits))
-}
-
-fmt_mean_sd <- function(x, digits = 2) {
-  x <- x[!is.na(x)]
-  if (!length(x)) NA_character_ 
-  else sprintf("%s ± %s", round(mean(x), digits), round(sd(x), digits))
-}
-
-# ---- 3a) Detection timeframe for each location × sex ------------------------
-select_for_timeframe <- dat_clean %>%
-  group_by(location, sex) %>%
-  summarise(
-    .time_min = min(date, na.rm = TRUE),
-    .time_max = max(date, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# ---- 3b) Summary table from stays -------------------------------------------
-table_out <- stays %>%
-  group_by(location, sex) %>%
-  summarise(
-    `Unique transmitter IDs detected`      = n_distinct(tag_id),
-    `Num. of movements detected`           = n_distinct(movement_id),
-    `Movement distance (km) - Range`       = fmt_range(distance),
-    `Movement distance (km) - Mean ± SD`   = fmt_mean_sd(distance),
-    `Movement duration (days) - Range`     = fmt_range(duration_days),
-    `Movement duration (days) - Mean ± SD` = fmt_mean_sd(duration_days),
+tbl_summary <- dat1 %>%
+  mutate(year = year(datetime),
+    date = as.Date(datetime)) %>%
+  group_by(location) %>%
+  summarise(females = n_distinct(tag_id[sex == "Female"]),
+    males = n_distinct(tag_id[sex == "Male"]),
+    years_tag_detections = n_distinct(year),
+    no_tag_detections = n_distinct(tag_id, datetime, station_name),
+    no_receiver_stations = n_distinct(station_name),
+    cumulative_days_detected = n_distinct(
+      paste(tag_id, date)),
     .groups = "drop") %>%
-  left_join(select_for_timeframe, by = c("location", "sex")) %>%
-  mutate(
-    `Detection Timeframe` = ifelse(is.na(.time_min), NA_character_,
-                                   paste(.time_min, "to", .time_max))
-  ) %>%
-  select(location, sex,
-         `Unique transmitter IDs detected`,
-         `Detection Timeframe`,
-         `Num. of movements detected`,
-         `Movement distance (km) - Range`,
-         `Movement distance (km) - Mean ± SD`,
-         `Movement duration (days) - Range`,
-         `Movement duration (days) - Mean ± SD`) %>%
-  arrange(location, sex)
-table_out
+  left_join(dat %>%
+      mutate(year = year(datetime),
+        date = as.Date(datetime)) %>%
+      group_by(location, tag_id, year) %>%
+      summarise(days_detected = n_distinct(date),
+        .groups = "drop") %>%
+      group_by(location) %>%
+      summarise(mean_days = mean(days_detected),
+        sd_days = sd(days_detected),
+        .groups = "drop"),
+    by = "location") %>%
+  transmute(location = location,
+    `Tagged C. taurus detected in region (female / male)` =
+      paste0(females, " — ", males),
+    `Years of tag detections` = years_tag_detections,
+    `No. tag detections` = no_tag_detections,
+    `No. receiver stations` = no_receiver_stations,
+    `Cumulative days tagged C. taurus detected (total)` =
+      cumulative_days_detected,
+    `Mean ± SD number of days per year tagged C. taurus detected` =
+      sprintf("%.1f ± %.1f", mean_days, sd_days))
 
-write_csv(table_out, "Outputs/Graphs/Final/detections/250828_table_one.csv")
 
 
-#make a flextable
-ft <- flextable(table_out) %>%
-  fontsize(size = 5, part = "all") %>%   # shrink everything
-  fontsize(size = 5, part = "header") %>% # slightly bigger headers
-  autofit()
-
-# create a Word doc
-doc <- read_docx() %>%
-  body_add_flextable(ft)
-
-# save
-print(doc, target = "Outputs/Graphs/Final/detections/250828_table_one.xlsx")
+write_csv(tbl_summary, "Outputs/Graphs/Final/detections/260603_table_one.csv")
 
 

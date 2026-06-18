@@ -11,12 +11,15 @@ dat1 <- dat %>%
   mutate(location = fct_relevel(location,
                                 "Wide Bay", "Sunshine Coast", "North Stradbroke Island",
                                 "Gold Coast", "Ballina", "Evans Head", "Yamba", "Coffs Harbour",
-                                "Port Macquarie", "Hawks Nest", 
+                                "Port Macquarie", "Forster", "Hawks Nest", 
                                 "Sydney", "Illawarra")) %>% 
   filter(location %in% c("Wide Bay", "Sunshine Coast", "North Stradbroke Island",
                      "Gold Coast", "Ballina", "Evans Head", "Yamba", "Coffs Harbour",
-                     "Port Macquarie", "Hawks Nest", 
-                     "Sydney", "Illawarra"))
+                     "Port Macquarie", "Forster", "Hawks Nest", 
+                     "Sydney", "Illawarra")) %>% 
+  mutate(location = recode(location, "Hawks Nest" = "Hunter"))
+                                
+  
 
 #dat munging -------------------------------------------------------------------
 
@@ -52,7 +55,7 @@ ggplot(dat2, aes(x = month, y = 0, colour = direction, yend = frequency)) +
 # Display the plot
 x
 
-ggsave(path = "outputs/Graphs/Final/detections", "260423_movement_arrows.pdf",
+ggsave(path = "outputs/Graphs/Final/detections", "260605_movement_arrows.pdf",
        plot = x, width = 8, height = 14) #in inches because gg weird
 
   
